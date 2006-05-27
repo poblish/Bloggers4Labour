@@ -9,6 +9,9 @@
 
 package org.bloggers4labour.admin;
 
+import com.hiatus.USQL_Utils;
+import com.hiatus.sql.ResultSetList;
+import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -16,6 +19,9 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.log4j.Logger;
+import org.bloggers4labour.*;
+import org.bloggers4labour.conf.Configuration;
+import org.bloggers4labour.sql.*;
 
 /**
  *
@@ -29,16 +35,122 @@ public class SiteAdministration
 
 	/*******************************************************************************
 	*******************************************************************************/
+	public static void main( String[] args)
+	{
+		Configuration.getInstance().setDirectoryIfNotSet("/Users/andrewre/www/htdocs/bloggers4labour/conf/");
+
+		DataSourceConnection	theConnectionObject = null;
+		StringBuffer		theBuf;
+		long			currTimeMSecs = System.currentTimeMillis();
+		boolean			isGood = false;
+
+		try
+		{
+			MysqlDataSource	theSource = new MysqlDataSource();
+			theSource.setUrl("jdbc:mysql://localhost:3306/Bloggers4Labour?user=root&password=Militant&useUnicode=true");
+
+			theConnectionObject = new DataSourceConnection(theSource);
+			if (theConnectionObject.Connect())
+			{
+				// s_FL_Logger.info("conn = " + theConnectionObject);
+
+				Statement	theS = null;
+
+				try
+				{
+					SiteAdministration	sa = new SiteAdministration();
+
+					theS = theConnectionObject.createStatement();
+
+					for ( int siteRecno = 200; siteRecno > 0; siteRecno--)
+					{
+						sa.deleteSite( theS, siteRecno, true);
+					}
+				}
+				catch (Exception e)
+				{
+					s_Logger.error("creating statement", e);
+				}
+				finally
+				{
+					USQL_Utils.closeStatementCatch(theS);
+				}
+			}
+			else
+			{
+				s_Logger.warn("Cannot connect!");
+			}
+		}
+		catch (Exception err)
+		{
+			s_Logger.error("???", err);
+		}
+		finally
+		{
+			// s_FL_Logger.info("m_FeedChannels = " + m_FeedChannels);
+
+			if ( theConnectionObject != null)
+			{
+				theConnectionObject.CloseDown();
+				theConnectionObject = null;
+			}
+		}
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
 	public SiteAdministration()
 	{
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public void cleanup( Connection inConn, boolean inCommitChanges) throws SQLException
+	public ResultSet getUnapprovedBlogs( Statement inStatement, int inSiteRecno, boolean inCommitChanges) throws SQLException
 	{
-		Statement	s = inConn.createStatement();
-		ResultSet	rs = s.executeQuery("SELECT site_recno FROM site");
+		ResultSet	theRS = inStatement.executeQuery( QueryBuilder.getUnapprovedBlogsQuery() );
+
+		return theRS; // new ResultSetList(theRS);
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public void deleteSite( Statement inStatement, int inSiteRecno, boolean inCommitChanges) throws SQLException
+	{
+		ResultSet	theRS = inStatement.executeQuery("SELECT site_recno FROM site WHERE site_recno=" + inSiteRecno);
+
+		if (theRS.next())
+		{
+			if (inCommitChanges)
+			{
+				int	numDeletions = inStatement.executeUpdate("DELETE FROM site WHERE site_recno=" + inSiteRecno);
+
+				if ( numDeletions > 0)
+				{
+					s_Logger.info(">>> SiteAdmin.deleteSite(): Site " + inSiteRecno + " deleted OK.");
+				}
+				else
+				{
+					s_Logger.error(">>> SiteAdmin.deleteSite(): Site " + inSiteRecno + " deletion FAILED.");
+				}
+			}
+			else
+			{
+				s_Logger.info(">>> SiteAdmin.deleteSite(): Site " + inSiteRecno + " found OK.");
+			}
+		}
+		else
+		{
+			s_Logger.warn(">>> SiteAdmin.deleteSite(): Site " + inSiteRecno + " not found.");
+		}
+
+		cleanup( inStatement, inCommitChanges);
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public void cleanup( Statement inStatement, boolean inCommitChanges) throws SQLException
+	{
+		ResultSet	rs = inStatement.executeQuery("SELECT site_recno FROM site");
 		StringBuffer	srBuf = new StringBuffer(500);
 		int		srCount = 0;
 
@@ -63,7 +175,7 @@ public class SiteAdministration
 		////////////////////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////////////////////
 
-		rs = s.executeQuery("SELECT creator_recno FROM creator");
+		rs = inStatement.executeQuery("SELECT creator_recno FROM creator");
 
 		List<Number>	crList = new ArrayList<Number>(100);
 
@@ -76,7 +188,7 @@ public class SiteAdministration
 
 		////////////////////////////////////////////////////////////////////////
 
-		rs = s.executeQuery("SELECT creator_recno FROM siteCreators");
+		rs = inStatement.executeQuery("SELECT creator_recno FROM siteCreators");
 
 		List	crList2 = new ArrayList(100);
 
@@ -90,7 +202,7 @@ public class SiteAdministration
 		////////////////////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////////////////////
 
-		rs = s.executeQuery("SELECT * FROM siteCreators WHERE site_recno NOT IN " + srBuf);
+		rs = inStatement.executeQuery("SELECT * FROM siteCreators WHERE site_recno NOT IN " + srBuf);
 
 		StringBuffer	scrBuf = new StringBuffer(500);
 		int		scrCount = 0;
@@ -121,7 +233,7 @@ public class SiteAdministration
 
 			if (inCommitChanges)
 			{
-				int	numUpdates = s.executeUpdate(delSCQuery);
+				int	numUpdates = inStatement.executeUpdate(delSCQuery);
 				s_Logger.info( LINE_PREFIX + numUpdates + " updates from running \"" + delSCQuery + "\"");
 			}
 			else
@@ -162,7 +274,7 @@ public class SiteAdministration
 
 			if (inCommitChanges)
 			{
-				int	numUpdates = s.executeUpdate(q);
+				int	numUpdates = inStatement.executeUpdate(q);
 				s_Logger.info( LINE_PREFIX + numUpdates + " updates from running \"" + q + "\"");
 			}
 			else
@@ -172,7 +284,7 @@ public class SiteAdministration
 		}
 		else if ( scrCount == 0)
 		{
-			s_Logger.info( LINE_PREFIX + "No cleanup required.");
+			s_Logger.debug( LINE_PREFIX + "No cleanup required.");
 		}
 	}
 }
