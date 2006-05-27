@@ -171,7 +171,7 @@ public class SiteAdministration
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public boolean cleanup( Statement inStatement, CleanupContext ioCtxt, boolean inCommitChanges) throws SQLException
+	private boolean cleanup( Statement inStatement, CleanupContext ioCtxt, boolean inCommitChanges) throws SQLException
 	{
 		ResultSet	rs;
 		String		sitesQuery = ioCtxt.getSitesQuery();
