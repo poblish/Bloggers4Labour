@@ -67,10 +67,13 @@ public class SiteAdministration
 
 					s_Logger.info("--- Done intial cleanup");
 
-					for ( int siteRecno = 350; siteRecno > 0; siteRecno--)
+					sa.deleteSite( theS, 306, commitChanges);
+
+/*					for ( int siteRecno = 350; siteRecno > 0; siteRecno--)
 					{
 						sa.deleteSite( theS, siteRecno, commitChanges);
 					}
+*/
 				}
 				catch (Exception e)
 				{
