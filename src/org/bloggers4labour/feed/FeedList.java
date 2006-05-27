@@ -1,0 +1,916 @@
+/*
+ * FeedList.java
+ *
+ * Created on 12 March 2005, 00:01
+ */
+
+package org.bloggers4labour.feed;
+
+import com.hiatus.USQL_Utils;
+import com.hiatus.UText;
+import com.hiatus.sql.ResultSetList;
+import de.nava.informa.parsers.*;
+import de.nava.informa.core.*;
+import de.nava.informa.impl.basic.ChannelBuilder;
+import de.nava.informa.impl.basic.Item;
+import java.io.IOException;
+import java.net.URL;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.*;
+import org.apache.log4j.Logger;
+import org.bloggers4labour.HeadlinesMgr;
+import org.bloggers4labour.Installation;
+import org.bloggers4labour.Poller;
+import org.bloggers4labour.Site;
+import org.bloggers4labour.favicon.FaviconManager;
+import org.bloggers4labour.index.IndexMgr;
+import org.bloggers4labour.jmx.*;
+import org.bloggers4labour.opml.OPMLGenerator;
+import org.bloggers4labour.options.Options;
+import org.bloggers4labour.options.TaskOptionsBeanIF;
+import org.bloggers4labour.sql.DataSourceConnection;
+import org.bloggers4labour.sql.QueryBuilder;
+
+/**
+ *
+ * @author andrewre
+ */
+public class FeedList
+{
+	private ArrayList<Site>			m_PostFeedSitesList = new ArrayList<Site>(150);
+	private ArrayList<Site>			m_CommentsFeedSitesList = new ArrayList<Site>(30);	// (AGR) 30 Nov 2005
+
+	private ArrayList<Site>			m_LastFeedURLsList;
+
+	private FeedChannels			m_FeedChannels = new FeedChannels();
+	private ScheduledExecutorService	m_USTPE;
+	private ScheduledExecutorService	m_STPE;
+	private UpdaterTask			m_UpdateTask;
+
+	private OPMLGenerator			m_OPMLGenerator;				// (AGR) 15 April 2005
+	private String				m_OPML_OutputStr;				// (AGR) 15 April 2005
+	private int				m_PostFeedsCount;				// (AGR) 31 March 2005
+	private transient Stats			m_Stats;					// (AGR) 1 June 2005
+
+	private Installation			m_Install;
+
+	private transient ProcessingObservable	m_DoneObservable = new ProcessingObservable();  // (AGR) 21 June 2005
+
+	private static Site[]			s_TempSiteArray = new Site[0];
+	private static Logger			s_FL_Logger = Logger.getLogger("Main");
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public FeedList( Installation inInstall)
+	{
+		m_Install = inInstall;
+		m_Stats = m_Install.getManagement().getStats();    // (AGR) 1 June 2005. Store a reference to this
+	}
+
+	/*******************************************************************************
+		(AGR) 5 June 2005
+	*******************************************************************************/
+	public synchronized void reconnect()
+	{
+		connect(true);
+	}
+
+	/*******************************************************************************
+		(AGR) 5 June 2005
+	*******************************************************************************/
+	public synchronized void disconnect()
+	{
+		_disconnect();
+	}
+
+	/*******************************************************************************
+		(AGR) 5 June 2005
+	*******************************************************************************/
+	public void connect( boolean inUseUpdater)
+	{
+		m_USTPE = Executors.newScheduledThreadPool(1);
+		s_FL_Logger.info( m_Install.getLogPrefix() + "m_USTPE " + m_USTPE);
+
+		m_STPE = Executors.newScheduledThreadPool( Options.getOptions().getNumSiteHandlerThreads() );
+		s_FL_Logger.info( m_Install.getLogPrefix() + "m_STPE " + m_STPE);
+
+		////////////////////////////////////////////////////////////////
+
+		if (inUseUpdater)
+		{
+			TaskOptionsBeanIF	theOptionsBean = Options.getOptions().getFeedUpdaterTaskOptions();
+
+			m_UpdateTask = new UpdaterTask();
+
+			m_USTPE.scheduleAtFixedRate( m_UpdateTask,
+							theOptionsBean.getDelayMsecs(),
+							theOptionsBean.getPeriodMsecs(),
+							TimeUnit.MILLISECONDS);
+
+			////////////////////////////////////////////////////////////////
+
+			s_FL_Logger.info( m_Install.getLogPrefix() + "created " + this + " " + theOptionsBean);
+		}
+
+		// m_OPMLGenerator = new OPMLGenerator();
+		// s_FL_Logger.info("created " + m_OPMLGenerator);
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	private void _disconnect()
+	{
+		String	prefix = m_Install.getLogPrefix();
+
+		s_FL_Logger.info( prefix + "FeedList: shutting down ScheduledThreadPoolExecutors...");
+
+		List<Runnable>	l1 = m_USTPE.shutdownNow();
+		if ( l1 != null && l1.size() > 0)
+		{
+			s_FL_Logger.info( prefix + "FeedList: left in m_USTPE: " + l1);
+		}
+
+		List<Runnable>	l2 = m_STPE.shutdownNow();
+		if ( l2 != null && l2.size() > 0)
+		{
+			s_FL_Logger.info( prefix + "FeedList: left in m_STPE: " + l2);
+		}
+
+		if ( m_OPMLGenerator != null)
+		{
+			m_OPMLGenerator.release();	// (AGR) 16 April 2005
+			m_OPMLGenerator = null;
+		}
+
+		/////////////////////////////////  (AGR) 5 June 2005
+
+		m_FeedChannels.clear();		// ensure we go and get a new snapshot next time
+
+		m_PostFeedSitesList.clear();
+		m_CommentsFeedSitesList.clear();
+
+		m_LastFeedURLsList = null;
+		m_OPML_OutputStr = null;
+	}
+
+	/*******************************************************************************
+		(AGR) 9 June 2005 - confusion/race conditions could conspire so that
+		we had a NULL generator when we fully expected to have a good one, e.g.
+		when 'generateOPML()' was seen to get called before 'connect()'
+		finished. Hopefully this 'lazy' instantiation will help.
+	*******************************************************************************/
+	public synchronized void obtainOPMLGenerator()
+	{
+		if ( m_OPMLGenerator == null)
+		{
+			m_OPMLGenerator = new OPMLGenerator();
+			s_FL_Logger.info( m_Install.getLogPrefix() + "created " + m_OPMLGenerator);
+		}
+	}
+
+	/*******************************************************************************
+	 * (AGR) 16 March 2005
+	 * 
+	 * (AGR) 31 March 2005. Basically if the channel registering takes a long time, it could take a while for the list to be built up, and this can cause the count we display to the user to be wrong (and change!) so we only update this value once the list is completely rebuilt. So once the list has been built once, it should drift up or down, not be reset to zero.
+	 * @return the number of URLs
+	*******************************************************************************/
+	public int countURLs()
+	{
+		return m_PostFeedsCount;
+	}
+
+	/*******************************************************************************
+		(AGR) 30 July 2005
+		Don't *think* I need to sync here...
+		Second thoughts: yes we do. Different thread to the list-building one
+		    so we need to ensure we don't get a stale version of the list.
+		Third thoughts: yes, but we'd be adding a dependency between a 'back-end'
+		    process (building the list) and a 'front-end' process (getting a
+		    list for building the DisplayItem objects) if we used a shared
+		    monitor, as well as slowing down the list-building, with extra
+		    sync-ing. So, for now, let's leave it un-synced.
+	*******************************************************************************/
+	public Site[] _getArrayToTraverse()
+	{
+//		System.out.println( "--> " + Thread.currentThread() );
+
+//		synchronized (_m_FUListLocker)
+		{
+			return (Site[]) m_PostFeedSitesList.toArray(s_TempSiteArray);
+		}
+	}
+
+	/*******************************************************************************
+		(AGR) 16 March 2005
+	*******************************************************************************/
+	public List<Site> getSites()
+	{
+		return Collections.unmodifiableList( m_PostFeedSitesList );
+	}
+
+	/*******************************************************************************
+		(AGR) 22 March 2005
+	*******************************************************************************/
+	public Site lookup( long inRecno)
+	{
+		if ( inRecno < 1)
+		{
+			return null;
+		}
+
+		////////////////////////////////////////////////////////////////
+
+		Site[]	sitesArray = _getArrayToTraverse();
+
+		for ( int i = 0; i < sitesArray.length; i++)
+		{
+			if ( sitesArray[i].getRecno() == inRecno)
+			{
+				return sitesArray[i];
+			}
+		}
+
+		return null;
+	}
+
+	/*******************************************************************************
+		(AGR) 22 March 2005
+	
+		Only looks at the Site's Posts channel
+	*******************************************************************************/
+	public Site lookupPostsChannel( ChannelIF inChannel)
+	{
+		if ( inChannel == null)
+		{
+			return null;
+		}
+
+		////////////////////////////////////////////////////////////////
+
+		Site[]	sitesArray = _getArrayToTraverse();
+
+		for ( int i = 0; i < sitesArray.length; i++)
+		{
+			if (inChannel.equals( sitesArray[i].getChannel() ))
+			{
+				return sitesArray[i];
+			}
+		}
+
+		return null;
+	}
+
+	/*******************************************************************************
+		(AGR) 30 Nov 2005
+	
+		Only looks at the Site's Posts channel and its Comments one (if present)
+	*******************************************************************************/
+	public Site lookupChannel( ChannelIF inChannel)
+	{
+		if ( inChannel == null)
+		{
+			return null;
+		}
+
+		////////////////////////////////////////////////////////////////
+
+		Site[]	sitesArray = _getArrayToTraverse();
+
+		for ( int i = 0; i < sitesArray.length; i++)
+		{
+			if (inChannel.equals( sitesArray[i].getChannel() ))
+			{
+				return sitesArray[i];
+			}
+
+			////////////////////////////////////////////////////////  (AGR) 30 Nov 2005
+
+			ChannelIF	theCC = sitesArray[i].getCommentsChannel();
+
+			if ( theCC != null && inChannel.equals(theCC))
+			{
+				return sitesArray[i];
+			}
+
+		}
+
+		return null;
+	}
+
+	/*******************************************************************************
+		(AGR) 23 June 2005
+	*******************************************************************************/
+	public Site lookupSiteURL( String inChannelSiteURL)
+	{
+		if ( inChannelSiteURL == null)
+		{
+			return null;
+		}
+
+		////////////////////////////////////////////////////////////////
+
+		Site[]	sitesArray = _getArrayToTraverse();
+
+		for ( int i = 0; i < sitesArray.length; i++)
+		{
+			ChannelIF	c = sitesArray[i].getChannel();
+
+			if ( c == null)
+			{
+				continue;	// good site, but no channel (site down?)
+			}
+
+			URL	theSiteURL = c.getSite();
+			if ( theSiteURL == null)
+			{
+				continue;	// only get this for the dodgy Swift blog
+			}
+
+			if (inChannelSiteURL.equals( theSiteURL.toString() ))
+			{
+				// System.out.println(">>>> GOOD");
+				return sitesArray[i];
+			}
+		}
+
+		// System.out.println("NO GOOD");
+		return null;
+	}
+	
+	/*******************************************************************************
+	*******************************************************************************/
+	public void generateOPML()
+	{
+		try
+		{
+			obtainOPMLGenerator();    // (AGR) 9 June 2005. Lazy instantiation...
+
+			// s_FL_Logger.info( m_Install.getLogPrefix() + "got generator");
+
+			m_OPMLGenerator.generate( _getArrayToTraverse() );
+
+			// s_FL_Logger.info( m_Install.getLogPrefix() + "done generate!");
+
+			try
+			{
+				m_OPML_OutputStr = m_OPMLGenerator.serialize();
+
+				// s_FL_Logger.info( m_Install.getLogPrefix() + "OPML_OutputStr = " + m_OPML_OutputStr);
+			}
+			catch (IOException e)
+			{
+				s_FL_Logger.info( m_Install.getLogPrefix() + "OPML serialization failed", e);
+			}
+			finally
+			{
+				m_OPMLGenerator.release();
+			}
+		}
+		catch (Exception e)
+		{
+			s_FL_Logger.error( m_Install.getLogPrefix() + "OPML generation failed", e);
+		}
+
+		// s_FL_Logger.info( m_Install.getLogPrefix() + "generateOPML() DONE");
+	}
+
+	/*******************************************************************************
+		(AGR) 15 April 2005
+	*******************************************************************************/
+	public String getOPMLOutputStr()
+	{
+		return m_OPML_OutputStr;
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public synchronized int countReferencedItems()
+	{
+		ChannelIF	c;
+		Collection	coll;
+		int		theItemCount = 0;
+		Site[]		sitesArray = _getArrayToTraverse();
+
+		for ( int i = 0; i < sitesArray.length; i++)
+		{
+			c = sitesArray[i].getChannel();
+			if ( c != null)
+			{
+				coll = c.getItems();
+				if ( coll != null)
+				{
+					theItemCount += coll.size();
+				}
+			}
+		}
+
+		// System.out.println("... countStoredItems() total: " + theItemCount);
+
+		return theItemCount;
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	class SiteHandlerTask implements Runnable
+	{
+		private UpdaterTask	m_Task;
+		private int		m_ID;
+		private List		m_RowsList;
+		private Map		m_CurrentRow;
+		private long		m_CurrTimeMSecs;
+
+		/*******************************************************************************
+		*******************************************************************************/
+		public SiteHandlerTask( UpdaterTask inTask, int inID, long inCurrTimeMSecs, List inList)
+		{
+			m_Task = inTask;
+			m_ID = inID;
+			m_RowsList = inList;
+			m_CurrTimeMSecs = inCurrTimeMSecs;
+		}
+
+		/*******************************************************************************
+		*******************************************************************************/
+		public void run()
+		{
+			try
+			{
+				do
+				{
+					if (!_run())
+					{
+						break;
+					}
+				}
+				while ( m_CurrentRow != null);
+			}
+			catch (Exception e)
+			{
+				s_FL_Logger.error( m_Install.getLogPrefix() + "in SHT.run()", e);
+			}
+			finally
+			{
+				m_Task.m_SHTs.remove(this);	// ensure this happens!
+
+				if ( m_Stats != null)
+				{
+//					int	x = m_Task.m_SHTs.size();
+//					s_FL_Logger.info("@@@--> Setting stats tasks count to " + x + " - " + m_Install + " - " + m_Stats);
+
+					m_Stats.setActiveSiteHandlerTasks( m_Task.m_SHTs.size() );
+				}
+
+				// s_FL_Logger.info("SHT #" + m_ID + " DONE. m_SHTs = " + m_Task.m_SHTs);
+			}
+		}
+
+		/*******************************************************************************
+		*******************************************************************************/
+		private boolean _run() throws Exception
+		{
+			synchronized (m_RowsList)
+			{
+				if ( m_RowsList.size() < 1)
+				{
+					return false;
+				}
+
+				m_CurrentRow = (Map) m_RowsList.remove(0);	// take one off the top
+
+				// s_FL_Logger.info("Remaining... " + m_RowsList);
+			}
+
+			//////////////////////////////////////////
+
+			// s_FL_Logger.info("SHT #" + m_ID + " GRABBED " + m_CurrentRow);
+
+			if ( m_CurrentRow != null)
+			{
+				Number	theSiteRecno = (Number) m_CurrentRow.get("site_recno");
+				boolean	newRecno;
+
+				synchronized (m_Task._m_LastRecnoLocker)
+				{
+					if (m_Task.m_SiteRecnosUsed.contains(theSiteRecno))
+					{
+						newRecno = false;
+					}
+					else
+					{
+						newRecno = true;
+
+						m_Task.m_SiteRecnosUsed.add(theSiteRecno);
+						// s_FL_Logger.info("adding recno: " + theSiteRecno);
+					}
+				}
+
+				//////////////////////////////////////////////////////////////////////
+
+				if (newRecno)
+				{
+					String		thePostsFeedURL = (String) m_CurrentRow.get("feed_url");
+					String		theFirstCreatorsType = (String) m_CurrentRow.get("creator_type");
+					ChannelIF	thePostsFeedChannel = m_FeedChannels.findURL(thePostsFeedURL);
+					ConnectResult	theResult;
+					boolean		gotNewPostsFeedChannel = false;
+
+					if ( thePostsFeedChannel == null)
+					{
+						theResult = m_FeedChannels.connectTo( m_Install, m_ID, thePostsFeedURL);
+						if (theResult.succeded())
+						{
+							thePostsFeedChannel = theResult.getChannel();
+
+							if ( m_Install.getPoller() != null)
+							{
+								// s_FL_Logger.info(">>> SHT #" + m_ID + " Trying to register: " + thePostsFeedURL);
+
+//								m_Install.getPoller().registerChannel( thePostsFeedChannel, m_CurrTimeMSecs);
+
+								gotNewPostsFeedChannel = true;
+							}
+						}
+						else if (theResult.failed())	// (AGR) 7 October 2005. connection failed
+						{
+							synchronized (m_Task.m_FailedPostFeeds)
+							{
+								m_Task.m_FailedPostFeeds.add(thePostsFeedURL);
+							}
+						}
+						else	// (AGR) 30 Nov 2005. connection timed-out
+						{
+							synchronized (m_Task.m_TimedOutPostFeeds)
+							{
+								m_Task.m_TimedOutPostFeeds.add(thePostsFeedURL);
+							}
+						}
+					}
+
+					// s_FL_Logger.info(">>> SHT #" + m_ID + " channel=" + thePostsFeedChannel);
+
+					//////////////////////////////////////////////////////////////////////  (AGR) 29 Nov 2005
+
+					String		theCommentsFeedURL = (String) m_CurrentRow.get("comments_feed_url");
+					ChannelIF	theCommentsFeedChannel;
+					boolean		specifiedACommentsFeed = UText.isValidString(theCommentsFeedURL);
+					boolean		gotNewCommentsFeedChannel = false;
+
+					if (specifiedACommentsFeed)
+					{
+						theCommentsFeedChannel = m_FeedChannels.findURL(theCommentsFeedURL);
+
+						if ( theCommentsFeedChannel == null)
+						{
+							theResult = m_FeedChannels.connectTo( m_Install, m_ID, theCommentsFeedURL);
+							if (theResult.succeded())
+							{							
+								theCommentsFeedChannel = theResult.getChannel();
+
+								if ( m_Install.getPoller() != null)
+								{
+									// s_FL_Logger.info(">>> SHT #" + m_ID + " Trying to register comments: " + theCommentsFeedURL);
+
+//									m_Install.getPoller().registerCommentsChannel( theCommentsFeedChannel, m_CurrTimeMSecs);
+
+									gotNewCommentsFeedChannel = true;
+								}
+							}
+							else if (theResult.failed())	// (AGR) 7 October 2005. connection failed
+							{
+								synchronized (m_Task.m_FailedCommentsFeeds)
+								{
+									m_Task.m_FailedCommentsFeeds.add(thePostsFeedURL);
+								}
+							}
+							else	// (AGR) 30 Nov 2005. connection timed-out
+							{
+								synchronized (m_Task.m_TimedOutCommentsFeeds)
+								{
+									m_Task.m_TimedOutCommentsFeeds.add(theCommentsFeedURL);
+								}
+							}
+						}
+					}
+					else
+					{
+						theCommentsFeedChannel = null;
+					}
+
+					//////////////////////////////////////////////////////////////////////
+
+					Site	theSiteObj = new Site( thePostsFeedChannel,
+									theCommentsFeedChannel,
+									theSiteRecno.longValue(),
+									(String) m_CurrentRow.get("name"),	// (AGR) 20 April 2005
+									(String) m_CurrentRow.get("url"),
+									thePostsFeedURL,
+									((Number) m_CurrentRow.get("creator_status_recno")).intValue(),
+									(String) m_CurrentRow.get("cat"),
+									(String) m_CurrentRow.get("favicon_url"));
+
+					FaviconManager.getInstance().rememberFavicon(theSiteObj);	// (AGR) 25 Feb 2006
+
+					theSiteObj.addCreator(theFirstCreatorsType);
+				//	theSiteObj.findFavicon();
+
+					m_PostFeedSitesList.add(theSiteObj);
+
+					if (specifiedACommentsFeed)	// (AGR) 30 Nov 2005. Keep track of how many there are...
+					{
+						m_CommentsFeedSitesList.add(theSiteObj);
+					}
+
+					// s_FL_Logger.info( m_Install.getLogPrefix() + ">>> SHT #" + m_ID + " adding " + theSiteObj);
+
+					//////////////////////////////////////////////////////////////////////
+
+					if ( gotNewPostsFeedChannel || gotNewCommentsFeedChannel)
+					{
+						// (AGR) 1 Dec 2005. In order to tell if an Item is a post or a comment, we
+						// need a Site object (can't do anything with a Channel). So the Site must
+						// exist before the Channel is registered and we get the snapshot of Items
+
+						if (gotNewPostsFeedChannel)
+						{
+							// s_FL_Logger.info(">>> SHT #" + m_ID + " Trying to register: " + thePostsFeedURL);
+
+							m_Install.getPoller().registerChannel( thePostsFeedChannel, m_CurrTimeMSecs);
+						}
+
+						if (gotNewCommentsFeedChannel)
+						{
+							// s_FL_Logger.info(">>> SHT #" + m_ID + " Trying to register comments: " + theCommentsFeedURL);
+
+							m_Install.getPoller().registerCommentsChannel( theCommentsFeedChannel, m_CurrTimeMSecs);
+						}
+					}
+				}
+			}
+
+			return true;
+		}
+	}
+
+	/*******************************************************************************
+		(AGR) 21 June 2005
+	*******************************************************************************/
+	private class ProcessingObservable extends Observable
+	{
+		/*******************************************************************************
+		*******************************************************************************/
+		void fire()
+		{
+			setChanged();
+			notifyObservers(m_PostFeedsCount);	// (AGR) 21 June 2005
+		}
+	}
+
+	/*******************************************************************************
+		(AGR) 21 June 2005
+	*******************************************************************************/
+	public void addObserver( Observer inObs)
+	{
+		m_DoneObservable.addObserver(inObs);
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	class UpdaterTask implements Runnable
+	{
+		protected List<SiteHandlerTask>		m_SHTs = new ArrayList<SiteHandlerTask>(6);
+		protected List<Number>			m_SiteRecnosUsed = new ArrayList<Number>(100);
+
+		protected List<String>			m_FailedPostFeeds = new ArrayList<String>();		// (AGR) 7 October 2005
+		protected List<String>			m_TimedOutPostFeeds = new ArrayList<String>();		// (AGR) 30 Nov 2005
+
+		protected List<String>			m_FailedCommentsFeeds = new ArrayList<String>();	// (AGR) 29 Nov 2005
+		protected List<String>			m_TimedOutCommentsFeeds = new ArrayList<String>();	// (AGR) 30 Nov 2005
+
+		protected byte[]			_m_LastRecnoLocker = new byte[1];
+
+		/*******************************************************************************
+		*******************************************************************************/
+		private void _handleStatement( Statement inS, long inCurrTimeMSecs) throws SQLException
+		{
+			ResultSetList	theRS = new ResultSetList( inS.executeQuery( QueryBuilder.getAllBlogFeeds() ) );
+			List		theRowsList = null;
+
+			try
+			{
+				m_OPML_OutputStr = null;	// (AGR) 15 April 2005
+
+				m_PostFeedSitesList.clear();
+				m_CommentsFeedSitesList.clear();
+
+				////////////////////////////////////////////  (AGR) 7 October 2005, 29 Nov 2005
+
+				m_FailedPostFeeds.clear();
+				m_FailedCommentsFeeds.clear();
+
+				m_TimedOutPostFeeds.clear();
+				m_TimedOutCommentsFeeds.clear();
+
+				////////////////////////////////////////////
+
+				if (!theRS.isEmpty())
+				{
+					SiteHandlerTask		sht;
+					int			numSHT = Options.getOptions().getNumSiteHandlerThreads();
+
+					theRowsList = theRS.getRowsList();
+
+					for ( int i = 1; i <= numSHT; i++)
+					{
+						sht = new SiteHandlerTask( this, i, inCurrTimeMSecs, theRowsList);
+
+						try
+						{
+							m_STPE.schedule( sht, 50, TimeUnit.MILLISECONDS);
+							m_SHTs.add(sht);
+
+							if ( m_Stats != null)
+							{
+								m_Stats.setActiveSiteHandlerTasks( m_SHTs.size() );
+							}
+						}
+						catch (RejectedExecutionException e)
+						{
+							s_FL_Logger.error("Err: " + e + " for " + sht);
+						}
+					}
+
+					////////////////////////////////////////////
+
+					while ( m_SHTs.size() > 0)
+					{
+						try
+						{
+							Thread.sleep(250);	// (AGR) 1 June 2005. Was '10'
+						}
+						catch (InterruptedException e) {}
+					}
+				}
+			}
+			finally		// (AGR) 31 March 2005. Update the headline count figure
+			{
+				//////////////////////////////////////////////////////////////  (AGR) 26 Feb 2006
+
+				if ( theRowsList != null)
+				{
+					for ( Object eachMap : theRowsList)
+					{
+						((Map) eachMap).clear();
+					}
+
+					theRowsList.clear();
+					theRowsList = null;
+				}
+
+				//////////////////////////////////////////////////////////////
+
+				m_PostFeedsCount = m_PostFeedSitesList.size();
+
+				int	postFeedSuccesses = m_PostFeedsCount - m_FailedPostFeeds.size() - m_TimedOutPostFeeds.size();
+				int	commentFeedTimeouts = m_TimedOutCommentsFeeds.size();
+				int	commentFeedFailures = m_FailedCommentsFeeds.size();
+				int	commentFeedSuccesses = m_CommentsFeedSitesList.size() - commentFeedFailures - commentFeedTimeouts;
+
+				s_FL_Logger.info( m_Install.getLogPrefix() + " >>> PostFeeds:    " + m_PostFeedsCount + " feeds (" + postFeedSuccesses + " suceeded, " + m_FailedPostFeeds.size() + " failed, " + m_TimedOutPostFeeds.size() + " timed out)");
+				s_FL_Logger.info( m_Install.getLogPrefix() + " >>> CommentFeeds: " + m_CommentsFeedSitesList.size() + " feeds (" + commentFeedSuccesses + " suceeded, " + commentFeedFailures + " failed, " + commentFeedTimeouts + " timed out)");
+
+				m_SiteRecnosUsed.clear();
+
+				//////////////////////////////////////////////////////////////
+
+				if ( m_Stats != null)
+				{
+					m_Stats.setLastFeedCheckTimeNow();
+					m_Stats.setActiveSiteHandlerTasks(0);
+					m_Stats.setFeedCount(m_PostFeedsCount);
+
+					// (AGR) 7 October 2005
+
+					m_Stats.setSuccessfulFeedCount(postFeedSuccesses);
+					m_Stats.setFailedFeedsList(m_FailedPostFeeds);
+
+					// (AGR) 29 Nov 2005
+
+					m_Stats.setSuccessfulCommentFeedCount( commentFeedSuccesses );
+					m_Stats.setFailedCommentFeedCount( commentFeedFailures );
+					m_Stats.setTimedOutCommentFeedCount( commentFeedTimeouts );
+					m_Stats.setFailedCommentFeedsList(m_FailedCommentsFeeds);
+				}
+
+				//////////////////////////////////////////////////////////////  (AGR) 18 April 2005 - moved here. Originally 15 April 2005
+
+				generateOPML();
+			}
+
+			///////////////////////////////////////  Are there any URLs in the old list and not in the new one?
+
+			if ( m_LastFeedURLsList != null)
+			{
+				// s_FL_Logger.info("==> lastFeedURLsList = "  + m_LastFeedURLsList);
+
+				if ( m_LastFeedURLsList.removeAll( m_PostFeedSitesList ) && ( m_LastFeedURLsList.size() >= 1))
+				{
+					for ( Site oldEntryObj : m_LastFeedURLsList)
+					{
+						ChannelIF	theLastChannel = m_FeedChannels.findURL( oldEntryObj.getFeedURL() );
+
+						// s_FL_Logger.info("==> theLastChannel = "  + theLastChannel);
+
+						if ( theLastChannel != null)
+						{
+							m_Install.getPoller().unregisterChannel(theLastChannel);
+
+							m_Install.getHeadlinesMgr().removeFor(theLastChannel);
+						}
+					}
+				}
+			}
+
+			/////////////////////  (AGR) 27 May 2005. Couldn't get clone() to work with JDK 1.5 !
+
+			m_LastFeedURLsList = new ArrayList<Site>( m_PostFeedSitesList.size() );
+			m_LastFeedURLsList.addAll( m_PostFeedSitesList );
+
+			/////////////////////
+
+			m_DoneObservable.fire();	// (AGR) 21 June 2005
+
+			/////////////////////  (AGR) 20 June 2005
+
+			m_Install.getIndexMgr().optimise();
+		}
+
+		/*******************************************************************************
+		*******************************************************************************/
+		public void run()
+		{
+			// s_FL_Logger.info("Hello " + new java.util.Date());
+
+			DataSourceConnection	theConnectionObject = null;
+			StringBuffer		theBuf;
+			long			currTimeMSecs = System.currentTimeMillis();
+			boolean			isGood = false;
+
+			try
+			{
+				theConnectionObject = new DataSourceConnection( m_Install.getDataSource() );
+				if (theConnectionObject.Connect())
+				{
+					// s_FL_Logger.info("conn = " + theConnectionObject);
+
+					Statement	theS = null;
+
+					try
+					{
+						theS = theConnectionObject.createStatement();
+						_handleStatement( theS, currTimeMSecs);
+					}
+					catch (Exception e)
+					{
+						s_FL_Logger.error("creating statement", e);
+					}
+					finally
+					{
+						USQL_Utils.closeStatementCatch(theS);
+					}
+				}
+				else
+				{
+					s_FL_Logger.warn("Cannot connect!");
+				}
+			}
+			catch (Exception err)
+			{
+				s_FL_Logger.error("???", err);
+			}
+			finally
+			{
+				// s_FL_Logger.info("m_FeedChannels = " + m_FeedChannels);
+
+				if ( theConnectionObject != null)
+				{
+					theConnectionObject.CloseDown();
+					theConnectionObject = null;
+				}
+			}
+		}
+	}
+}
