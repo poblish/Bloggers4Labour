@@ -52,19 +52,24 @@ public class SiteAdministration
 			theConnectionObject = new DataSourceConnection(theSource);
 			if (theConnectionObject.Connect())
 			{
-				// s_FL_Logger.info("conn = " + theConnectionObject);
+				// s_Logger.info("conn = " + theConnectionObject);
 
 				Statement	theS = null;
 
 				try
 				{
 					SiteAdministration	sa = new SiteAdministration();
+					boolean			commitChanges = true;
 
 					theS = theConnectionObject.createStatement();
 
-					for ( int siteRecno = 200; siteRecno > 0; siteRecno--)
+					sa.cleanupAll( theS, commitChanges);
+
+					s_Logger.info("--- Done intial cleanup");
+
+					for ( int siteRecno = 350; siteRecno > 0; siteRecno--)
 					{
-						sa.deleteSite( theS, siteRecno, true);
+						sa.deleteSite( theS, siteRecno, commitChanges);
 					}
 				}
 				catch (Exception e)
@@ -143,34 +148,62 @@ public class SiteAdministration
 			s_Logger.warn(">>> SiteAdmin.deleteSite(): Site " + inSiteRecno + " not found.");
 		}
 
-		cleanup( inStatement, inCommitChanges);
+//		if ( Math.random() >= 0.5)
+		{
+			cleanupAll( inStatement, inCommitChanges);
+		}
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public void cleanup( Statement inStatement, boolean inCommitChanges) throws SQLException
+	public boolean cleanupAll( Statement inStatement, boolean inCommitChanges) throws SQLException
 	{
-		ResultSet	rs = inStatement.executeQuery("SELECT site_recno FROM site");
-		StringBuffer	srBuf = new StringBuffer(500);
-		int		srCount = 0;
+		CleanupContext	theCtxt = new CleanupContext();
+		boolean		neededCleanup = false;
 
-		while (rs.next())
+		while (cleanup( inStatement, theCtxt, inCommitChanges))
 		{
-			if ( srBuf.length() < 1)
+			neededCleanup = true;
+		}
+
+		return neededCleanup;
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public boolean cleanup( Statement inStatement, CleanupContext ioCtxt, boolean inCommitChanges) throws SQLException
+	{
+		ResultSet	rs;
+		String		sitesQuery = ioCtxt.getSitesQuery();
+		boolean		uncleanRecsFound = false;
+
+//		s_Logger.info("sitesQuery ==> " + sitesQuery);
+
+		if ( sitesQuery == null)
+		{
+			StringBuffer	srBuf = new StringBuffer(500);
+
+			rs = inStatement.executeQuery("SELECT site_recno FROM site");
+
+			while (rs.next())
 			{
-				srBuf.append("(" + rs.getLong(1));
+				if ( srBuf.length() < 1)
+				{
+					srBuf.append("(" + rs.getLong(1));
+				}
+				else	srBuf.append("," + rs.getLong(1));
 			}
-			else	srBuf.append("," + rs.getLong(1));
 
-			srCount++;
+			if ( srBuf.length() >= 1)
+			{
+				srBuf.append(")");
+			}
+
+			sitesQuery = srBuf.toString();
+			ioCtxt.setSitesQuery(sitesQuery);	// cache this, as the site doesn't change for a CleanupContext
 		}
 
-		if ( srBuf.length() >= 1)
-		{
-			srBuf.append(")");
-		}
-
-		// %><p>Sites: <%= srBuf %> = <%= srCount %> "site" recs</p><%
+//		s_Logger.info("ste ==> " + sitesQuery);
 
 		////////////////////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////////////////////
@@ -190,7 +223,7 @@ public class SiteAdministration
 
 		rs = inStatement.executeQuery("SELECT creator_recno FROM siteCreators");
 
-		List	crList2 = new ArrayList(100);
+		List<Number>	crList2 = new ArrayList<Number>(100);
 
 		while (rs.next())
 		{
@@ -202,7 +235,20 @@ public class SiteAdministration
 		////////////////////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////////////////////
 
-		rs = inStatement.executeQuery("SELECT * FROM siteCreators WHERE site_recno NOT IN " + srBuf);
+		String	scrQuery;
+
+		if ( sitesQuery.length() > 0)
+		{
+			scrQuery = "SELECT * FROM siteCreators WHERE site_recno NOT IN " + sitesQuery;
+		}
+		else	// (AGR) 27 May 2006. Could only happen if there were no Site records but left-over ancillary recs
+		{
+			scrQuery = "SELECT * FROM siteCreators";
+		}
+
+		// s_Logger.info("scr ==> " + scrQuery);
+
+		rs = inStatement.executeQuery(scrQuery);
 
 		StringBuffer	scrBuf = new StringBuffer(500);
 		int		scrCount = 0;
@@ -240,6 +286,8 @@ public class SiteAdministration
 			{
 				s_Logger.info( LINE_PREFIX + "Changes required: " + delSCQuery);
 			}
+
+			uncleanRecsFound = true;
 		}
 
 		////////////////////////////////////////////////////////////////////////
@@ -281,10 +329,57 @@ public class SiteAdministration
 			{
 				s_Logger.info( LINE_PREFIX + "Changes required: " + q);
 			}
+
+			return true;
 		}
 		else if ( scrCount == 0)
 		{
 			s_Logger.debug( LINE_PREFIX + "No cleanup required.");
+		}
+
+		return uncleanRecsFound;
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	private class CleanupContext
+	{
+		private boolean	m_NeedsCleaning;
+		private String	m_SitesQuery;
+
+		/*******************************************************************************
+		*******************************************************************************/
+		public CleanupContext()
+		{
+			;
+		}
+
+		/*******************************************************************************
+		*******************************************************************************/
+		public String getSitesQuery()
+		{
+			return m_SitesQuery;
+		}
+
+		/*******************************************************************************
+		*******************************************************************************/
+		public void setSitesQuery( String x)
+		{
+			m_SitesQuery = x;
+		}
+
+		/*******************************************************************************
+		*******************************************************************************/
+		public void setUnclean()
+		{
+			m_NeedsCleaning = true;
+		}
+
+		/*******************************************************************************
+		*******************************************************************************/
+		public boolean needsCleaning()
+		{
+			return m_NeedsCleaning;
 		}
 	}
 }
