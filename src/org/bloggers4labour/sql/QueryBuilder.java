@@ -152,4 +152,12 @@ public class QueryBuilder
 	{
 		return s_Bundle.getString("sql.total.blogs");
 	}
+
+	/*******************************************************************************
+		(AGR) 27 May 2006
+	*******************************************************************************/
+	public static String getUnapprovedBlogsQuery()
+	{
+		return s_Bundle.getString("sql.unapproved.query");
+	}
 }

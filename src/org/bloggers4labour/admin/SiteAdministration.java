@@ -105,7 +105,7 @@ public class SiteAdministration
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public ResultSet getUnapprovedBlogs( Statement inStatement, int inSiteRecno, boolean inCommitChanges) throws SQLException
+	public ResultSet getUnapprovedBlogs( Statement inStatement) throws SQLException
 	{
 		ResultSet	theRS = inStatement.executeQuery( QueryBuilder.getUnapprovedBlogsQuery() );
 
