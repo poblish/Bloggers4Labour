@@ -122,6 +122,38 @@ public class SiteAdministration
 
 	/*******************************************************************************
 	*******************************************************************************/
+	public void approveSite( Statement inStatement, int inSiteRecno, boolean inCommitChanges) throws SQLException
+	{
+		ResultSet	theRS = inStatement.executeQuery("SELECT site_recno FROM site WHERE site_recno=" + inSiteRecno);
+
+		if (theRS.next())
+		{
+			if (inCommitChanges)
+			{
+				int	numUpdates = inStatement.executeUpdate("UPDATE site SET approved=1 WHERE site_recno=" + inSiteRecno);
+
+				if ( numUpdates > 0)
+				{
+					s_Logger.info(">>> SiteAdmin.approveSite(): Site " + inSiteRecno + " approved OK.");
+				}
+				else
+				{
+					s_Logger.error(">>> SiteAdmin.approveSite(): Site " + inSiteRecno + " approval FAILED.");
+				}
+			}
+			else
+			{
+				s_Logger.info(">>> SiteAdmin.approveSite(): Site " + inSiteRecno + " found OK.");
+			}
+		}
+		else
+		{
+			s_Logger.warn(">>> SiteAdmin.approveSite(): Site " + inSiteRecno + " not found.");
+		}
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
 	public void deleteSite( Statement inStatement, int inSiteRecno, boolean inCommitChanges) throws SQLException
 	{
 		ResultSet	theRS = inStatement.executeQuery("SELECT site_recno FROM site WHERE site_recno=" + inSiteRecno);
