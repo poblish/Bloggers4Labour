@@ -23,6 +23,13 @@ public class Feed
 
 	/********************************************************************
 	********************************************************************/
+	public Feed( String inURL, FeedType inFeedType)
+	{
+		this( inURL, inFeedType, ItemType.POST);
+	}
+
+	/********************************************************************
+	********************************************************************/
 	public Feed( String inURL, FeedType inFeedType, ItemType inItemType)
 	{
 		m_URL = inURL;
