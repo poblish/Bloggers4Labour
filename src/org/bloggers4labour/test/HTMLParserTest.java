@@ -9,10 +9,15 @@
 
 package org.bloggers4labour.test;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.*;
+import org.bloggers4labour.feed.*;
 import org.htmlparser.*;
 import org.htmlparser.filters.*;
 import org.htmlparser.util.NodeList;
+import org.htmlparser.util.ParserException;
 
 /**
  *
@@ -20,6 +25,11 @@ import org.htmlparser.util.NodeList;
  */
 public class HTMLParserTest
 {
+	private static Pattern		theRelPattern = Pattern.compile(" +rel=\"alternate\"");
+	private static Pattern		theTypePattern = Pattern.compile(" +type=\"([^\"]*)\"");
+	private static Pattern		theHrefPattern = Pattern.compile(" +href=\"([^\"]*)\"");
+	private static Pattern		theRSS092Pattern = Pattern.compile(" +title=\"RSS .92\"");
+
 	/********************************************************************
 	********************************************************************/
 	public static void main( String[] args)
@@ -29,13 +39,101 @@ public class HTMLParserTest
 
 	/********************************************************************
 	********************************************************************/
+	public static List<Feed> discoverFeeds( final String inSiteURL)
+	{
+		TagNameFilter	tf = new TagNameFilter("link");
+
+		try
+		{
+			Parser		p = new Parser(inSiteURL);
+			NodeList	nl = p.extractAllNodesThatMatch(tf);
+			Node[]		nArray = nl.toNodeArray();
+			List<Feed>	theFeedsList = new ArrayList<Feed>();
+
+			for ( Node n : nArray)
+			{
+				String	theLinkStr = n.getText();
+		//		System.out.println(theLinkStr);
+
+				Matcher	relMatcher = theRelPattern.matcher(theLinkStr);
+				if (relMatcher.find())
+				{
+					Matcher	typeMatcher = theTypePattern.matcher(theLinkStr);
+					if (typeMatcher.find())
+					{
+						String	theTypeStr = typeMatcher.group(1);
+
+						if (theTypeStr.startsWith("application/"))
+						{
+							Matcher	hrefMatcher = theHrefPattern.matcher(theLinkStr);
+							if (hrefMatcher.find())
+							{
+								theTypeStr = theTypeStr.substring(12);
+
+								String	theHRefURL = hrefMatcher.group(1);
+
+								if (theTypeStr.equals("rss+xml"))
+								{
+									// System.out.println(" RSS 2.0: " + theHRefURL);
+
+									if (theHRefURL.endsWith(".rdf"))	// yuk!
+									{
+										theFeedsList.add( new Feed( theHRefURL, FeedType.RSD) );
+									}
+									else
+									{
+										theFeedsList.add( new Feed( theHRefURL, FeedType.RSS) );
+									}
+								}
+								else if (theTypeStr.equals("atom+xml"))
+								{
+									// System.out.println("    Atom: " + theHRefURL);
+									theFeedsList.add( new Feed( theHRefURL, FeedType.ATOM) );
+								}
+								else if (theTypeStr.equals("rsd+xml"))
+								{
+		//										System.out.println(" RSS old: " + theHRefURL);
+									theFeedsList.add( new Feed( theHRefURL, FeedType.RSD) );
+								}
+							}
+						}
+						else if (theTypeStr.startsWith("text/xml"))
+						{
+							Matcher	rss092Matcher = theRSS092Pattern.matcher(theLinkStr);
+							if (rss092Matcher.find())
+							{
+								Matcher	hrefMatcher = theHrefPattern.matcher(theLinkStr);
+								if (hrefMatcher.find())
+								{
+									// String	theHRefURL = hrefMatcher.group(1);
+									// System.out.println("RSS 0.92: " + theHRefURL);
+									theFeedsList.add( new Feed( hrefMatcher.group(1), FeedType.RSD) );
+								}
+							}
+						}
+						else	System.out.println("***NO*** " + theLinkStr);
+					}
+					else	System.out.println("***NO*** " + theLinkStr);
+				}
+			}
+
+			Collections.sort(theFeedsList);
+
+			return theFeedsList;
+		}
+		catch (ParserException e)
+		{
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	/********************************************************************
+	********************************************************************/
 	public HTMLParserTest()
 	{
 		TagNameFilter	tf = new TagNameFilter("link");
-		Pattern		theRelPattern = Pattern.compile(" +rel=\"alternate\"");
-		Pattern		theTypePattern = Pattern.compile(" +type=\"([^\"]*)\"");
-		Pattern		theHrefPattern = Pattern.compile(" +href=\"([^\"]*)\"");
-		Pattern		theRSS092Pattern = Pattern.compile(" +title=\"RSS .92\"");
 		int		i = 0;
 
 		while ( i < s_Entries.length)
@@ -46,64 +144,9 @@ public class HTMLParserTest
 			{
 				System.out.println( "Doing: " + theEntry.m_Name + " / " + theEntry.m_URL);
 
-				Parser p = new Parser( theEntry.m_URL );
-				NodeList	nl = p.extractAllNodesThatMatch(tf);
-				Node[]		nArray = nl.toNodeArray();
+				List<Feed>	theFeedsList = discoverFeeds( theEntry.m_URL);
 
-				for ( Node n : nArray)
-				{
-					String	theLinkStr = n.getText();
-			//		System.out.println(theLinkStr);
-
-					Matcher	relMatcher = theRelPattern.matcher(theLinkStr);
-					if (relMatcher.find())
-					{
-						Matcher	typeMatcher = theTypePattern.matcher(theLinkStr);
-						if (typeMatcher.find())
-						{
-							String	theTypeStr = typeMatcher.group(1);
-
-							if (theTypeStr.startsWith("application/"))
-							{
-								Matcher	hrefMatcher = theHrefPattern.matcher(theLinkStr);
-								if (hrefMatcher.find())
-								{
-									theTypeStr = theTypeStr.substring(12);
-
-									String	theHRefURL = hrefMatcher.group(1);
-
-									if (theTypeStr.equals("rss+xml"))
-									{
-										System.out.println(" RSS 2.0: " + theHRefURL);
-									}
-									else if (theTypeStr.equals("atom+xml"))
-									{
-										System.out.println("    Atom: " + theHRefURL);
-									}
-									else if (theTypeStr.equals("rsd+xml"))
-									{
-										System.out.println(" RSS old: " + theHRefURL);
-									}
-								}
-							}
-							else if (theTypeStr.startsWith("text/xml"))
-							{
-								Matcher	rss092Matcher = theRSS092Pattern.matcher(theLinkStr);
-								if (rss092Matcher.find())
-								{
-									Matcher	hrefMatcher = theHrefPattern.matcher(theLinkStr);
-									if (hrefMatcher.find())
-									{
-										String	theHRefURL = hrefMatcher.group(1);
-										System.out.println("RSS 0.92: " + theHRefURL);
-									}
-								}
-							}
-							else	System.out.println("***NO*** " + theLinkStr);
-						}
-						else	System.out.println("***NO*** " + theLinkStr);
-					}
-				}
+				System.out.println(" => " + theFeedsList);
 
 				System.out.println("  ACTUAL: " + theEntry.m_FeedURL);
 				System.out.println("==========================================");
@@ -135,7 +178,7 @@ public class HTMLParserTest
 	}
 	/********************************************************************
 	********************************************************************/
-	private final static String[]	s_Entries = {
+	private final static String[]	s_Entries = { /*
 "Andrew Brown","http://www.20six.co.uk/Cllr_Andrew_Brown","http://www.20six.co.uk/rss/Cllr_Andrew_Brown.rss",null,
 "Fiona Colley","http://www.fiona-colley.net","http://www.fiona-colley.net/atom.xml",null,
 "Bob Piper","http://councillorbobpiper.blogspot.com","http://councillorbobpiper.blogspot.com/atom.xml",null,
@@ -150,7 +193,7 @@ public class HTMLParserTest
 "The Westminster Gazette","http://www.20six.co.uk/Westminster","http://www.20six.co.uk/rss/Westminster.rss",null,
 "Stuart Bruce (Old)","http://www.20six.co.uk/middletonpark","http://www.20six.co.uk/rss/middletonpark.rss",null,
 "A Councillor Writes","http://cramlingtonvillagecouncillor.blogspot.com/","http://cramlingtonvillagecouncillor.blogspot.com/atom.xml",null,
-"John Humphries","http://www.20six.co.uk/johnhumphries","http://www.20six.co.uk/rss/johnhumphries.rss",null,
+"John Humphries","http://www.20six.co.uk/johnhumphries","http://www.20six.co.uk/rss/johnhumphries.rss",null, */
 "Jamie Bolden","http://www.jamiebolden.com/","",null,
 "Zoe Hopkins","http://www.20six.co.uk/kingstanding","http://www.20six.co.uk/rss/kingstanding.rss",null,
 "Lea Bridge Life","http://leabridgelife.blogspot.com/","http://leabridgelife.blogspot.com/atom.xml",null,
@@ -195,7 +238,7 @@ public class HTMLParserTest
 "A Cloud In Trousers","http://cloud-in-trousers.blogspot.com/","http://cloud-in-trousers.blogspot.com/atom.xml",null,
 "Recess Monkey","http://www.recessmonkey.com/","http://www.recessmonkey.com/feed/","http://www.recessmonkey.com/comments/feed/",
 "Delbert Wilkins","http://delbertwilkins.blogspot.com/","http://delbertwilkins.blogspot.com/atom.xml",null,
-"Rob Newman","http://robnewman.typepad.com/","http://robnewman.typepad.com/rob_newman/rss.xml",null,
+"Rob Newman","http://robnewman.typepad.com/","http://robnewman.typepad.com/rob_newman/rss.xml",null /* ,
 "Bloggers4Labour","http://www.bloggers4labour.org/","http://www.bloggers4labour.org/atom.xml",null,
 "Rullsenberg Rules","http://rullsenbergrules.blogspot.com/","http://rullsenbergrules.blogspot.com/atom.xml",null,
 "Jonathan Derbyshire","http://jonathanderbyshire.typepad.com","http://feeds.feedburner.com/JonathanDerbyshireFixed",null,
@@ -336,6 +379,6 @@ public class HTMLParserTest
 "Someday I Will Treat You Good","http://andrewkbrown.wordpress.com/","http://andrewkbrown.wordpress.com/feed/",null,
 "Reading From Rhoderick","http://readingfromrhoderick.blogspot.com","",null,
 "The Ministry of Agitation and Propaganda","http://agitpropcentral.blogspot.com/","http://agitpropcentral.blogspot.com/atom.xml",null,
-"John Paschoud","http://www.lewisham.org.uk/john/LBL/weblog/","http://www.lewisham.org.uk/john/LBL/weblog/atom.xml",null
+"John Paschoud","http://www.lewisham.org.uk/john/LBL/weblog/","http://www.lewisham.org.uk/john/LBL/weblog/atom.xml",null */
 	};
 }
