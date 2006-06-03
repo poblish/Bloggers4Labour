@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.*;
+import org.bloggers4labour.ItemType;
 import org.bloggers4labour.feed.*;
 import org.htmlparser.*;
 import org.htmlparser.filters.*;
@@ -25,10 +26,12 @@ import org.htmlparser.util.ParserException;
  */
 public class HTMLParserTest
 {
-	private static Pattern		theRelPattern = Pattern.compile(" +rel=\"alternate\"");
-	private static Pattern		theTypePattern = Pattern.compile(" +type=\"([^\"]*)\"");
-	private static Pattern		theHrefPattern = Pattern.compile(" +href=\"([^\"]*)\"");
+	private static Pattern		s_RelPattern	 = Pattern.compile(" +rel=\"alternate\"");
+	private static Pattern		s_MetaPattern	 = Pattern.compile(" +rel=\"meta\"");
+	private static Pattern		theTypePattern	 = Pattern.compile(" +type=\"([^\"]*)\"");
+	private static Pattern		theHrefPattern	 = Pattern.compile(" +href=\"([^\"]*)\"");
 	private static Pattern		theRSS092Pattern = Pattern.compile(" +title=\"RSS .92\"");
+	private static Pattern		s_FOAFPattern	 = Pattern.compile(" +title=\"FOAF\"");
 
 	/********************************************************************
 	********************************************************************/
@@ -39,7 +42,7 @@ public class HTMLParserTest
 
 	/********************************************************************
 	********************************************************************/
-	public static List<Feed> discoverFeeds( final String inSiteURL)
+	public static List<Feed> discoverFeeds( final String inSiteURL, boolean inOnlyPosts)
 	{
 		TagNameFilter	tf = new TagNameFilter("link");
 
@@ -55,7 +58,7 @@ public class HTMLParserTest
 				String	theLinkStr = n.getText();
 		//		System.out.println(theLinkStr);
 
-				Matcher	relMatcher = theRelPattern.matcher(theLinkStr);
+				Matcher	relMatcher = s_RelPattern.matcher(theLinkStr);
 				if (relMatcher.find())
 				{
 					Matcher	typeMatcher = theTypePattern.matcher(theLinkStr);
@@ -115,6 +118,22 @@ public class HTMLParserTest
 					}
 					else	System.out.println("***NO*** " + theLinkStr);
 				}
+				else if (!inOnlyPosts)
+				{
+					Matcher	metaMatcher = s_MetaPattern.matcher(theLinkStr);
+					if (metaMatcher.find())
+					{
+						Matcher	foafMatcher = s_FOAFPattern.matcher(theLinkStr);
+						if (foafMatcher.find())
+						{
+							Matcher	hrefMatcher = theHrefPattern.matcher(theLinkStr);
+							if (hrefMatcher.find())
+							{
+								theFeedsList.add( new Feed( hrefMatcher.group(1), FeedType.FOAF, ItemType.FOAF) );
+							}
+						}
+					}
+				}
 			}
 
 			Collections.sort(theFeedsList);
@@ -144,7 +163,7 @@ public class HTMLParserTest
 			{
 				System.out.println( "Doing: " + theEntry.m_Name + " / " + theEntry.m_URL);
 
-				List<Feed>	theFeedsList = discoverFeeds( theEntry.m_URL);
+				List<Feed>	theFeedsList = discoverFeeds( theEntry.m_URL, false);
 
 				System.out.println(" => " + theFeedsList);
 
@@ -193,7 +212,7 @@ public class HTMLParserTest
 "The Westminster Gazette","http://www.20six.co.uk/Westminster","http://www.20six.co.uk/rss/Westminster.rss",null,
 "Stuart Bruce (Old)","http://www.20six.co.uk/middletonpark","http://www.20six.co.uk/rss/middletonpark.rss",null,
 "A Councillor Writes","http://cramlingtonvillagecouncillor.blogspot.com/","http://cramlingtonvillagecouncillor.blogspot.com/atom.xml",null,
-"John Humphries","http://www.20six.co.uk/johnhumphries","http://www.20six.co.uk/rss/johnhumphries.rss",null, */
+"John Humphries","http://www.20six.co.uk/johnhumphries","http://www.20six.co.uk/rss/johnhumphries.rss",null,
 "Jamie Bolden","http://www.jamiebolden.com/","",null,
 "Zoe Hopkins","http://www.20six.co.uk/kingstanding","http://www.20six.co.uk/rss/kingstanding.rss",null,
 "Lea Bridge Life","http://leabridgelife.blogspot.com/","http://leabridgelife.blogspot.com/atom.xml",null,
@@ -222,7 +241,7 @@ public class HTMLParserTest
 "mad musings of me","http://www.madmusingsof.me.uk/weblog/","http://www.madmusingsof.me.uk/weblog/index.rdf",null,
 "Labour Friends of Iraq","http://www.labourfriendsofiraq.org.uk/","http://www.labourfriendsofiraq.org.uk/index.rdf",null,
 "the thimble","http://thethimble.blogspot.com/","http://thethimble.blogspot.com/atom.xml",null,
-"Tooting's Labour team","http://www.labourwandsworth.org.uk/tooting/blog/","",null,
+"Tooting's Labour team","http://www.labourwandsworth.org.uk/tooting/blog/","",null, */
 "Battersea's Labour team","http://www.labourwandsworth.org.uk/latchmere/blog/index.htm","http://www.labourwandsworth.org.uk/latchmere/atom.xml",null,
 "Sadiq Khan","http://www.sadiqkhan.org.uk/blog/sadiqblog.htm","http://www.sadiqkhan.org.uk/blog/atom.xml",null,
 "Catherine Stihler","http://www.cstihlermep.com/ViewPage.cfm?Page=8894","",null,

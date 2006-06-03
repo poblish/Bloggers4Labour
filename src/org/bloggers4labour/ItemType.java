@@ -15,5 +15,5 @@ package org.bloggers4labour;
  */
 public enum ItemType
 {
-	UNKNOWN, POST, COMMENT
+	UNKNOWN, POST, COMMENT, FOAF
 }
