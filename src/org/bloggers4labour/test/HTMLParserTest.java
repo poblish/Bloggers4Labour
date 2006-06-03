@@ -11,6 +11,7 @@ package org.bloggers4labour.test;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.regex.*;
 import org.bloggers4labour.ItemType;
@@ -42,7 +43,7 @@ public class HTMLParserTest
 
 	/********************************************************************
 	********************************************************************/
-	public static List<Feed> discoverFeeds( final String inSiteURL, boolean inOnlyPosts)
+	public static List<Feed> discoverFeeds( final String inSiteURL, final EnumSet<FeedType> inOptions)
 	{
 		TagNameFilter	tf = new TagNameFilter("link");
 
@@ -55,11 +56,12 @@ public class HTMLParserTest
 
 			for ( Node n : nArray)
 			{
-				String	theLinkStr = n.getText();
-		//		System.out.println(theLinkStr);
+				String		theLinkStr = n.getText();
+				boolean		isAtom = inOptions.contains( FeedType.ATOM );
+				boolean		isRSS = inOptions.contains( FeedType.RSS );
+				boolean		isRSD = inOptions.contains( FeedType.RSD );
 
-				Matcher	relMatcher = s_RelPattern.matcher(theLinkStr);
-				if (relMatcher.find())
+				if (( isAtom || isRSD || isRSS) && s_RelPattern.matcher(theLinkStr).find())
 				{
 					Matcher	typeMatcher = theTypePattern.matcher(theLinkStr);
 					if (typeMatcher.find())
@@ -81,29 +83,32 @@ public class HTMLParserTest
 
 									if (theHRefURL.endsWith(".rdf"))	// yuk!
 									{
-										theFeedsList.add( new Feed( theHRefURL, FeedType.RSD) );
+										if (isRSD)
+										{
+											theFeedsList.add( new Feed( theHRefURL, FeedType.RSD) );
+										}
 									}
-									else
+									else if (isRSS)
 									{
 										theFeedsList.add( new Feed( theHRefURL, FeedType.RSS) );
 									}
 								}
 								else if (theTypeStr.equals("atom+xml"))
 								{
-									// System.out.println("    Atom: " + theHRefURL);
-									theFeedsList.add( new Feed( theHRefURL, FeedType.ATOM) );
+									if (isAtom)
+									{
+										theFeedsList.add( new Feed( theHRefURL, FeedType.ATOM) );
+									}
 								}
-								else if (theTypeStr.equals("rsd+xml"))
+								else if ( isRSD && theTypeStr.equals("rsd+xml"))
 								{
-		//										System.out.println(" RSS old: " + theHRefURL);
 									theFeedsList.add( new Feed( theHRefURL, FeedType.RSD) );
 								}
 							}
 						}
 						else if (theTypeStr.startsWith("text/xml"))
 						{
-							Matcher	rss092Matcher = theRSS092Pattern.matcher(theLinkStr);
-							if (rss092Matcher.find())
+							if ( isRSD && theRSS092Pattern.matcher(theLinkStr).find())
 							{
 								Matcher	hrefMatcher = theHrefPattern.matcher(theLinkStr);
 								if (hrefMatcher.find())
@@ -114,23 +119,25 @@ public class HTMLParserTest
 								}
 							}
 						}
-						else	System.out.println("***NO*** " + theLinkStr);
-					}
-					else	System.out.println("***NO*** " + theLinkStr);
-				}
-				else if (!inOnlyPosts)
-				{
-					Matcher	metaMatcher = s_MetaPattern.matcher(theLinkStr);
-					if (metaMatcher.find())
-					{
-						Matcher	foafMatcher = s_FOAFPattern.matcher(theLinkStr);
-						if (foafMatcher.find())
+						else
 						{
-							Matcher	hrefMatcher = theHrefPattern.matcher(theLinkStr);
-							if (hrefMatcher.find())
-							{
-								theFeedsList.add( new Feed( hrefMatcher.group(1), FeedType.FOAF, ItemType.FOAF) );
-							}
+							System.out.println("*** NO *** " + theLinkStr);
+						}
+					}
+					else
+					{
+						System.out.println("***NO*** " + theLinkStr);
+					}
+				}
+				else if (inOptions.contains( FeedType.FOAF ))
+				{
+					if ( s_MetaPattern.matcher(theLinkStr).find() &&
+					     s_FOAFPattern.matcher(theLinkStr).find())
+					{
+						Matcher	hrefMatcher = theHrefPattern.matcher(theLinkStr);
+						if (hrefMatcher.find())
+						{
+							theFeedsList.add( new Feed( hrefMatcher.group(1), FeedType.FOAF, ItemType.FOAF) );
 						}
 					}
 				}
@@ -163,7 +170,7 @@ public class HTMLParserTest
 			{
 				System.out.println( "Doing: " + theEntry.m_Name + " / " + theEntry.m_URL);
 
-				List<Feed>	theFeedsList = discoverFeeds( theEntry.m_URL, false);
+				List<Feed>	theFeedsList = discoverFeeds( theEntry.m_URL, EnumSet.allOf( FeedType.class ));
 
 				System.out.println(" => " + theFeedsList);
 
@@ -241,7 +248,7 @@ public class HTMLParserTest
 "mad musings of me","http://www.madmusingsof.me.uk/weblog/","http://www.madmusingsof.me.uk/weblog/index.rdf",null,
 "Labour Friends of Iraq","http://www.labourfriendsofiraq.org.uk/","http://www.labourfriendsofiraq.org.uk/index.rdf",null,
 "the thimble","http://thethimble.blogspot.com/","http://thethimble.blogspot.com/atom.xml",null,
-"Tooting's Labour team","http://www.labourwandsworth.org.uk/tooting/blog/","",null, */
+"Tooting's Labour team","http://www.labourwandsworth.org.uk/tooting/blog/","",null,
 "Battersea's Labour team","http://www.labourwandsworth.org.uk/latchmere/blog/index.htm","http://www.labourwandsworth.org.uk/latchmere/atom.xml",null,
 "Sadiq Khan","http://www.sadiqkhan.org.uk/blog/sadiqblog.htm","http://www.sadiqkhan.org.uk/blog/atom.xml",null,
 "Catherine Stihler","http://www.cstihlermep.com/ViewPage.cfm?Page=8894","",null,
@@ -249,7 +256,7 @@ public class HTMLParserTest
 "Neil MacDonald","http://neilmacdonald.typepad.com/","http://feeds.feedburner.com/NeilMacdonald_Fixed",null,
 "LabourStart","http://www.labourstart.org/","http://www.labourstart.org/rss/labourstart.uk.xml",null,
 "Black Triangle","http://blacktriangle.org/blog","http://www.blacktriangle.org/wordpress/wp-rss2.php","http://www.blacktriangle.org/blog/?feed=comments-rss2",
-"Let's be sensible","http://letsbesensible.blogspot.com","http://letsbesensible.blogspot.com/atom.xml",null,
+"Let's be sensible","http://letsbesensible.blogspot.com","http://letsbesensible.blogspot.com/atom.xml",null, */
 "Stoke Labour Group","http://stokelabourgroup.blogspot.com/","http://stokelabourgroup.blogspot.com/atom.xml",null,
 "Allan Wilson","http://allanwilsonmsp.com/v-web/b2/","http://allanwilsonmsp.com/v-web/b2/b2rss2.php",null,
 "What Comes To Pass","http://www.whatcomestopass.com/","http://www.whatcomestopass.com/index.rdf",null,
@@ -257,9 +264,9 @@ public class HTMLParserTest
 "A Cloud In Trousers","http://cloud-in-trousers.blogspot.com/","http://cloud-in-trousers.blogspot.com/atom.xml",null,
 "Recess Monkey","http://www.recessmonkey.com/","http://www.recessmonkey.com/feed/","http://www.recessmonkey.com/comments/feed/",
 "Delbert Wilkins","http://delbertwilkins.blogspot.com/","http://delbertwilkins.blogspot.com/atom.xml",null,
-"Rob Newman","http://robnewman.typepad.com/","http://robnewman.typepad.com/rob_newman/rss.xml",null /* ,
+"Rob Newman","http://robnewman.typepad.com/","http://robnewman.typepad.com/rob_newman/rss.xml",null,
 "Bloggers4Labour","http://www.bloggers4labour.org/","http://www.bloggers4labour.org/atom.xml",null,
-"Rullsenberg Rules","http://rullsenbergrules.blogspot.com/","http://rullsenbergrules.blogspot.com/atom.xml",null,
+"Rullsenberg Rules","http://rullsenbergrules.blogspot.com/","http://rullsenbergrules.blogspot.com/atom.xml",null /* ,
 "Jonathan Derbyshire","http://jonathanderbyshire.typepad.com","http://feeds.feedburner.com/JonathanDerbyshireFixed",null,
 "Bowblog","http://bowblog.com","http://feeds.feedburner.com/Bowblog_Fixed",null,
 "Deep Calls to Deep","http://www.deepcallstodeep.sonafide.com","http://www.deepcallstodeep.sonafide.com/atom.xml",null,
