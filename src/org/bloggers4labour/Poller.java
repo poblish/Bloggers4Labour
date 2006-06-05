@@ -397,6 +397,12 @@ public class Poller
 	{
 		// s_Poll_Logger.info( m_Installation.getLogPrefix() + "Poller: registering " + inChannel + " @ " + inCurrentTimeMSecs);
 
+		if ( inChannel == null)
+		{
+			s_Poll_Logger.error( m_Installation.getLogPrefix() + "Poller.registerChannel: inChannel is NULL");
+			return false;
+		}
+
 		s_InformaPoller.registerChannel( inChannel, /* Note Channel polling every 5 minutes! */ 5 * ONE_MINUTE_MSECS);
 
 		_processChannelItems( inChannel, inCurrentTimeMSecs);
