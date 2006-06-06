@@ -14,6 +14,8 @@ import com.hiatus.UHTML;
 import com.hiatus.ULocale2;
 import com.hiatus.USQL_Utils;
 import com.hiatus.UText;
+import de.nava.informa.core.*;
+import de.nava.informa.impl.basic.Item;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URLEncoder;
@@ -123,11 +125,29 @@ public class MainServlet extends HttpServlet
 
 				InstallationIF	theInstall = InstallationManager.getDefaultInstallation();
 				String		theOneWeWant = inRequest.getParameter("rss");
+				String		theIncludedSitesParam = inRequest.getParameter("includedsites");  // (AGR) 6 June 2006
+				String		theExcludedSitesParam = inRequest.getParameter("excludedsites");  // (AGR) 6 June 2006
 				Headlines	theRightHeads;
+				String		theStringToUse = null;
 
 				if ( UText.isNullOrBlank(theOneWeWant) || theOneWeWant.equals("true"))	// (AGR) 25 March 2006
 				{
 					theRightHeads = theInstall.getHeadlinesMgr().getMainRSSFeedInstance();
+					if ( theRightHeads != null)
+					{
+						if (UText.isValidString(theIncludedSitesParam))
+						{
+							theStringToUse = theRightHeads.publishSnapshot_Included( theRightHeads.toArray(), theIncludedSitesParam);
+						}
+						else if (UText.isValidString(theExcludedSitesParam))
+						{
+							theStringToUse = theRightHeads.publishSnapshot_Excluded( theRightHeads.toArray(), theExcludedSitesParam);
+						}
+						else
+						{
+							theStringToUse = theRightHeads.getHeadlinesXMLString();
+						}
+					}
 				}
 				else	// (AGR) 25 March 2006
 				{
@@ -135,12 +155,25 @@ public class MainServlet extends HttpServlet
 					if ( theRightHeads != null)
 					{
 						theRightHeads.publishSnapshot();
+
+					//	theRightHeads.getRightHeadlines
+
+						if (UText.isValidString(theIncludedSitesParam))
+						{
+							theStringToUse = theRightHeads.publishSnapshot_Included( theRightHeads.toArray(), theIncludedSitesParam);
+						}
+						else if (UText.isValidString(theExcludedSitesParam))
+						{
+							theStringToUse = theRightHeads.publishSnapshot_Excluded( theRightHeads.toArray(), theExcludedSitesParam);
+						}
+						else
+						{
+							theStringToUse = theRightHeads.getHeadlinesXMLString();
+						}
 					}
 				}
 
 				////////////////////////////////////////////////
-
-				String	theStringToUse = ( theRightHeads != null) ? theRightHeads.getHeadlinesXMLString() : null;
 
 				theOutputBuffer = ( theStringToUse != null) ? new StringBuffer(theStringToUse) : null;
 			}

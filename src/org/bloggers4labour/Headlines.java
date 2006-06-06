@@ -13,12 +13,15 @@ import de.nava.informa.impl.basic.Channel;
 import de.nava.informa.impl.basic.Item;
 import de.nava.informa.utils.poller.*;
 import java.io.*;
+import java.math.BigInteger;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -30,6 +33,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.log4j.Logger;
+import org.bloggers4labour.feed.FeedList;
 import org.bloggers4labour.headlines.*;
 import org.bloggers4labour.opml.OPMLGenerator;
 import org.bloggers4labour.options.Options;
@@ -601,6 +605,93 @@ public class Headlines implements HeadlinesIF
 
 		fc.clear();
 		fc = null;	// (AGR) 23 May 2005
+	}
+
+	/*******************************************************************************
+		(AGR) 6 June 2006
+	*******************************************************************************/
+	public String publishSnapshot_Included( ItemIF[] inItems, final String inIncludeOnlyTheseBlogs)
+	{
+		return publishSnapshot_Filtered( inItems, inIncludeOnlyTheseBlogs, true);
+	}
+
+	/*******************************************************************************
+		(AGR) 6 June 2006
+	*******************************************************************************/
+	public String publishSnapshot_Excluded( ItemIF[] inItems, final String inExcludeOnlyTheseBlogs)
+	{
+		return publishSnapshot_Filtered( inItems, inExcludeOnlyTheseBlogs, false);
+	}
+
+	/*******************************************************************************
+		(AGR) 6 June 2006
+	*******************************************************************************/
+	public String publishSnapshot_Filtered( ItemIF[] inItems, final String inBase36BitmapString, boolean inIncludeNotExclude)
+	{
+		FeedList	theFL = m_Install.getFeedList();
+
+		// System.out.println("inBase36BitmapString = " + inBase36BitmapString);
+
+		BigInteger	theBitmap = new BigInteger( inBase36BitmapString, Character.MAX_RADIX);
+
+		// System.out.println("==> theBitmap = " + theBitmap.toString(2));
+
+		ItemIF[]	theFilteredArray = filterItemsList( theFL, inItems, theBitmap, inIncludeNotExclude);
+
+		// System.out.println("Result: " + Arrays.deepToString(theFilteredArray));
+
+		////////////////////////////////////////////////////////////////
+
+		FeedCreator	fc = new FeedCreator(s_Headlines_Logger);	// (AGR) 21 May 2005. Factored-out
+		ResourceBundle	theBundle = m_Install.getBundle();
+		String		theContent;
+
+		fc.createChannel( null, theBundle.getString("feed.headlines.name"), theBundle.getString("feed.headlines.description"), theFilteredArray);
+		theContent = fc.getString();
+
+//		s_Headlines_Logger.info("Done snapshot: " + theFilteredArray.length);
+
+		fc.clear();
+		fc = null;	// (AGR) 23 May 2005
+
+		return theContent;
+	}
+
+	/*******************************************************************************
+		(AGR) 6 June 2006
+	*******************************************************************************/
+	private ItemIF[] filterItemsList( final FeedList inFL, final ItemIF[] inItems, final BigInteger inBitmapToUse,
+					  boolean inIncludeNotExclude)
+	{
+		List<ItemIF>			theFilteredList = new ArrayList<ItemIF>( inItems.length / 2);
+		HashMap<ChannelIF,Site>		theMapping = new HashMap<ChannelIF,Site>();	// Done to cut down on Channel lookups
+
+		for ( ItemIF eachItem : inItems)
+		{
+			ChannelIF	eachChannel = eachItem.getChannel();
+			Site		eachSiteObj = theMapping.get(eachChannel);
+
+			if ( eachSiteObj == null)
+			{
+				eachSiteObj = inFL.lookupPostsChannel( eachChannel);
+				theMapping.put( eachChannel, eachSiteObj);
+			}
+
+			// System.out.println("# Item: " + FeedUtils.adjustTitle(eachItem) + " => " + eachSiteObj);
+
+			////////////////////////////////////////////////////////
+
+			boolean		foundMatch = inBitmapToUse.testBit((int) eachSiteObj.getRecno() );
+
+			if (( foundMatch && inIncludeNotExclude) || ( !foundMatch && !inIncludeNotExclude))
+			{
+				theFilteredList.add(eachItem);
+
+				// System.out.println("### Recno " + eachSiteObj.getRecno() + " is included in list");
+			}
+		}
+
+		return theFilteredList.toArray( new ItemIF[0] );
 	}
 
 	/*******************************************************************************
