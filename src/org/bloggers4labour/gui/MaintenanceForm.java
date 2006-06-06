@@ -317,6 +317,7 @@ public class MaintenanceForm extends javax.swing.JFrame
 			for ( int i = 0; i < theCount; i++)
 			{
 				theH.publishSnapshot(theStats);
+				// System.out.println(">>> " + theH.publishSnapshot_Included( theH.toArray(), "kjhsdkhkeh324"));
 			}
 
 			System.out.println("DONE in " + UDates.getFormattedTimeDiff( System.currentTimeMillis() - theStartMS));

@@ -204,7 +204,7 @@ public class FeedList
 		    monitor, as well as slowing down the list-building, with extra
 		    sync-ing. So, for now, let's leave it un-synced.
 	*******************************************************************************/
-	public Site[] _getArrayToTraverse()
+	public Site[] getArrayToTraverse()
 	{
 //		System.out.println( "--> " + Thread.currentThread() );
 
@@ -234,7 +234,7 @@ public class FeedList
 
 		////////////////////////////////////////////////////////////////
 
-		Site[]	sitesArray = _getArrayToTraverse();
+		Site[]	sitesArray = getArrayToTraverse();
 
 		for ( int i = 0; i < sitesArray.length; i++)
 		{
@@ -250,7 +250,9 @@ public class FeedList
 	/*******************************************************************************
 		(AGR) 22 March 2005
 	
-		Only looks at the Site's Posts channel
+		Only looks at the Site's Posts channel. The overwhelming proportion of
+		total function time is - unfortunately - spent in URL.equals() within
+		Channel.equals()
 	*******************************************************************************/
 	public Site lookupPostsChannel( ChannelIF inChannel)
 	{
@@ -261,7 +263,7 @@ public class FeedList
 
 		////////////////////////////////////////////////////////////////
 
-		Site[]	sitesArray = _getArrayToTraverse();
+		Site[]	sitesArray = getArrayToTraverse();
 
 		for ( int i = 0; i < sitesArray.length; i++)
 		{
@@ -273,6 +275,31 @@ public class FeedList
 
 		return null;
 	}
+
+	/*******************************************************************************
+		(AGR) 6 June 2006
+	
+		Only looks at the Site's Posts channel
+	*******************************************************************************
+	public static Site lookupPostsChannel( ChannelIF inChannel, final Site[] inArray)
+	{
+		if ( inChannel == null)
+		{
+			return null;
+		}
+
+		////////////////////////////////////////////////////////////////
+
+		for ( int i = 0; i < inArray.length; i++)
+		{
+			if (inChannel.equals( inArray[i].getChannel() ))
+			{
+				return inArray[i];
+			}
+		}
+
+		return null;
+	}/
 
 	/*******************************************************************************
 		(AGR) 30 Nov 2005
@@ -288,7 +315,7 @@ public class FeedList
 
 		////////////////////////////////////////////////////////////////
 
-		Site[]	sitesArray = _getArrayToTraverse();
+		Site[]	sitesArray = getArrayToTraverse();
 
 		for ( int i = 0; i < sitesArray.length; i++)
 		{
@@ -323,7 +350,7 @@ public class FeedList
 
 		////////////////////////////////////////////////////////////////
 
-		Site[]	sitesArray = _getArrayToTraverse();
+		Site[]	sitesArray = getArrayToTraverse();
 
 		for ( int i = 0; i < sitesArray.length; i++)
 		{
@@ -361,7 +388,7 @@ public class FeedList
 
 			// s_FL_Logger.info( m_Install.getLogPrefix() + "got generator");
 
-			m_OPMLGenerator.generate( _getArrayToTraverse() );
+			m_OPMLGenerator.generate( getArrayToTraverse() );
 
 			// s_FL_Logger.info( m_Install.getLogPrefix() + "done generate!");
 
@@ -403,7 +430,7 @@ public class FeedList
 		ChannelIF	c;
 		Collection	coll;
 		int		theItemCount = 0;
-		Site[]		sitesArray = _getArrayToTraverse();
+		Site[]		sitesArray = getArrayToTraverse();
 
 		for ( int i = 0; i < sitesArray.length; i++)
 		{
