@@ -23,11 +23,17 @@ import org.bloggers4labour.*;
  */
 public class First implements Observer
 {
-	static FeedList		s_FL = InstallationManager.getDefaultInstallation().getFeedList();
+	static FeedList		s_FL = null; // InstallationManager.getDefaultInstallation().getFeedList();
 
 	public static void main( String[] args)
 	{
-		s_FL.addObserver( new First() );
+		java.math.BigInteger	bi = new java.math.BigInteger("0");
+
+		bi = bi.setBit(58).setBit(49).setBit(150);
+
+		System.out.println("==> " + bi.toString( Character.MAX_RADIX ));
+
+		// s_FL.addObserver( new First() );
 	}
 
 	public First()

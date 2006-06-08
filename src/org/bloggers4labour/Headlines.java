@@ -7,6 +7,7 @@
 package org.bloggers4labour;
 
 import com.hiatus.UDates;
+import com.hiatus.UText;
 import de.nava.informa.parsers.*;
 import de.nava.informa.core.*;
 import de.nava.informa.impl.basic.Channel;
@@ -71,6 +72,8 @@ public class Headlines implements HeadlinesIF
 	private String			m_Description;
 
 	////////////////////////////////////////////////////////////////////////
+
+	private static ItemIF[]		s_EmptyItemArray = new ItemIF[0];	// (AGR) 7 June 2006
 
 	private static Logger		s_Headlines_Logger = Logger.getLogger("Main");
 
@@ -628,14 +631,21 @@ public class Headlines implements HeadlinesIF
 	*******************************************************************************/
 	public String publishSnapshot_Filtered( ItemIF[] inItems, final String inBase36BitmapString, boolean inIncludeNotExclude)
 	{
-		FeedList	theFL = m_Install.getFeedList();
+		BigInteger	theBitmap;
 
 		// System.out.println("inBase36BitmapString = " + inBase36BitmapString);
 
-		BigInteger	theBitmap = new BigInteger( inBase36BitmapString, Character.MAX_RADIX);
+		if ( UText.isNullOrBlank(inBase36BitmapString) || inBase36BitmapString.equals("0"))	// (AGR) 7 June 2006
+		{
+			theBitmap = BigInteger.ZERO;
+		}
+		else	theBitmap = new BigInteger( inBase36BitmapString, Character.MAX_RADIX);
+
+		////////////////////////////////////////////////////////////////
 
 		// System.out.println("==> theBitmap = " + theBitmap.toString(2));
 
+		FeedList	theFL = m_Install.getFeedList();
 		ItemIF[]	theFilteredArray = filterItemsList( theFL, inItems, theBitmap, inIncludeNotExclude);
 
 		// System.out.println("Result: " + Arrays.deepToString(theFilteredArray));
@@ -663,6 +673,21 @@ public class Headlines implements HeadlinesIF
 	private ItemIF[] filterItemsList( final FeedList inFL, final ItemIF[] inItems, final BigInteger inBitmapToUse,
 					  boolean inIncludeNotExclude)
 	{
+		if ( inBitmapToUse == BigInteger.ZERO ||		// For efficiency...
+		     inBitmapToUse.equals( BigInteger.ZERO ))
+		{
+			if (inIncludeNotExclude)	// if you only want to include NOTHING, simply return nothing now...
+			{
+				return s_EmptyItemArray;
+			}
+			else
+			{
+				return inItems;		// if you only want to exclude NOTHING, just return the original list...
+			}
+		}
+
+		////////////////////////////////////////////////////////////////
+
 		List<ItemIF>			theFilteredList = new ArrayList<ItemIF>( inItems.length / 2);
 		HashMap<ChannelIF,Site>		theMapping = new HashMap<ChannelIF,Site>();	// Done to cut down on Channel lookups
 
@@ -691,7 +716,7 @@ public class Headlines implements HeadlinesIF
 			}
 		}
 
-		return theFilteredList.toArray( new ItemIF[0] );
+		return theFilteredList.toArray(s_EmptyItemArray);
 	}
 
 	/*******************************************************************************
