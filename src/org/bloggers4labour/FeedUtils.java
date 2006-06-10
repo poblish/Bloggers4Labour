@@ -533,4 +533,36 @@ public final class FeedUtils
 
 		return theCopy;
 	}
+	/*******************************************************************************
+		(AGR) 10 June 2006
+	*******************************************************************************/
+	public static String listToString( final List<?> inList)
+	{
+		StringBuilder	theSitesBuf = new StringBuilder(500);
+		int		numDoneSoFar = 0;
+		int		numEntries = inList.size();
+
+		for ( Object eachName : inList)
+		{
+			if ( numDoneSoFar >= numEntries - 1)	// the last one...
+			{
+				if ( numEntries >= 3)
+				{
+					theSitesBuf.append(", and ");
+				}
+				else if ( numEntries == 2)
+				{
+					theSitesBuf.append(" and ");
+				}
+			}
+			else if ( numDoneSoFar++ > 0)
+			{
+				theSitesBuf.append(", ");
+			}
+
+			theSitesBuf.append(eachName);
+		}
+
+		return theSitesBuf.toString();
+	}
 }

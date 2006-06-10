@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Formatter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -78,6 +79,8 @@ public class Headlines implements HeadlinesIF
 	private static Logger		s_Headlines_Logger = Logger.getLogger("Main");
 
 	private static ItemIF[]		s_TempArray = new ItemIF[0];
+
+	private final static int	MAX_FEED_BLOGS_LISTED = 10;		// (AGR) 10 June 2006
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -655,8 +658,54 @@ public class Headlines implements HeadlinesIF
 		FeedCreator	fc = new FeedCreator(s_Headlines_Logger);	// (AGR) 21 May 2005. Factored-out
 		ResourceBundle	theBundle = m_Install.getBundle();
 		String		theContent;
+		String		theAppropriateDesc;			// (AGR) 10 June 2006
+		int		numBlogsChosen = theBitmap.bitCount();	// (AGR) 10 June 2006
 
-		fc.createChannel( null, theBundle.getString("feed.headlines.name"), theBundle.getString("feed.headlines.description"), theFilteredArray);
+		if ( theFilteredArray == inItems)
+		{
+			theAppropriateDesc = theBundle.getString("feed.headlines.description");
+		}
+		else if ( numBlogsChosen == 0)
+		{
+			theAppropriateDesc = theBundle.getString("feed.headlines.none");
+		}
+		else
+		{
+			Formatter	theFormatter = new Formatter();
+
+			if ( numBlogsChosen <= MAX_FEED_BLOGS_LISTED)
+			{
+				ArrayList<String>	theNames = new ArrayList<String>( MAX_FEED_BLOGS_LISTED );
+				Site			theSiteObj;
+				int			theBitmapSize = theBitmap.bitLength();
+
+				for ( int theIndex = 0; theIndex < theBitmapSize; theIndex++)
+				{
+					if (theBitmap.testBit(theIndex))
+					{
+						theSiteObj = theFL.lookup(theIndex);
+						if ( theSiteObj != null)
+						{
+							theNames.add( theSiteObj.getName() );
+						}
+					}
+				}
+
+				///////////////////////////////////////////////////////////////////////
+
+				theFormatter.format( theBundle.getString( inIncludeNotExclude ? "feed.headlines.some" : "feed.headlines.not_some"),
+						     FeedUtils.listToString(theNames));
+			}
+			else
+			{
+				theFormatter.format( theBundle.getString( inIncludeNotExclude ? "feed.headlines.lots" : "feed.headlines.not_lots"),
+						     numBlogsChosen);
+			}
+
+			theAppropriateDesc = theFormatter.toString();
+		}
+
+		fc.createChannel( null, theBundle.getString("feed.headlines.name"), theAppropriateDesc, theFilteredArray);
 		theContent = fc.getString();
 
 //		s_Headlines_Logger.info("Done snapshot: " + theFilteredArray.length);
