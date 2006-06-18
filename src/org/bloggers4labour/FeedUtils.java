@@ -45,6 +45,8 @@ public final class FeedUtils
 
 	private static Pattern		s_MidHeaderPattern;		// (AGR) 10 May 2005
 	private static Pattern		s_OuterHeaderPattern;		// (AGR) 10 May 2005
+	private static Pattern		s_ObjectPattern = Pattern.compile( "<object *>|<object [^>]*>", Pattern.CASE_INSENSITIVE);	// (AGR) 11 June 2006
+	private static Pattern		s_ObjectEndPattern = Pattern.compile( "</object>", Pattern.CASE_INSENSITIVE);			// (AGR) 11 June 2006
 
 	private static Logger		s_Utils_Logger = Logger.getLogger("Main");
 
@@ -75,7 +77,8 @@ public final class FeedUtils
 
 		s_SpacePattern = Pattern.compile( "</table>|</p>|</o:p>|</div>|</iframe>|</ul>|</ol>|</li>|</font *>|&nbsp;|</td>|</h[1-7][^>]*>|</tbody>", Pattern.CASE_INSENSITIVE);
 //		s_ClearPattern = Pattern.compile( "<p[^>]*>|<small>|</small>|" + BOLD_STRIPPER + "|" + ITALIC_STRIPPER + "|<em[^>]*>|</em>|" + STRONG_STRIPPER + "|</span>|" + MICROSOFT_STRIPPER + "|<!\\[CDATA\\[|<div[^>]*>|<span[^>]*>|<font[^>]*>|<iframe[^>]*>|<center>|</center>|<ul[^>]*>|<ol[^>]*>|<li[^>]*>|]]>|<table[^>]*>|<tbody[^>]*>|<tr[^>]*>|</tr>|<s>|</s>|<del>|</del>|<td[^>]*>|<h[1-7][^>]*>|<style[^>]*>.*</style[^>]*>|<wbr />|</img>|" + FRAG_STRIPPER + "|" + TT_STRIPPER + "|" + INTERNAL_LINK_STRIPPER, Pattern.CASE_INSENSITIVE);
-		s_ClearPattern = Pattern.compile( "<p[^>]*>|<small>|</small>|" + BOLD_STRIPPER + "|<em[^>]*>|</em>|" + STRONG_STRIPPER + "|</span>|" + MICROSOFT_STRIPPER + "|<!\\[CDATA\\[|<div[^>]*>|<span[^>]*>|<font[^>]*>|<iframe[^>]*>|<center>|</center>|<ul[^>]*>|<ol[^>]*>|<li[^>]*>|]]>|<table[^>]*>|<tbody[^>]*>|<tr[^>]*>|</tr>|<s>|</s>|<del>|</del>|<td[^>]*>|<h[1-7][^>]*>|<style[^>]*>.*</style[^>]*>|<wbr />|</img>|" + FRAG_STRIPPER + "|" + TT_STRIPPER + "|" + INTERNAL_LINK_STRIPPER + "|" + "<object .*</object>", Pattern.CASE_INSENSITIVE);
+//		s_ClearPattern = Pattern.compile( "<p[^>]*>|<small>|</small>|" + BOLD_STRIPPER + "|<em[^>]*>|</em>|" + STRONG_STRIPPER + "|</span>|" + MICROSOFT_STRIPPER + "|<!\\[CDATA\\[|<div[^>]*>|<span[^>]*>|<font[^>]*>|<iframe[^>]*>|<center>|</center>|<ul[^>]*>|<ol[^>]*>|<li[^>]*>|]]>|<table[^>]*>|<tbody[^>]*>|<tr[^>]*>|</tr>|<s>|</s>|<del>|</del>|<td[^>]*>|<h[1-7][^>]*>|<style[^>]*>.*</style[^>]*>|<wbr />|</img>|" + FRAG_STRIPPER + "|" + TT_STRIPPER + "|" + INTERNAL_LINK_STRIPPER + "|" + "<object .*</object>", Pattern.CASE_INSENSITIVE);
+		s_ClearPattern = Pattern.compile( "<p[^>]*>|<small>|</small>|" + BOLD_STRIPPER + "|<em[^>]*>|</em>|" + STRONG_STRIPPER + "|</span>|" + MICROSOFT_STRIPPER + "|<!\\[CDATA\\[|<div[^>]*>|<span[^>]*>|<font[^>]*>|<iframe[^>]*>|<center>|</center>|<ul[^>]*>|<ol[^>]*>|<li[^>]*>|]]>|<table[^>]*>|<tbody[^>]*>|<tr[^>]*>|</tr>|<s>|</s>|<del>|</del>|<td[^>]*>|<h[1-7][^>]*>|<style[^>]*>.*</style[^>]*>|<wbr />|</img>|" + FRAG_STRIPPER + "|" + TT_STRIPPER + "|" + INTERNAL_LINK_STRIPPER, Pattern.CASE_INSENSITIVE);
 		s_QuotePattern = Pattern.compile( "<blockquote[^>]*>[\r\n\t ]*\"|<blockquote[^>]*>[\r\n\t ]*|\"[\r\n\t ]*</blockquote>|[\r\n\t ]*</blockquote>", Pattern.CASE_INSENSITIVE);	// (AGR) 19 April 2005. Also strip out initial double-quote
 
 		s_MidHeaderPattern = Pattern.compile( "</th><th[^>]*>", Pattern.CASE_INSENSITIVE);
@@ -193,7 +196,33 @@ public final class FeedUtils
 		////////////////////////////////////////////////////////////////
 
 		final String	imageAdjustedStr = FormatUtils.allowingImages(inOptions) ? cleanedStr : s_ImagePattern.matcher(cleanedStr).replaceAll("");			// (AGR) 13 May 2005
-		final String	breakAdjustedStr = s_BreakPattern.matcher(imageAdjustedStr).replaceAll( FormatUtils.allowingBreaks(inOptions) ? "<br>" : " ");			// (AGR) 13 May 2005
+		String		breakAdjustedStr = s_BreakPattern.matcher(imageAdjustedStr).replaceAll( FormatUtils.allowingBreaks(inOptions) ? "<br>" : " ");			// (AGR) 13 May 2005
+
+		////////////////////////////////////////////////////////////////  (AGR) 11 June 2006. Strip everything inside Object tags
+
+		while (true)
+		{
+			Matcher		objMatcher = s_ObjectPattern.matcher( breakAdjustedStr );
+
+			if (objMatcher.find())
+			{
+				Matcher	objEndMatcher = s_ObjectEndPattern.matcher(breakAdjustedStr);
+
+				if (objEndMatcher.find( objMatcher.end() ))
+				{
+					StringBuilder	sb = new StringBuilder( breakAdjustedStr.length() );
+
+					sb.append( breakAdjustedStr.substring( 0, objMatcher.start() ) )
+					  .append( breakAdjustedStr.substring( objEndMatcher.end() ) );
+
+					breakAdjustedStr = sb.toString();
+				}
+				else	break;
+			}
+			else	break;
+		}
+
+		////////////////////////////////////////////////////////////////
 
 		return s_OuterHeaderPattern.matcher(
 			s_MidHeaderPattern.matcher(
