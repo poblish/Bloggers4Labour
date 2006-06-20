@@ -7,6 +7,8 @@
 package org.bloggers4labour;
 
 import org.bloggers4labour.feed.FeedList;
+import org.bloggers4labour.recommend.RecommendationHandler;
+import org.bloggers4labour.recommend.RecommendationResult;
 import org.bloggers4labour.sql.DataSourceConnection;
 import com.hiatus.CharEncoding;
 import com.hiatus.UDates;
@@ -187,11 +189,43 @@ public class MainServlet extends HttpServlet
 				// s_Servlet_Logger.info("... theOutputBuffer = \"" + theOutputBuffer + "\"");
 				// keepAlive = false;
 			}
+			else if (hasParameter( inRequest, "recommend"))	// (AGR) 20 June 2006. Value is a URL...
+			{
+				try
+				{
+					InstallationIF		defInstall = InstallationManager.getDefaultInstallation();
+					RecommendationHandler	rh = new RecommendationHandler( defInstall.getDataSource() );
+					RecommendationResult	result;
+
+					result = rh.handleRequest( inRequest.getSession(true).getId(), inRequest.getParameter("recommend"));
+
+					inResponse.setLocale( GetClientLocale(inRequest) );
+					inResponse.setContentType("text/xml; charset=\"UTF-8\"");
+
+					StringBuffer	sb = new StringBuffer("<?xml version=\"1.0\" ?><response>");
+
+					switch (result)
+					{
+						case OK:		sb.append("OK");		break;
+						case DUPLICATE:		sb.append("DUPLICATE");		break;
+						case BAD_INPUTS:	sb.append("BAD_INPUTS");	break;
+						case ERROR:		sb.append("ERROR");		break;
+					}
+
+					sb.append("</response>");
+					theOutputBuffer = sb;
+				}
+				catch (Exception e)
+				{
+					s_Servlet_Logger.error("recommend...", e);
+
+					goHome( inRequest, inResponse);
+					theOutputBuffer = null;
+				}
+			}
 			else
 			{
-				setResponseLocaleAndUse_HTML( inRequest, inResponse);
-
-				inResponse.sendRedirect( inResponse.encodeRedirectURL("http://www.bloggers4labour.org/") );
+				goHome( inRequest, inResponse);
 				theOutputBuffer = null;
 			}
 		}
@@ -204,6 +238,15 @@ public class MainServlet extends HttpServlet
 			myOutputBuffer( inResponse, theOutputBuffer, keepAlive);
 			Finish(inResponse);
 		}
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	private void goHome( HttpServletRequest inRequest, HttpServletResponse inResponse) throws IOException
+	{
+		setResponseLocaleAndUse_HTML( inRequest, inResponse);
+
+		inResponse.sendRedirect( inResponse.encodeRedirectURL("http://www.bloggers4labour.org/") );
 	}
 
 	/*******************************************************************************
