@@ -36,7 +36,7 @@ public class RecommendationHandler
 
 	/********************************************************************
 	********************************************************************/
-	public boolean handleRequest( String inSessionID, String inURL)
+	public RecommendationResult handleRequest( String inSessionID, String inURL)
 	{
 		DataSourceConnection	theConnectionObject = null;
 
@@ -70,6 +70,7 @@ public class RecommendationHandler
 		catch (Exception err)
 		{
 			s_Logger.error("???", err);
+
 		}
 		finally
 		{
@@ -80,16 +81,16 @@ public class RecommendationHandler
 			}
 		}
 
-		return false;
+		return RecommendationResult.ERROR;
 	}
 
 	/********************************************************************
 	********************************************************************/
-	private boolean _handleRequest( Statement inStatement, String inSessionID, String inURL) throws SQLException
+	private RecommendationResult _handleRequest( Statement inStatement, String inSessionID, String inURL) throws SQLException
 	{
 		if (UText.isNullOrBlank(inURL))
 		{
-			return false;
+			return RecommendationResult.BAD_INPUTS;
 		}
 
 		////////////////////////////////////////////////////////////////
@@ -100,7 +101,7 @@ public class RecommendationHandler
 		if (theRS.next())	// Session user (!) has already recommended this URL in the past day - reject
 		{
 			theRS.close();
-			return false;
+			return RecommendationResult.DUPLICATE;
 		}
 
 		////////////////////////////////////////////////////////////////
@@ -128,19 +129,19 @@ public class RecommendationHandler
 			{
 				s_Logger.error("Could not get recno of new URL!!!");
 				theRS.close();
-				return false;
+				return RecommendationResult.ERROR;
 			}
 		}
 
 		////////////////////////////////////////////////////////////////
 
-		if ( inStatement.executeUpdate("INSERT INTO recommendations (session_id, url_recno, date) VALUES (" + inSessionID + "," + urlRecno + ", NOW())") == 1)
+		if ( inStatement.executeUpdate("INSERT INTO recommendations (session_id, url_recno, date) VALUES (" + USQL_Utils.getQuoted(inSessionID) + "," + urlRecno + ", NOW())") == 1)
 		{
-			return true;
+			return RecommendationResult.OK;
 		}
 
 		s_Logger.error("Failed to insert recommendation record!!");
-		return false;
+		return RecommendationResult.ERROR;
 	}
 
 	private static String[]	testStrings = {
