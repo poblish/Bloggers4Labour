@@ -196,15 +196,30 @@ public class MainServlet extends HttpServlet
 					InstallationIF		defInstall = InstallationManager.getDefaultInstallation();
 					RecommendationHandler	rh = new RecommendationHandler( defInstall.getDataSource() );
 					RecommendationResult	result;
+					long			theSiteRecno;
 
-					result = rh.handleRequest( inRequest.getSession(true).getId(), inRequest.getParameter("recommend"));
+					try
+					{
+						theSiteRecno = Long.parseLong( inRequest.getParameter("site"));
+					}
+					catch (Exception e)
+					{
+						s_Servlet_Logger.error("recommend site...", e);
+						theSiteRecno = -1L;
+					}
+
+					result = rh.handleRequest( inRequest.getSession(true).getId(),
+								   inRequest.getParameter("recommend"),
+								   theSiteRecno);
+
+					ensureNotCached(inResponse);
 
 					inResponse.setLocale( GetClientLocale(inRequest) );
 					inResponse.setContentType("text/xml; charset=\"UTF-8\"");
 
-					StringBuffer	sb = new StringBuffer("<?xml version=\"1.0\" ?><response>");
+					StringBuffer	sb = new StringBuffer("<?xml version=\"1.0\" ?><response><status>");
 
-					switch (result)
+					switch (result.getStatus())
 					{
 						case OK:		sb.append("OK");		break;
 						case DUPLICATE:		sb.append("DUPLICATE");		break;
@@ -212,7 +227,7 @@ public class MainServlet extends HttpServlet
 						case ERROR:		sb.append("ERROR");		break;
 					}
 
-					sb.append("</response>");
+					sb.append("</status><votes>").append( result.getVoteCount() ).append("</votes></response>");
 					theOutputBuffer = sb;
 				}
 				catch (Exception e)
@@ -247,6 +262,17 @@ public class MainServlet extends HttpServlet
 		setResponseLocaleAndUse_HTML( inRequest, inResponse);
 
 		inResponse.sendRedirect( inResponse.encodeRedirectURL("http://www.bloggers4labour.org/") );
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public static void ensureNotCached( HttpServletResponse ioResponse)
+	{
+		ioResponse.addHeader("Cache-Control","must-revalidate");
+		ioResponse.addHeader("Cache-Control","no-cache");
+		ioResponse.setHeader("Cache-Control","no-store");	// HTTP 1.1
+		ioResponse.setHeader("Pragma","no-cache");		// HTTP 1.0
+		ioResponse.setDateHeader("Expires", -1 /* 0 */);	// prevents caching at the proxy server
 	}
 
 	/*******************************************************************************
