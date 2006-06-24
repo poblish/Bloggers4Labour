@@ -36,7 +36,7 @@ public class RecommendationHandler
 
 	/********************************************************************
 	********************************************************************/
-	public RecommendationResult handleRequest( String inSessionID, String inURL)
+	public RecommendationResult handleRequest( String inSessionID, String inURL, long inSiteRecno)
 	{
 		DataSourceConnection	theConnectionObject = null;
 
@@ -51,7 +51,7 @@ public class RecommendationHandler
 				{
 					theS = theConnectionObject.createStatement();
 
-					return _handleRequest( theS, inSessionID, inURL);
+					return _handleRequest( theS, inSessionID, inURL, inSiteRecno);
 				}
 				catch (Exception e)
 				{
@@ -81,71 +81,92 @@ public class RecommendationHandler
 			}
 		}
 
-		return RecommendationResult.ERROR;
+		return RecommendationResult.newErrorResult();
 	}
 
 	/********************************************************************
 	********************************************************************/
-	private RecommendationResult _handleRequest( Statement inStatement, String inSessionID, String inURL) throws SQLException
+	private RecommendationResult _handleRequest( Statement inStatement, String inSessionID,
+						     String inURL, long inSiteRecno) throws SQLException
 	{
 		if (UText.isNullOrBlank(inURL))
 		{
-			return RecommendationResult.BAD_INPUTS;
+			return new RecommendationResult( RecommendationStatus.BAD_INPUTS, -1L);
 		}
 
 		////////////////////////////////////////////////////////////////
 
+		long		theVoteCount;
 		CharSequence	theAdjustedURL = USQL_Utils.getQuoted( inURL.trim().toLowerCase() );
 		ResultSet	theRS = inStatement.executeQuery("SELECT 1 FROM recommendations R, recommendedURLs U WHERE R.url_recno=U.recno AND U.url=" + theAdjustedURL + " AND R.session_id=" + USQL_Utils.getQuoted(inSessionID) + " AND ( NOW() - R.date) < 86400");
 
 		if (theRS.next())	// Session user (!) has already recommended this URL in the past day - reject
 		{
+			// Do, however, give them a current total for that URL
+
+			theRS = inStatement.executeQuery("SELECT COUNT(*) AS 'count' FROM recommendations R, recommendedURLs U WHERE R.url_recno=U.recno AND U.url=" + theAdjustedURL);
+			theRS.next();	// (AGR) 21 June 2006. The COUNT means we always return a value...
+
+			theVoteCount = theRS.getLong(1);
+
 			theRS.close();
-			return RecommendationResult.DUPLICATE;
+
+			return new RecommendationResult( RecommendationStatus.DUPLICATE, theVoteCount);
 		}
 
 		////////////////////////////////////////////////////////////////
 
-		theRS = inStatement.executeQuery("SELECT recno FROM recommendedURLs WHERE url=" + theAdjustedURL);
+		theRS = inStatement.executeQuery("SELECT MAX(recno) AS 'recno', COUNT(*) AS 'count' FROM recommendations R, recommendedURLs U WHERE R.url_recno=U.recno AND U.url=" + theAdjustedURL);
+		theRS.next();	// (AGR) 21 June 2006. The COUNT means we always return a value...
 
-		long	urlRecno;
+		theVoteCount = theRS.getLong(2);
 
-		if (theRS.next())	// URL is already in DB, use recno
+		long	urlRecno = theRS.getLong(1);
+
+		if (theRS.wasNull())	// recno was NULL (vote count will also be zero)
 		{
-			urlRecno = theRS.getLong(1);
-			theRS.close();
-		}
-		else
-		{
-			inStatement.executeUpdate("INSERT INTO recommendedURLs (url) VALUES (" + theAdjustedURL + ")");
+			inStatement.executeUpdate("INSERT INTO recommendedURLs (originating_site_recno,url) VALUES (" +
+						   USQL_Utils.getQuoted(inSiteRecno) + "," + theAdjustedURL + ")");
 
 			theRS = inStatement.executeQuery("SELECT LAST_INSERT_ID()");
 			if (theRS.next())	// phew...
 			{
 				urlRecno = theRS.getLong(1);
 				theRS.close();
+
+				theVoteCount = 1L;
 			}
 			else
 			{
 				s_Logger.error("Could not get recno of new URL!!!");
 				theRS.close();
-				return RecommendationResult.ERROR;
+
+				return RecommendationResult.newErrorResult();
 			}
+		}
+		else
+		{
+			urlRecno = theRS.getLong(1);
+			theVoteCount = theRS.getLong(2) + /* Add one for our new vote */ 1;
+			theRS.close();
 		}
 
 		////////////////////////////////////////////////////////////////
 
-		if ( inStatement.executeUpdate("INSERT INTO recommendations (session_id, url_recno, date) VALUES (" + USQL_Utils.getQuoted(inSessionID) + "," + urlRecno + ", NOW())") == 1)
+		if ( inStatement.executeUpdate("INSERT INTO recommendations (session_id, url_recno, date) VALUES (" +
+						USQL_Utils.getQuoted(inSessionID) + "," +
+						urlRecno + ", NOW())") == 1)
 		{
-			return RecommendationResult.OK;
+			return new RecommendationResult( RecommendationStatus.OK, theVoteCount);
 		}
 
 		s_Logger.error("Failed to insert recommendation record!!");
-		return RecommendationResult.ERROR;
+
+		return RecommendationResult.newErrorResult();
 	}
 
 	private static String[]	testStrings = {
-"http://123.writeboard.com/a797eb2b85fb98580",
+/* "http://123.writeboard.com/a797eb2b85fb98580",
 "http://about-whose-news.blogspot.com/",
 "http://adloyada.typepad.com/adloyada/2006/05/fighting_the_na.html",
 "http://agitpropcentral.blogspot.com/",
@@ -618,6 +639,7 @@ public class RecommendationHandler
 "http://yorkielabour.blogspot.com/",
 "https://www.blogger.com/atom/10883926",
 "https://www.paypal.com/cgi-bin/webscr"
+ */
 	};
 
 	/********************************************************************
@@ -634,7 +656,7 @@ public class RecommendationHandler
 			String	ssnID = String.valueOf( Math.random() * 500);
 			double	d = Math.random() * testStrings.length;
 
-			System.out.println("[" + (i++) + "]: " + rh.handleRequest( ssnID, testStrings[(int) d] ));
+			System.out.println("[" + (i++) + "]: " + rh.handleRequest( ssnID, testStrings[(int) d], -1));
 		}
 	}
 }
