@@ -125,23 +125,41 @@ public class RecommendationHandler
 
 		if (theRS.wasNull())	// recno was NULL (vote count will also be zero)
 		{
-			inStatement.executeUpdate("INSERT INTO recommendedURLs (originating_site_recno,url) VALUES (" +
-						   USQL_Utils.getQuoted(inSiteRecno) + "," + theAdjustedURL + ")");
+			boolean	ignoreDupeURL = false;
 
-			theRS = inStatement.executeQuery("SELECT LAST_INSERT_ID()");
-			if (theRS.next())	// phew...
+			try
 			{
-				urlRecno = theRS.getLong(1);
-				theRS.close();
-
-				theVoteCount = 1L;
+				inStatement.executeUpdate("INSERT INTO recommendedURLs (originating_site_recno,url) VALUES (" +
+							   USQL_Utils.getQuoted(inSiteRecno) + "," + theAdjustedURL + ")");
 			}
-			else
+			catch (SQLException e)
 			{
-				s_Logger.error("Could not get recno of new URL!!!");
-				theRS.close();
+				// (AGR) 24 June 2006. Oops, almost certainly a dupe key, and almost certainly because
+				// there was once a recommURL/recomm pair, and the recomm rec was deleted. So the count query
+				// on line 128 returned a NULL recommURL recno, even though there was actually a record!
 
-				return RecommendationResult.newErrorResult();
+				ignoreDupeURL = true;
+			}
+
+			////////////////////////////////////////////////////////
+
+			if (!ignoreDupeURL)
+			{
+				theRS = inStatement.executeQuery("SELECT LAST_INSERT_ID()");
+				if (theRS.next())	// phew...
+				{
+					urlRecno = theRS.getLong(1);
+					theRS.close();
+
+					theVoteCount = 1L;
+				}
+				else
+				{
+					s_Logger.error("Could not get recno of new URL!!!");
+					theRS.close();
+
+					return RecommendationResult.newErrorResult();
+				}
 			}
 		}
 		else
