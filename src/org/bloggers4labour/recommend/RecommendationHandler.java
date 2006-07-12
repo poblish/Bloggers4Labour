@@ -27,6 +27,10 @@ public class RecommendationHandler
 
 	private static Logger		s_Logger = Logger.getLogger("Main");
 
+	public final static String	CONVERTED_URL = "IF( LOCATE(\"http://www.\",url)=1, CONCAT('http://',LCASE( SUBSTRING(url, 12, LENGTH(url)-11))), LCASE(url))";
+	public final static String	LENGTH_URL = "IF( LOCATE(\"http://www.\",url)=1, LENGTH(url)-4, LENGTH(url))";
+	private final static String	SITE_VALIDITY = " AND is_blog=1 AND approved=1 AND show_on_feed_page=1";
+
 	/********************************************************************
 	********************************************************************/
 	public RecommendationHandler( DataSource inDS)
@@ -125,12 +129,33 @@ public class RecommendationHandler
 
 		if (theRS.wasNull())	// recno was NULL (vote count will also be zero)
 		{
+			////////////////////////////////////////////////////////  (AGR) 11 July 2006
+
+			long	theSiteRecno;
+
+			if ( inSiteRecno < 0)
+			{
+				theSiteRecno = getSiteRecnoForURL( inStatement, inURL);
+			}
+			else	theSiteRecno = inSiteRecno;
+
+			if ( theSiteRecno <= 0)
+			{
+				s_Logger.warn("Recommend: could not find site for: " + inURL);
+
+				theRS.close();
+
+				return new RecommendationResult( RecommendationStatus.UNKNOWN_SITE, -1);
+			}
+
+			////////////////////////////////////////////////////////
+
 			boolean	ignoreDupeURL = false;
 
 			try
 			{
 				inStatement.executeUpdate("INSERT INTO recommendedURLs (originating_site_recno,url) VALUES (" +
-							   USQL_Utils.getQuoted(inSiteRecno) + "," + theAdjustedURL + ")");
+							   USQL_Utils.getQuoted(theSiteRecno) + "," + theAdjustedURL + ")");
 			}
 			catch (SQLException e)
 			{
@@ -181,6 +206,114 @@ public class RecommendationHandler
 		s_Logger.error("Failed to insert recommendation record!!");
 
 		return RecommendationResult.newErrorResult();
+	}
+
+	/********************************************************************
+	********************************************************************/
+	public static long getSiteRecnoForURL( Statement inStatement, String inURL) throws SQLException
+	{
+		if (UText.isNullOrBlank(inURL))
+		{
+			return 0;
+		}
+
+		////////////////////////////////////////////////////////////////
+
+//		int		expectedRecno = Integer.parseInt( s_TestURLsAndRecnos[i] );
+		String		adjustedURL = inURL.toLowerCase();
+		String		s = null;
+		ResultSet	rs = null;
+
+		try
+		{
+			if (adjustedURL.startsWith("http://feeds.feedburner.com/wongablog"))
+			{
+				adjustedURL = "http://wandwaver.co.uk/blog/";
+			}
+			else if (adjustedURL.startsWith("http://bagrec.livejournal.com/"))
+			{
+				adjustedURL = "http://livejournal.com/users/bagrec/";
+			}
+			else if (adjustedURL.startsWith("http://afarfetchedresolution."))
+			{
+				adjustedURL = "http://afarfetchedresolution.com/";
+			}
+			else if (adjustedURL.startsWith("http://www.madmusingsof."))
+			{
+				adjustedURL = "http://madmusingsof.me.uk/weblog/";
+			}
+			else if (adjustedURL.startsWith("http://www.rogerdarlington."))
+			{
+				adjustedURL = "http://rogerdarlington.co.uk/nighthawk/";
+			}
+			else if (adjustedURL.startsWith("http://blogs.guardian.co.uk/news/archives"))
+			{
+				adjustedURL = "http://blogs.guardian.co.uk/news/archives/cat_uk_politics.html";
+			}
+			else if (adjustedURL.startsWith("http://cllrfay."))
+			{
+				adjustedURL = "http://blog.co.uk/cllrfay";
+			}
+			else if (adjustedURL.startsWith("http://users.ox.ac.uk/~magd1368/"))
+			{
+				adjustedURL = "http://users.ox.ac.uk/~magd1368/weblog/blogger.html";
+			}
+			else if (adjustedURL.startsWith("http://www.odpm.gov.uk/cs/blogs/ministerial_blog"))
+			{
+				adjustedURL = "http://davidmiliband.defra.gov.uk/blogs/ministerial_blog/default.aspx";
+			}
+			else if (adjustedURL.startsWith("http://www.labour.org.uk/blog/index.php?id=17&"))	// Khevyn L
+			{
+				s = "SELECT site_recno FROM site WHERE url='http://www.labour.org.uk/blog/index.php?id=12'" + SITE_VALIDITY;
+			}
+			else if (adjustedURL.startsWith("http://labour.org.uk/blog/index.php?id=113&"))		// Sadiq Khan
+			{
+				s = "SELECT site_recno FROM site WHERE url='http://www.labour.org.uk/blog/index.php?id=106'" + SITE_VALIDITY;
+			}
+			else if (adjustedURL.contains("fourthterm.net/postnuke/"))
+			{
+				s = "SELECT site_recno FROM site WHERE url='http://fourthterm.net'" + SITE_VALIDITY;
+			}
+			else if (adjustedURL.contains("fourthterm.net/plog/"))
+			{
+				s = "SELECT site_recno FROM site WHERE url='http://libdems.fourthterm.net'" + SITE_VALIDITY;
+			}
+			else	adjustedURL = adjustedURL.startsWith("http://www.") ? ( "http://" + adjustedURL.substring(11)) : adjustedURL;
+
+			if ( s == null)
+			{
+				s = "SELECT site_recno FROM site WHERE LOCATE(" + CONVERTED_URL + "," + USQL_Utils.getQuoted(adjustedURL) + ") > 0" + SITE_VALIDITY; // AND " + LENGTH_URL + " >= " + adjustedURL.length();
+			}
+
+			rs = inStatement.executeQuery(s);
+			if (rs.next())
+			{
+				long	actualRecno = rs.getLong(1);
+
+				if (rs.next())
+				{
+					return -2; // System.out.println("Multiple matches for " + s); // s_TestURLsAndRecnos[i+1]);
+				}
+				else
+				{
+					return actualRecno;
+				}
+			}
+			else
+			{
+				; // System.out.println("No match for: " + s); // " + s_TestURLsAndRecnos[i+1]);
+			}
+		}
+		catch (Exception e)
+		{
+			if ( rs != null)
+			{
+				rs.close();
+				rs = null;
+			}
+		}
+
+		return 0;
 	}
 
 	private static String[]	testStrings = {

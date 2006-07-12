@@ -204,7 +204,7 @@ public class MainServlet extends HttpServlet
 					}
 					catch (Exception e)
 					{
-						s_Servlet_Logger.error("recommend site...", e);
+						// s_Servlet_Logger.error("recommend site...", e);
 						theSiteRecno = -1L;
 					}
 
@@ -225,6 +225,7 @@ public class MainServlet extends HttpServlet
 						case DUPLICATE:		sb.append("DUPLICATE");		break;
 						case BAD_INPUTS:	sb.append("BAD_INPUTS");	break;
 						case ERROR:		sb.append("ERROR");		break;
+						case UNKNOWN_SITE:	sb.append("UNKNOWN_SITE");	break;	// (AGR) 11 July 2006
 					}
 
 					sb.append("</status><votes>").append( result.getVoteCount() ).append("</votes></response>");

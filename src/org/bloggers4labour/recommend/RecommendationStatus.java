@@ -15,5 +15,5 @@ package org.bloggers4labour.recommend;
  */
 public enum RecommendationStatus
 {
-	OK, DUPLICATE, BAD_INPUTS, ERROR
+	OK, DUPLICATE, BAD_INPUTS, ERROR, UNKNOWN_SITE
 }

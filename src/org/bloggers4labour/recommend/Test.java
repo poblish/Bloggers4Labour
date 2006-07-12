@@ -25,8 +25,6 @@ import org.bloggers4labour.sql.*;
 public class Test
 {
 	private static Logger		s_Logger = Logger.getLogger("Main");
-	private final static String	CONVERTED_URL = "IF( LOCATE(\"http://www.\",url)=1, CONCAT('http://',LCASE( SUBSTRING(url, 12, LENGTH(url)-11))), LCASE(url))";
-
 	/********************************************************************
 	********************************************************************/
 	public Test()
@@ -56,61 +54,23 @@ public class Test
 					for ( int i = 0; i < s_TestURLsAndRecnos.length; i += 2)
 					{
 						int		expectedRecno = Integer.parseInt( s_TestURLsAndRecnos[i] );
-						String		adjustedURL = s_TestURLsAndRecnos[i+1].toLowerCase();
+						long		x = RecommendationHandler.getSiteRecnoForURL( theS, s_TestURLsAndRecnos[i+1]);
 
-						if (adjustedURL.startsWith("http://feeds.feedburner.com/wongablog"))
+						if ( x != 0)
 						{
-							adjustedURL = "http://wandwaver.co.uk/blog/";
-						}
-						else if (adjustedURL.startsWith("http://bagrec.livejournal.com/"))
-						{
-							adjustedURL = "http://livejournal.com/users/bagrec/";
-						}
-						else if (adjustedURL.startsWith("http://afarfetchedresolution."))
-						{
-							adjustedURL = "http://afarfetchedresolution.com/";
-						}
-						else if (adjustedURL.startsWith("http://www.madmusingsof."))
-						{
-							adjustedURL = "http://madmusingsof.me.uk/weblog/";
-						}
-						else if (adjustedURL.startsWith("http://www.rogerdarlington."))
-						{
-							adjustedURL = "http://rogerdarlington.co.uk/nighthawk/";
-						}
-						else if (adjustedURL.startsWith("http://blogs.guardian.co.uk/news/archives"))
-						{
-							adjustedURL = "http://blogs.guardian.co.uk/news/archives/cat_uk_politics.html";
-						}
-						else if (adjustedURL.startsWith("http://cllrfay."))
-						{
-							adjustedURL = "http://blog.co.uk/cllrfay";
-						}
-						else	adjustedURL = adjustedURL.startsWith("http://www.") ? ( "http://" + adjustedURL.substring(11)) : adjustedURL;
-
-						String		s = "SELECT site_recno FROM site WHERE LOCATE(" + CONVERTED_URL + "," + USQL_Utils.getQuoted(adjustedURL) + ") > 0";
-
-						rs = theS.executeQuery(s);
-						if (rs.next())
-						{
-							int	actualRecno = rs.getInt(1);
-
-							if (rs.next())
+							if ( x == -2)
 							{
 								System.out.println("Multiple matches for " + s_TestURLsAndRecnos[i+1]);
 							}
-							else if ( actualRecno != expectedRecno)
+							else if ( x != expectedRecno)
 							{
-								System.out.println("Wrong recno for " + s_TestURLsAndRecnos[i+1]);
+								System.out.println("Wrong recno for " + s_TestURLsAndRecnos[i+1] + ", got " + x + ", expected " + expectedRecno);
 							}
-							// else	System.out.println("OK: " + s_TestURLsAndRecnos[i+1]);
 						}
 						else
 						{
-							System.out.println("No match for: " + s); // " + s_TestURLsAndRecnos[i+1]);
+							System.out.println("No match for: " + s_TestURLsAndRecnos[i+1]);
 						}
-
-						rs.close();
 					}
 
 					System.out.println("DONE!");
@@ -152,9 +112,397 @@ public class Test
 		new Test();
 	}
 
+/*	private final static String	s_OtherTestURLsAndRecnos[] =
+{
+
+ "-1","http://123.writeboard.com/a797eb2b85fb98580",
+"-1","http://about-whose-news.blogspot.com/",
+"-1","http://afarfetchedresolution.blogspot.com/2006/07/idiots-please-read-this-understand-it.html",
+"-1","http://agitpropcentral.blogspot.com/",
+"-1","http://allanwilsonmsp.com/v-web/b2/",
+"-1","http://alun-clwydwest.blogspot.com/2006/07/tories-clueless-on-cost-of.html",
+"-1","http://andrewkbrown.wordpress.com/",
+"-1","http://andrewkbrown.wordpress.com/2006/06/29/stupid-council/",
+"-1","http://andrewkbrown.wordpress.com/2006/07/11/labour-home/",
+"-1","http://andydowland.com/blog/",
+"-1","http://anthonymckeown.info/blog.html",
+"-1","http://bagrec.livejournal.com/193891.html",
+"-1","http://bagrec.livejournal.com/195588.html",
+"-1","http://bagrec.livejournal.com/202062.html",
+"-1","http://bagrec.livejournal.com/206366.html",
+"-1","http://barbaraportwin.blogspot.com/",
+"-1","http://barrysbeef.blogspot.com/2006/06/england-thrown-into-disarray_29.html",
+"-1","http://barrysbeef.blogspot.com/2006/07/missing-person.html",
+"-1","http://barrysbeef.blogspot.com/2006/07/viva-las-vegas.html",
+"-1","http://battersea-mp.org.uk/",
+"-1","http://benjamincomments.wordpress.com/",
+"-1","http://bigmacthered.blogspot.com/",
+"-1","http://blacktriangle.org/blog",
+"-1","http://blairitebob.blogdrive.com/",
+"-1","http://blog.hakmao.com/archives/001638.html",
+"-1","http://blog.hakmao.com/archives/001644.html",
+"-1","http://blog.jonworth.eu/",
+"-1","http://blogs.guardian.co.uk/election2005/",
+"-1","http://blogs.guardian.co.uk/news/archives/2006/06/28/gordon_1_brussels_0.html",
+"-1","http://blogs.guardian.co.uk/news/archives/cat_uk_politics.html",
+"-1","http://bowblog.com/",
+"-1","http://bratiaith.blogspot.com/",
+"-1","http://brightonregencylabourparty.blogspot.com/",
+"-1","http://brightonregencylabourparty.blogspot.com/2006/06/its-labour-bias-ok.html",
+"-1","http://brightonregencylabourparty.blogspot.com/2006/06/my-thoughts-on-thatcher-and-gordons.html",
+"-1","http://brightonregencylabourparty.blogspot.com/2006/06/thomas-paine-festival.html",
+"-1","http://britishspin.blogspot.com/",
+"-1","http://brownswoodcouncillors.blogspot.com/2006/06/brownswood-councillors_25.html",
+"-1","http://captainsmoo.blogspot.com/",
+"-1","http://catherinedawson.typepad.com/north/",
+"-1","http://cat-smith.blogspot.com/",
+"-1","http://chriswgale.typepad.com/chris_gale/",
+"-1","http://chriswgale.typepad.com/chris_gale/2006/06/dont_panic.html",
+"-1","http://chriswgale.typepad.com/chris_gale/2006/06/nuclear_weapons.html",
+"-1","http://chriswgale.typepad.com/chris_gale/2006/07/bloodsports_bil.html",
+"-1","http://chriswgale.typepad.com/chris_gale/2006/07/pure_evil.html",
+"-1","http://chriswgale.typepad.com/chris_gale/2006/07/the_sadism_of_t.html",
+"-1","http://clivesoleymp.typepad.com/",
+"-1","http://cllrcorazzo.blogspot.com/2006/06/ever-been-so-angered-by-incomptence.html",
+"-1","http://cllrfay.blog.co.uk/2006/06/29/title~919715",
+"-1","http://cllrpeterjohn.blogspot.com/",
+"-1","http://cllrtedgeorge.blogspot.com/",
+"-1","http://cloud-in-trousers.blogspot.com/",
+"-1","http://cloud-in-trousers.blogspot.com/2006/07/amnesty-international-on-gilad-shalit.html",
+"-1","http://cloud-in-trousers.blogspot.com/2006/07/private-reasons-great-or-small.html",
+"-1","http://coedpoeth-ward.blogspot.com/",
+"-1","http://councillorbobpiper.blogspot.com/",
+"-1","http://councillorbobpiper.blogspot.com/2006/06/bland-and-blander.html",
+"-1","http://councillorbobpiper.blogspot.com/2006/06/in-search-of-right.html",
+"-1","http://councillorbobpiper.blogspot.com/2006/07/this-law-must-go.html",
+"-1","http://cramlingtonvillagecouncillor.blogspot.com/2006/06/challenge-for-bloggers-4-labour_29.html",
+"-1","http://cramlingtonvillagecouncillor.blogspot.com/2006/06/welcome-to-world-of-blogging.html",
+"-1","http://cramlingtonvillagecouncillor.blogspot.com/2006/07/english-votes-for-english-laws.html",
+"-1","http://dan-miller.co.uk/dlogs/",
+"-1","http://delbertwilkins.blogspot.com/",
+"-1","http://dirtyleftie.blogspot.com/",
+"-1","http://eastclifframsgate.blogspot.com/",
+"-1","http://eastclifframsgate.blogspot.com/2006/06/david-cameron-to-abolish-human-rights.html",
+"-1","http://elephunt.blogspot.com/",
+"-1","http://emmajonesbrucegrove.blogspot.com/",
+"-1","http://emmajonesbrucegrove.blogspot.com/2006/07/first-post.html",
+"-1","http://emmajonesbrucegrove.blogspot.com/2006/07/sport-relief-mile.html",
+"-1","http://erictheunred.blogspot.com/",
+"-1","http://everton.blogspot.com/2006/06/dashed-into-record-shop-in-hebden.html",
+"-1","http://everton.blogspot.com/2006/06/victoria-reveals-that-david-never.html",
+"-1","http://everton.blogspot.com/2006/07/am-i-only-one-to-notice-common-theme.html",
+"-1","http://everton.blogspot.com/2006/07/anthropologist-writes.html",
+"-1","http://everton.blogspot.com/2006/07/plaicekicks.html",
+"-1","http://eynesburyrose.blogspot.com/",
+"-1","http://fourthterm.net/",
+"-1","http://fourthterm.net/plog/index.php?op=viewarticle",
+"-1","http://freethoughtsofaman.blogspot.com/",
+"-1","http://geofflumley.blogspot.com/",
+"-1","http://georgeeaton.blogspot.com/",
+"-1","http://georgeeaton.blogspot.com/2006/07/first-challenge.html",
+"-1","http://grumpyoldben.blogspot.com/2006/06/1-day-until-morocco-heist-pair.html",
+"-1","http://grumpyoldben.blogspot.com/2006/06/kings-cross-fire-causes-grumpyoldben.html",
+"-1","http://hattieajderian.typepad.com/",
+"-1","http://hoxtoncouncillors.blogspot.com/",
+"-1","http://huggysmind.blogspot.com/",
+"-1","http://humanistsforlabour.typepad.com/",
+"-1","http://humanistsforlabour.typepad.com/labour_humanists/2006/06/a_salute_to_our.html",
+"-1","http://humanistsforlabour.typepad.com/labour_humanists/2006/07/useless_religio.html",
+"-1","http://humanistsforlabour.typepad.com/labour_humanists/2006/07/viva_zapatero.html",
+"-1","http://hurryupharry.bloghouse.net/",
+"-1","http://hurryupharry.bloghouse.net/archives/2006/06/28/aki_nawaz_is_a_tosser.php",
+"-1","http://hurryupharry.bloghouse.net/archives/2006/07/07/unite_against_terror_statement_in_arabic.php",
+"-1","http://janestheones.blogspot.com/2006/06/it-wouldnt-stand-up-in-court.html",
+"-1","http://johnwestjourno.blogspot.com/",
+"-1","http://jonathanderbyshire.typepad.com/",
+"-1","http://jtothak.blogspot.com/",
+"-1","http://jtothak.blogspot.com/2006/06/blaenau-blues.html",
+"-1","http://juliemorgan.blogdrive.com/",
+"-1","http://juliemorgan.typepad.com/",
+"-1","http://keeplabourin.blogspot.com/",
+"-1","http://kerroncross.blogspot.com/",
+"-1","http://kerroncross.blogspot.com/2006/06/alarming-situation.html",
+"-1","http://kerroncross.blogspot.com/2006/06/beaver-watch.html",
+"-1","http://kerroncross.blogspot.com/2006/06/has-anyone-seen-shaun-woodward.html",
+"-1","http://kerroncross.blogspot.com/2006/07/tough-government-line-on-nat-west-3.html",
+"-1","http://labour4crystalpalace.blogspot.com/",
+"-1","http://labour4crystalpalace.blogspot.com/2006/06/results-from-this-weeks-by-election.html",
+"-1","http://laboursteve.blogspot.com/",
+"-1","http://leabridgelife.blogspot.com/",
+"-1","http://leegregory.typepad.com/lee_gregory/2006/07/so_long_and_far.html",
+"-1","http://leightonandrews.typepad.com/leighton_andrews_am/",
+"-1","http://leightonandrews.typepad.com/leighton_andrews_am/2006/07/allez_les_bleus.html",
+"-1","http://leightonandrews.typepad.com/rhondda_today/2006/06/rhondda_diabete.html",
+"-1","http://leightonandrews.typepad.com/rhondda_today/2006/07/children_from_y.html",
+"-1","http://letsbesensible.blogspot.com/",
+"-1","http://letsbesensible.blogspot.com/2006/07/please.html",
+"-1","http://letsbesensible.blogspot.com/2006/07/taleban-top-trumps.html",
+"-1","http://libdems.fourthterm.net/",
+"-1","http://libsoc.blogspot.com/",
+"-1","http://lithgo.wordpress.com/",
+"-1","http://louisebaldock.blogspot.com/",
+"-1","http://lukeakehurst.blogspot.com/",
+"-1","http://lukeakehurst.blogspot.com/2006/06/i-support.html",
+"-1","http://lukeakehurst.blogspot.com/2006/07/picture-time.html",
+"-1","http://maryfoulkes.blogspot.com/",
+"-1","http://meandophelia.blogspot.com/",
+"-1","http://mike-ion.blogspot.com/",
+"-1","http://mike-ion.blogspot.com/2006/06/compass-taking-labour-in-right.html",
+"-1","http://moretomethodism.blogspot.com/",
+"-1","http://neilmacdonald.typepad.com/",
+"-1","http://nevertrustahippy.blogspot.com/",
+"-1","http://nevertrustahippy.blogspot.com/2006/06/decent-blogging.html",
+"-1","http://nevertrustahippy.blogspot.com/2006/06/quick-question.html",
+"-1","http://newerlabour.blogspot.com/2006/06/political-commitment-is-not-about-true.html",
+"-1","http://newerlabour.blogspot.com/2006/07/compass-keeps-on-turning.html",
+"-1","http://newgolddream.dyndns.info/blog",
+"-1","http://newgolddream.dyndns.info/blog/?p=17",
+"-1","http://newgolddream.dyndns.info/blog/?p=18",
+"-1","http://newgolddream.dyndns.info/blog/?p=6",
+"-1","http://nicolaheaton.blogspot.com/",
+"-1","http://nicolaheaton.blogspot.com/2006/07/day-britain-became-proper-democracy.html",
+"-1","http://nicolaheaton.blogspot.com/2006/07/world-cup-update.html",
+"-1","http://normblog.typepad.com/normblog/",
+"-1","http://normblog.typepad.com/normblog/2006/06/a_step.html",
+"-1","http://normblog.typepad.com/normblog/2006/06/cycle_talk.html",
+"-1","http://normblog.typepad.com/normblog/2006/06/dignity_period.html",
+"-1","http://normblog.typepad.com/normblog/2006/06/left_look.html",
+"-1","http://northyorkshiretimes.blogspot.com/",
+"-1","http://orlikreport.blogspot.com/",
+"-1","http://parburypolitica.blogspot.com/",
+"-1","http://parburypolitica.blogspot.com/2006/07/5-times-in-one-night.html",
+"-1","http://parburypolitica.blogspot.com/2006/07/respec-stylee-to-huqster.html",
+"-1","http://parburypolitica.blogspot.com/2006/07/usshering-in-new-generation.html",
+"-1","http://paulburgin.blogspot.com/2006/06/cross-labourshire-twinned-with-dale.html",
+"-1","http://paulburgin.blogspot.com/2006/06/first-anniversary.html",
+"-1","http://paulburgin.blogspot.com/2006/07/sunday-blogging-on-gmtv.html",
+"-1","http://politicalhackuk.blogspot.com/",
+"-1","http://politicalhackuk.blogspot.com/2006/07/oh-no-john-no-john-no-john-no.html",
+"-1","http://politicsforbeginners.blogspot.com/",
+"-1","http://popsensible.modblog.com/",
+"-1","http://redflagboy.blogspot.com/",
+"-1","http://rhodonpublicaffairs.blogspot.com/",
+"-1","http://rhodonpublicaffairs.blogspot.com/2006/06/no-private-funds-control-of-nhs.html",
+"-1","http://ridiculouspolitics.blogspot.com/2006/06/left-wing-tory-attacks-david-cameron.html",
+"-1","http://ridiculouspolitics.blogspot.com/2006/07/lib-dems-in-major-new-funding-row.html",
+"-1","http://ridiculouspolitics.blogspot.com/2006/07/old-etonians-stage-coup-de-partie.html",
+"-1","http://robnewman.typepad.com/",
+"-1","http://rodneymcaree.blogspot.com/",
+"-1","http://rodneymcaree.blogspot.com/2006/06/cameron-and-human-rights.html",
+"-1","http://rubberring.blogspot.com/",
+"-1","http://rullsenbergrules.blogspot.com/2006/06/dear-lord-of-rings.html",
+"-1","http://rullsenbergrules.blogspot.com/2006/06/fiskers-and-blog-anniversaries.html",
+"-1","http://rullsenbergrules.blogspot.com/2006/06/house.html",
+"-1","http://rullsenbergrules.blogspot.com/2006/06/on-this-note-with-just-another-14.html",
+"-1","http://rullsenbergrules.blogspot.com/2006/07/apparantly-i-dont-exist.html",
+"-1","http://rullsenbergrules.blogspot.com/2006/07/is-this-first-time.html",
+"-1","http://rullsenbergrules.blogspot.com/2006/07/who-else-sleeps-like-pornographic.html",
+"-1","http://sebcarroll.blogspot.com/",
+"-1","http://skipper59.blogspot.com/",
+"-1","http://skipper59.blogspot.com/2006/06/blair-busted-flush-on-crime-and-much.html",
+"-1","http://skipper59.blogspot.com/2006/06/charles-still-very-angry.html",
+"-1","http://skipper59.blogspot.com/2006/06/every-day-blair-remains-is-gift-to.html",
+"-1","http://skipper59.blogspot.com/2006/07/english-votes-for-english-issues-would.html",
+"-1","http://skipper59.blogspot.com/2006/07/this-prezza-problem-is-now-urgent.html",
+"-1","http://skuds.blogspot.com/",
+"-1","http://skuds.co.uk/",
+"-1","http://skuds.co.uk/index.php/2006/06/another-false-alarm/",
+"-1","http://skuds.co.uk/index.php/2006/06/crawley-in-bloom/",
+"-1","http://skuds.co.uk/index.php/2006/06/gerrit-dou/",
+"-1","http://skuds.co.uk/index.php/2006/07/two-minutes/",
+"-1","http://smalltownscribble.blogspot.com/",
+"-1","http://smalltownscribble.blogspot.com/2006/06/germany-win-hurrah.html",
+"-1","http://smalltownscribble.blogspot.com/2006/07/and-so-end.html",
+"-1","http://smeeble.blogspot.com/",
+"-1","http://snowflake5.blogspot.com/2006/06/capitalism-and-centre-left.html",
+"-1","http://snowflake5.blogspot.com/2006/07/total-taxes-as-of-gdp.html",
+"-1","http://snowflake5.blogspot.com/2006/07/why-labour-should-embrace-idea-of.html",
+"-1","http://softleft.blogspot.com/",
+"-1","http://softleft.blogspot.com/2006/06/proportional-response.html",
+"-1","http://softleft.blogspot.com/2006/07/parting-is-such-sweet-sorrow_08.html",
+"-1","http://spiritof1976.livejournal.com/",
+"-1","http://stokelabourgroup.blogspot.com/",
+"-1","http://tamanou.blogspot.com/",
+"-1","http://thebiggsreport.blogspot.com/",
+"-1","http://theboabie.blogspot.com/",
+"-1","http://thecrazyworldofpolitics.blogspot.com/2006/06/good-luck-comrades.html",
+"-1","http://thecrazyworldofpolitics.blogspot.com/2006/06/neal-lawsons-letter-to-blair.html",
+"-1","http://thecrazyworldofpolitics.blogspot.com/2006/07/what-on-earth.html",
+"-1","http://thegrammaticalpuss.blogspot.com/",
+"-1","http://thegrammaticalpuss.blogspot.com/2006/06/hello-kettle-this-is-pot.html",
+"-1","http://thekupfers.typepad.com/tothepoint/",
+"-1","http://thepoormouth.blogspot.com/",
+"-1","http://thepoormouth.blogspot.com/2006/06/burghers-of-calais-london.html",
+"-1","http://thepoormouth.blogspot.com/2006/06/churchill-parliament-square.html",
+"-1","http://thepoormouth.blogspot.com/2006/07/how-london-defeated-bombers.html",
+"-1","http://thepoormouth.blogspot.com/2006/07/saddams-road-to-hell.html",
+"-1","http://thesilenthunter.blogspot.com/",
+"-1","http://thesilenthunter.blogspot.com/2006/07/yet-another-four-years-of-hurt.html",
+"-1","http://thethimble.blogspot.com/",
+"-1","http://thewonderfulworldoflola.blogspot.com/",
+"-1","http://thewonderfulworldoflola.blogspot.com/2006/06/lets-hear-it-for-doctor.html",
+"-1","http://thewonderfulworldoflola.blogspot.com/2006/07/pleased-to-report.html",
+"-1","http://treesforlabour.wordpress.com/",
+"-1","http://treesforlabour.wordpress.com/2006/06/27/fighting-the-wrong-battles-at-the-wrong-time-in-the-wrong-places/",
+"-1","http://treesforlabour.wordpress.com/2006/06/27/fighting-the-wrong-battles-at-the-wrong-time-in-the-wrong-places/#comment-1005",
+"-1","http://tygerland.net/",
+"-1","http://tygerland.net/?p=702",
+"-1","http://tygerland.net/?p=705",
+"-1","http://tygerland.net/?p=709",
+"-1","http://tygerland.net/?p=710",
+"-1","http://tygerland.net/?p=712",
+"-1","http://uk.blog.360.yahoo.com/blog-kbdesrg7bqpuovjiyzvpss3reg--?cq=1",
+"-1","http://users.ox.ac.uk/~magd1368/weblog/2006_06_01_archive.html",
+"-1","http://users.ox.ac.uk/~magd1368/weblog/blogger.html",
+"-1","http://wandwaver.co.uk/blog/",
+"-1","http://warrenmorgan.blogspot.com/",
+"-1","http://warrenmorgan.blogspot.com/2006/07/me-on-web.html",
+"-1","http://whelton.blogspot.com/",
+"-1","http://whelton.blogspot.com/2006/06/bromley-blaenau-by-elections.html",
+"-1","http://whelton.blogspot.com/2006/07/comic-davidson-declared-bankrupt.html",
+"-1","http://whelton.blogspot.com/2006/07/tony-blair-speech-to-labour-party.html",
+"-1","http://www.186mph.blogspot.com/",
+"-1","http://www.20six.co.uk/bodimeade",
+"-1","http://www.20six.co.uk/Cllr_Andrew_Brown",
+"-1","http://www.20six.co.uk/karenmarshall",
+"-1","http://www.20six.co.uk/kingstanding",
+"-1","http://www.20six.co.uk/middletonpark",
+"-1","http://www.20six.co.uk/Westminster",
+"-1","http://www.afarfetchedresolution.com/",
+"-1","http://www.alun-clwydwest.blogspot.com/",
+"-1","http://www.annecampbell.org.uk/weblog/",
+"-1","http://www.antoniabance.org.uk/",
+"-1","http://www.antoniabance.org.uk/2006/06/24/being-a-guardian-cack-inspired-councillor/",
+"-1","http://www.antoniabance.org.uk/2006/06/29/18-lib-dem-councillors-sitting-on-the-wall/",
+"-1","http://www.antoniabance.org.uk/2006/06/30/just-for-the-boys/",
+"-1","http://www.antoniabance.org.uk/2006/07/06/votes-for-the-nec/",
+"-1","http://www.assemblylabour.blogspot.com/",
+"-1","http://www.austinmitchell.org/",
+"-1","http://www.barder.com/ephems/",
+"-1","http://www.barder.com/ephems/512",
+"-1","http://www.barrysbeef.blogspot.com/",
+"-1","http://www.billyhayes.co.uk/",
+"-1","http://www.blacktriangle.org/blog/?p=1399",
+"-1","http://www.blog.co.uk/cllrfay",
+"-1","http://www.bloggers4labour.org/",
+"-1","http://www.bloggers4labour.org/2006/06/compass.jsp",
+"-1","http://www.bloggers4labour.org/2006/06/recommend-posts-at-b4l.jsp",
+"-1","http://www.bloggers4labour.org/2006/07/lest-we-forget.jsp",
+"-1","http://www.bloggers4labour.org/atom.xml",
+"-1","http://www.bloggers4labour.org/create.jsp",
+"-1","http://www.bloggers4labour.org/css/b4l_2006.css",
+"-1","http://www.bloggers4labour.org/DSW.jsp",
+"-1","http://www.bloggers4labour.org/links2.jsp",
+"-1","http://www.bloggers4labour.org/recent_posts.jsp",
+"-1","http://www.bloggers4labour.org/servlet/b4l_main?rss=true",
+"-1","http://www.bloggers4labour.org/stats.jsp",
+"-1","http://www.carlroper.blogspot.com/",
+"-1","http://www.channel4.com/news/microsites/E/election2005_blogs/dobson_blog.html",
+"-1","http://www.cllrcorazzo.blogspot.com/",
+"-1","http://www.corbett-euro.demon.co.uk/blog/",
+"-1","http://www.cstihlermep.com/ViewPage.cfm?Page=8894",
+"-1","http://www.dadblog.co.uk/",
+"-1","http://www.dan-jackson.co.uk/news.html",
+"-1","http://www.davosnewbies.com/",
+"-1","http://www.deepcallstodeep.sonafide.com/",
+"-1","http://www.derekwyatt.co.uk/pages/blog.asp?i_PageID=1817",
+"-1","http://www.dirtyleftie.co.uk/",
+"-1","http://www.dirtyleftie.co.uk/?p=148",
+"-1","http://www.dirtyleftie.co.uk/?p=154",
+"-1","http://www.ericlee.info/",
+"-1","http://www.etribes.com/waspish",
+"-1","http://www.fiona-colley.net/",
+"-1","http://www.gentheoryrubbish.com/",
+"-1","http://www.gentheoryrubbish.com/archives/000688.html",
+"-1","http://www.gentheoryrubbish.com/archives/000690.html",
+"-1","http://www.grumpyoldben.blogspot.com/",
+"-1","http://www.hulc.org/blog/",
+"-1","http://www.islingtonlabour.org.uk/",
+"-1","http://www.jamiebolden.com/",
+"-1","http://www.janestheones.blogspot.com/",
+"-1","http://www.johntyrrell.co.uk/",
+"-1","http://www.jonathanbishop.org.uk/weblog/",
+"-1","http://www.josalmon.co.uk/",
+"-1","http://www.josalmon.co.uk/2006/06/politics-online/",
+"-1","http://www.josalmon.co.uk/2006/06/pompeii-live/",
+"-1","http://www.josalmon.co.uk/2006/07/suspended-for-disagreeing-with-the-government/",
+"-1","http://www.josalmon.co.uk/2006/07/wealth-vs-life-expectancy/",
+"-1","http://www.josalmon.co.uk/2006/07/what-kind-of-coffee-are-you/",
+"-1","http://www.keep-the-faith.org/",
+"-1","http://www.labour.org.uk/blog/index.php?id=1",
+"-1","http://www.labour.org.uk/blog/index.php?id=113&tx_ttnews[tt_news]=263&tx_ttnews[year]=2006&tx_ttnews[month]=07&tx_ttnews[day]=07&cHash=6e14f8f72c",
+"-1","http://www.labour.org.uk/blog/index.php?id=12",
+"-1","http://www.labour.org.uk/blog/index.php?id=90",
+"-1","http://www.labour4mildmay.blogspot.com/",
+"-1","http://www.labourinlondon.org.uk/blog",
+"-1","http://www.labourstart.org/",
+"-1","http://www.labourwandsworth.org.uk/latchmere/blog/index.htm",
+"-1","http://www.labourwandsworth.org.uk/roehampton/blog/",
+"-1","http://www.labourwandsworth.org.uk/tooting/blog/",
+"-1","http://www.leegregory.typepad.com/",
+"-1","http://www.leightonandrews.blogspot.com/",
+"-1","http://www.leightonandrews.typepad.com/rhondda_today/",
+"-1","http://www.lewisatkinson.co.uk/",
+"-1","http://www.lewisham.org.uk/john/LBL/weblog/",
+"-1","http://www.lewisham.org.uk/john/lbl/weblog/2006/07/i-predict-riot-or-back-to-nineties.html",
+"-1","http://www.madmusingsof.me.uk/archives/2006/07/lets_blame_roon.php",
+"-1","http://www.madmusingsof.me.uk/archives/2006/07/were_coming_hom.php",
+"-1","http://www.madmusingsof.me.uk/weblog/",
+"-1","http://www.marlynsblog.org.uk/",
+"-1","http://www.ministryoftruth.org.uk/",
+"-1","http://www.ministryoftruth.org.uk/2006/06/22/were-not-homophobic-but/",
+"-1","http://www.mirandagrell.com/",
+"-1","http://www.odpm.gov.uk/cs/blogs/ministerial_blog/archive/2006/06/22/1203.aspx",
+"-1","http://www.omarsalem.com/",
+"-1","http://www.organisingacademy.blogspot.com/",
+"-1","http://www.owen.org/blog",
+"-1","http://www.owen.org/blog/536",
+"-1","http://www.oxfordlabour.org.uk/",
+"-1","http://www.oxfordlabour.org.uk/2006/06/29/councillor-saj-malik-joins-labour/",
+"-1","http://www.oxfordlabour.org.uk/2006/07/03/lib-dem-gaffe-outrages-community-groups/",
+"-1","http://www.patmcfadden.com/cgi-bin/cm.cgi?cmrid=2&cmpid=33",
+"-1","http://www.paulbell.org/",
+"-1","http://www.paulburgin.blogspot.com/",
+"-1","http://www.paulnowak.blogspot.com/",
+"-1","http://www.pendre.blogspot.com/",
+"-1","http://www.petemorton.blogspot.com/",
+"-1","http://www.philbateman.com/",
+"-1","http://www.pootergeek.com/",
+"-1","http://www.pootergeek.com/?p=2300",
+"-1","http://www.pootergeek.com/?p=2344",
+"-1","http://www.recessmonkey.com/2006/06/23/tory-wingnuts-choose-new-party-logo/",
+"-1","http://www.recessmonkey.com/2006/06/27/clarke-praises-and-advises-gordon/",
+"-1","http://www.recessmonkey.com/2006/06/30/cameron-in-despair-over-mp-selections/",
+"-1","http://www.recessmonkey.com/2006/07/01/operation-petal-the-lilac-larceny/",
+"-1","http://www.ridiculouspolitics.blogspot.com/",
+"-1","http://www.river-views.blogspot.com/",
+"-1","http://www.robshorrock.me.uk/",
+"-1","http://www.rogerdarlington.co.uk/nighthawk/",
+"-1","http://www.rogerdarlington.co.uk/nighthawk/index.php?id=p2736",
+"-1","http://www.rogerdarlington.me.uk/nighthawk/2006/07/the_english_language.html",
+"-1","http://www.sadiqkhan.org.uk/blog/sadiqblog.htm",
+"-1","http://www.schmoontherun.blogspot.com/",
+"-1","http://www.snedds.co.uk/",
+"-1","http://www.snedds.co.uk/?p=84",
+"-1","http://www.stephennewton.com/",
+"-1","http://www.stephenpollard.net/",
+"-1","http://www.stuartssoapbox.com/",
+"-1","http://www.stuartssoapbox.com/2006/06/why_we_need_com.html",
+"-1","http://www.thecrazyworldofpolitics.blogspot.com/",
+"-1","http://www.thirskandmalton.blogspot.com/",
+"-1","http://www.wellslabour.org/blog.php?",
+"-1","http://www.westminstervillage.co.uk/",
+"-1","http://www.whatcomestopass.com/",
+"-1","http://www.whatcomestopass.com/archives/000723.html",
+"-1","http://www.youngfreeandlabour.co.uk/worldcupblog.htm",
+"-1","http://www.youngfreeandpolitical.com/myblog.htm",
+"-1","http://yorkielabour.blogspot.com/" };
+ 
+*/
+	
 	private final static String	s_TestURLsAndRecnos[] =
-					{
-					"212","http://afarfetchedresolution.blogspot.com/2006/07/idiots-please-read-this-understand-it.html",
+				{
+/*					"212","http://afarfetchedresolution.blogspot.com/2006/07/idiots-please-read-this-understand-it.html",
 					"302","http://agitpropcentral.blogspot.com/2006/07/compass-and-party-in-fighting.html",
 					"317","http://alun-clwydwest.blogspot.com/2006/07/tories-clueless-on-cost-of.html",
 					"300","http://andrewkbrown.wordpress.com/2006/06/29/stupid-council/",
@@ -527,6 +875,9 @@ public class Test
 					"295","http://www.rogerdarlington.me.uk/nighthawk/2006/07/why_does_history_matter.html",
 					"311","http://www.snedds.co.uk/?p=84",
 					"311","http://www.snedds.co.uk/?p=86",
-					"210","http://www.stuartssoapbox.com/2006/06/why_we_need_com.html"
+					"210","http://www.stuartssoapbox.com/2006/06/why_we_need_com.html",
+					"100","https://www.nwolb.com/default.aspx?refererident=b0ba0ee93474164b5421a64032db66b9f1bac11f",
+*/					"100","http://news.bbc.co.uk/sport/"
 					};
+
 }
