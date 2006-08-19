@@ -6,14 +6,16 @@
 
 package org.bloggers4labour;
 
-import org.bloggers4labour.feed.FeedList;
 import com.hiatus.UDates;
 import com.hiatus.UHTML;
+import com.hiatus.ULocale2;
 import com.hiatus.UText;
 import de.nava.informa.core.*;
 import de.nava.informa.impl.basic.Item;
 import de.nava.informa.utils.ParserUtils;
+import java.text.DateFormat;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -24,6 +26,7 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
+import org.bloggers4labour.feed.FeedList;
 import org.bloggers4labour.tag.Tag;
 import static org.bloggers4labour.Constants.*;
 
@@ -62,6 +65,7 @@ public final class FeedUtils
 	private static Pattern		s_CommentAuthorMemPattern = Pattern.compile(" \\[Member\\]");			// (AGR) 30 Nov 2005
 
 	private static NumberFormat	s_MemoryNumFormat;		// (AGR) 22 May 2005
+	private static DateFormat	s_BigIssueDotNetDateFormat;	// (AGR) 12 July 2006
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -90,6 +94,9 @@ public final class FeedUtils
 
 		s_MemoryNumFormat = NumberFormat.getNumberInstance( Locale.UK );
 		s_MemoryNumFormat.setMaximumFractionDigits(2);
+
+		s_BigIssueDotNetDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.US);	// (AGR) 12 July 2006. Shudder...
+		s_BigIssueDotNetDateFormat.setTimeZone( ULocale2.getBestTimeZone( Locale.UK ));		// Assume published in London time
 	}
 
 	/*******************************************************************************
@@ -377,7 +384,17 @@ public final class FeedUtils
 				}
 				catch (Exception e2)
 				{
-					// (AGR) 4 March 2006. Haven't we tried hard enough???'
+					// (AGR) 4 March 2006. Haven't we tried hard enough???
+					// (AGR) 12 July 2006. For TheBigIssue.Net's benefit, handle this bogus date format...
+
+					try
+					{
+						return s_BigIssueDotNetDateFormat.parse( inItem.getElementValue("pubDate") );
+					}
+					catch (Exception e3)
+					{
+						;
+					}
 				}
 			}
 		}
