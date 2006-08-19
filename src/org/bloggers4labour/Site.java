@@ -281,7 +281,11 @@ public final class Site implements Serializable, Comparable<Site>	// (AGR) 6 Jun
 
 		for ( String s : m_Creators)
 		{
-			if (s.equalsIgnoreCase("MEP"))
+			if (s.startsWith("Former "))	// (AGR) 12 August 2006
+			{
+				continue;
+			}
+			else if (s.equalsIgnoreCase("MEP"))
 			{
 				imageName = "mep.png";
 			}
