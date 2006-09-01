@@ -27,6 +27,7 @@ import java.sql.Statement;
 import java.text.*;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -179,17 +180,21 @@ public class MainServlet extends HttpServlet
 
 				theOutputBuffer = ( theStringToUse != null) ? new StringBuffer(theStringToUse) : null;
 			}
-			else if (hasParameter( inRequest, "search"))	// (AGR) 17 July 2005. Ok, can be GET too
+			else if (hasParameter( inRequest, "search"))		// (AGR) 17 July 2005. Ok, can be GET too
 			{
 				handleSearch( inRequest, inResponse);
 			}
-			else if (hasParameter( inRequest, "dsw"))	// (AGR) 20 September 2005
+			else if (hasParameter( inRequest, "dsw"))		// (AGR) 20 September 2005
 			{
 				theOutputBuffer = handleDSW( inRequest, inResponse).toString();
 				// s_Servlet_Logger.info("... theOutputBuffer = \"" + theOutputBuffer + "\"");
 				// keepAlive = false;
 			}
-			else if (hasParameter( inRequest, "recommend"))	// (AGR) 20 June 2006. Value is a URL...
+			else if (hasParameter( inRequest, "recommendations"))	// (AGR) 31 August 2006
+			{
+				theOutputBuffer = handleRecommendations( inRequest, inResponse).toString();
+			}
+			else if (hasParameter( inRequest, "recommend"))		// (AGR) 20 June 2006. Value is a URL...
 			{
 				try
 				{
@@ -619,7 +624,6 @@ s_Servlet_Logger.info( inRequest.getMethod() + " query = " + inRequest.getQueryS
 			theAgeFmt.setMaximumFractionDigits(0);
 
 			boolean		gotOne = false;
-			boolean		showComma = false;
 
 			do
 			{
@@ -771,6 +775,188 @@ s_Servlet_Logger.info( inRequest.getMethod() + " query = " + inRequest.getQueryS
 		else
 		{
 			ioBuf.append("no entries");
+		}
+
+		ioBuf.append("</p>");
+	}
+
+	/*******************************************************************************
+		(AGR) 31 August 2006
+	*******************************************************************************/
+	public CharSequence handleRecommendations( HttpServletRequest inRequest, HttpServletResponse inResponse)
+	{
+		DataSourceConnection	theConnectionObject = null;
+		StringBuilder		cs = new StringBuilder();
+		Locale			theLocale = GetClientLocale(inRequest);
+		String			theType = inRequest.getParameter("recommendations");
+		String			theFormatStr = inRequest.getParameter("format");
+		int			theCount;
+
+		try
+		{
+			theCount = Integer.parseInt( inRequest.getParameter("count") );
+		}
+		catch (Exception e)
+		{
+			theCount = 5;
+		}
+
+		////////////////////////////////////////////////////////////////
+
+		inResponse.setLocale(theLocale);
+		inResponse.setContentType("text/javascript");
+
+		if (UText.isValidString(theFormatStr))
+		{
+			if (theFormatStr.equals("b4l"))
+			{
+				cs.append("document.writeln('")
+				  .append("<style type=\"text/css\">")
+					.append("@import url(\"http://www.bloggers4labour.org/css/Recommendations.css\");")
+				  .append("</style>');\n");
+			}
+		}
+
+		////////////////////////////////////////////////////////////////
+
+		cs.append("document.writeln('");
+		cs.append("<div id=\"b4l-recommendations\">")
+			.append("<p class=\"recommend-head\">")
+				.append("<span class=\"recommend-head\">")
+					.append("Recently Recommended...")
+					.append("&nbsp;")
+				.append("</span>")
+			.append("</p>");
+
+		try
+		{
+			InstallationIF	theInstall = InstallationManager.getDefaultInstallation();
+
+			theConnectionObject = new DataSourceConnection( theInstall.getDataSource() );
+			if (theConnectionObject.Connect())
+			{
+				// s_FL_Logger.info("conn = " + theConnectionObject);
+
+				Statement	theS = null;
+
+				try
+				{
+					theS = theConnectionObject.createStatement();
+					_handleRecommendations( theInstall,
+								theType,
+								theFormatStr,
+								theCount, theS, cs);
+				}
+				catch (Exception e)
+				{
+					s_Servlet_Logger.error("creating statement", e);
+				}
+				finally
+				{
+					USQL_Utils.closeStatementCatch(theS);
+				}
+			}
+			else
+			{
+				s_Servlet_Logger.warn("Cannot connect!");
+			}
+		}
+		catch (Exception err)
+		{
+			s_Servlet_Logger.error("???", err);
+		}
+		finally
+		{
+			if ( theConnectionObject != null)
+			{
+				theConnectionObject.CloseDown();
+				theConnectionObject = null;
+			}
+		}
+
+		////////////////////////////////////////////////////////////////
+
+		cs.append("<hr />")
+		  .append("<p class=\"recommend-link\">")
+				.append("<a class=\"recommend\" href=\"" + "http://www.bloggers4labour.org/recommended.jsp" + "\" target=\"recommendedWind\">")
+					.append("More Recommendations")
+				.append("</a>")
+			.append("</p>");
+
+		return cs.append("</div>');");
+	}
+
+	/*******************************************************************************
+		(AGR) 31 August 2006
+	*******************************************************************************/
+	private void _handleRecommendations( final InstallationIF inInstall, String inTypeStr, String inFormatStr, int inNumber,
+						Statement inS, StringBuilder ioBuf) throws SQLException
+	{
+
+		StringBuilder	qBuilder = new StringBuilder("SELECT U.url,S.site_recno,S.name FROM recommendations R, recommendedURLs U, site S WHERE R.url_recno=U.recno AND U.originating_site_recno=S.site_recno ORDER BY date DESC LIMIT " + inNumber);
+		ResultSet	theRS = inS.executeQuery( qBuilder.toString() );
+
+		ioBuf.append("<p class=\"recommend-entries\">");
+
+		if (theRS.next())
+		{
+			HashMap<Number,Site>	theSitesMap = new HashMap<Number,Site>();
+			FeedList		theFL = inInstall.getFeedList();
+			Site			theSiteObj;
+			int			numPostsPerLevel = inNumber / 5;
+	//		int			currentLevel = 1;
+			int			postCount = 0;
+			boolean			usesLevels = ( inNumber % 5 == 0);
+			boolean			gotOne = false;
+			boolean			showComma = false;
+
+			do
+			{
+				String		theURL = theRS.getString("url");
+				long		theSiteRecno = theRS.getLong("site_recno");
+
+/*				theSiteObj = theSitesMap.get(theSiteRecno);
+				if ( theSiteObj == null)
+				{
+					theSiteObj = theFL.lookup(theSiteRecno);
+					theSitesMap.put( theSiteRecno, theSiteObj);
+				}
+*/
+				////////////////////////////////////////////////
+
+				if (gotOne)
+				{
+					ioBuf.append(", ");
+				}
+				else	gotOne = true;
+
+				ioBuf.append("<a href=\"" + theURL + "\" target=\"recommendedWind\">");
+
+				if (usesLevels)
+				{
+					int	currentLevel = postCount / numPostsPerLevel + 1;
+
+					ioBuf.append("<span class=\"level").append(currentLevel).append("\">");
+				}
+
+				ioBuf.append( UHTML.StringToHtml( theRS.getString("name") ));
+
+				if (usesLevels)
+				{
+					ioBuf.append("</span>");
+				}
+
+				ioBuf.append("</a>");
+
+				postCount++;
+			}
+			while (theRS.next());
+
+			// s_Servlet_Logger.info("... DONE: ioBuf = \"" + ioBuf + "\"");
+		}
+		else
+		{
+			ioBuf.append("no articles");
 		}
 
 		ioBuf.append("</p>");
