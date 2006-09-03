@@ -27,6 +27,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
 import org.bloggers4labour.feed.FeedList;
+import org.bloggers4labour.html.Encoding;
 import org.bloggers4labour.tag.Tag;
 import static org.bloggers4labour.Constants.*;
 
@@ -45,6 +46,8 @@ public final class FeedUtils
 	private static Pattern		s_FookPattern;			// (AGR) 19 April 2005
 	private static Pattern		s_ImagePattern;			// (AGR) 13 May 2005. Seperated out.
 	private static Pattern		s_BreakPattern;			// (AGR) 15 May 2005. Seperated out.
+	private static Pattern		s_LtPattern;			// (AGR) 28 August 2006
+	private static Pattern		s_GtPattern;			// (AGR) 28 August 2006
 
 	private static Pattern		s_MidHeaderPattern;		// (AGR) 10 May 2005
 	private static Pattern		s_OuterHeaderPattern;		// (AGR) 10 May 2005
@@ -83,7 +86,9 @@ public final class FeedUtils
 //		s_ClearPattern = Pattern.compile( "<p[^>]*>|<small>|</small>|" + BOLD_STRIPPER + "|" + ITALIC_STRIPPER + "|<em[^>]*>|</em>|" + STRONG_STRIPPER + "|</span>|" + MICROSOFT_STRIPPER + "|<!\\[CDATA\\[|<div[^>]*>|<span[^>]*>|<font[^>]*>|<iframe[^>]*>|<center>|</center>|<ul[^>]*>|<ol[^>]*>|<li[^>]*>|]]>|<table[^>]*>|<tbody[^>]*>|<tr[^>]*>|</tr>|<s>|</s>|<del>|</del>|<td[^>]*>|<h[1-7][^>]*>|<style[^>]*>.*</style[^>]*>|<wbr />|</img>|" + FRAG_STRIPPER + "|" + TT_STRIPPER + "|" + INTERNAL_LINK_STRIPPER, Pattern.CASE_INSENSITIVE);
 //		s_ClearPattern = Pattern.compile( "<p[^>]*>|<small>|</small>|" + BOLD_STRIPPER + "|<em[^>]*>|</em>|" + STRONG_STRIPPER + "|</span>|" + MICROSOFT_STRIPPER + "|<!\\[CDATA\\[|<div[^>]*>|<span[^>]*>|<font[^>]*>|<iframe[^>]*>|<center>|</center>|<ul[^>]*>|<ol[^>]*>|<li[^>]*>|]]>|<table[^>]*>|<tbody[^>]*>|<tr[^>]*>|</tr>|<s>|</s>|<del>|</del>|<td[^>]*>|<h[1-7][^>]*>|<style[^>]*>.*</style[^>]*>|<wbr />|</img>|" + FRAG_STRIPPER + "|" + TT_STRIPPER + "|" + INTERNAL_LINK_STRIPPER + "|" + "<object .*</object>", Pattern.CASE_INSENSITIVE);
 		s_ClearPattern = Pattern.compile( "<p[^>]*>|<small>|</small>|" + BOLD_STRIPPER + "|<em[^>]*>|</em>|" + STRONG_STRIPPER + "|</span>|" + MICROSOFT_STRIPPER + "|<!\\[CDATA\\[|<div[^>]*>|<span[^>]*>|<font[^>]*>|<iframe[^>]*>|<center>|</center>|<ul[^>]*>|<ol[^>]*>|<li[^>]*>|]]>|<table[^>]*>|<tbody[^>]*>|<tr[^>]*>|</tr>|<s>|</s>|<del>|</del>|<td[^>]*>|<h[1-7][^>]*>|<style[^>]*>.*</style[^>]*>|<wbr />|</img>|" + FRAG_STRIPPER + "|" + TT_STRIPPER + "|" + INTERNAL_LINK_STRIPPER, Pattern.CASE_INSENSITIVE);
-		s_QuotePattern = Pattern.compile( "<blockquote[^>]*>[\r\n\t ]*\"|<blockquote[^>]*>[\r\n\t ]*|\"[\r\n\t ]*</blockquote>|[\r\n\t ]*</blockquote>", Pattern.CASE_INSENSITIVE);	// (AGR) 19 April 2005. Also strip out initial double-quote
+//		s_QuotePattern = Pattern.compile( "<blockquote[^>]*>[\r\n\t ]*\"|<blockquote[^>]*>[\r\n\t ]*|\"[\r\n\t ]*</blockquote>|[\r\n\t ]*</blockquote>", Pattern.CASE_INSENSITIVE);	// (AGR) 19 April 2005. Also strip out initial double-quote
+		s_LtPattern    = Pattern.compile("&lt;");
+		s_GtPattern    = Pattern.compile("&gt;");
 
 		s_MidHeaderPattern = Pattern.compile( "</th><th[^>]*>", Pattern.CASE_INSENSITIVE);
 		s_OuterHeaderPattern = Pattern.compile( "<th[^>]*>|</th>", Pattern.CASE_INSENSITIVE);
@@ -191,13 +196,26 @@ public final class FeedUtils
 	*******************************************************************************/
 	public static String stripHTML( final String inStr, final EnumSet<FormatOption> inOptions)
 	{
-		final String	cleanedStr = stripExpletives(inStr);
+		String	cleanedStr = stripExpletives(inStr);
 
-		if (!cleanedStr.contains("<"))	// (AGR) 27 Feb 2006. A performance bodge - we're only stripping HTML, which must contain a <
+		if (!cleanedStr.contains("<"))			// (AGR) 27 Feb 2006. A performance bodge - we're only stripping HTML, which must contain a <
 		{
-			// System.out.println("~~~ Nothing in... " + cleanedStr); // .substring(0, cleanedStr.length() > 100 ? 100 : cleanedStr.length()));
+			if (cleanedStr.contains("&lt;"))	// (AGR) 28 Aug 2006. Look - HTML! Carry on...
+			{
+//				cleanedStr = Encoding.htmlunescape(cleanedStr);
 
-			return cleanedStr;
+				cleanedStr = s_GtPattern.matcher( s_LtPattern.matcher(cleanedStr).replaceAll("<") ).replaceAll(">");
+			}
+/*			else if (cleanedStr.contains(">"))	// (AGR) 28 Aug 2006. This was a poor bodge. I've noticed the following stuff that breaks the above...  &lt;a href="...">Nice paper&lt;/a> ... at NewerLabour.
+			{
+				cleanedStr = s_LtPattern.matcher(cleanedStr).replaceAll("<");
+			}
+*/			else
+			{
+				// System.out.println("~~~ Nothing in... " + cleanedStr); // .substring(0, cleanedStr.length() > 100 ? 100 : cleanedStr.length()));
+
+				return cleanedStr;
+			}
 		}
 
 		////////////////////////////////////////////////////////////////
@@ -233,9 +251,9 @@ public final class FeedUtils
 
 		return s_OuterHeaderPattern.matcher(
 			s_MidHeaderPattern.matcher(
-				s_QuotePattern.matcher(
+//				s_QuotePattern.matcher(
 					s_SpacePattern.matcher(
-						s_ClearPattern.matcher( breakAdjustedStr ).replaceAll("") ).replaceAll(" ") ).replaceAll("\"") ).replaceAll(" / ") ).replaceAll("|");
+						s_ClearPattern.matcher( breakAdjustedStr ).replaceAll( /* Clear */ "") ).replaceAll( /* Space */ " ") ) /* .replaceAll("\"") ) */ .replaceAll( /* Mid */ " / ") ).replaceAll( /* Outer */ "|");
 	}
 
 	/*******************************************************************************	
@@ -500,12 +518,16 @@ public final class FeedUtils
 		{
 			// Leave the date alone, and let the AgeResult record flag us as unacceptable
 		}
+		else if ( theMsecsInTheFuture > 0 &&
+			  theMsecsInTheFuture <= ( 5L * ONE_MINUTE_MSECS))	// (AGR) 3 Sep 2006. Any thing <= 5 mins in the future I take to be a problem with the clock on the feed server (see: http://www.bloggers4labour.org/2006/09/up-on-bricks-results-so-far.jsp) ...
+		{
+			theItemDateMsecs -= ( 5L * ONE_MINUTE_MSECS);		// ... so imply shift back by 5 minutes.
+		}
 		else if (( theMsecsInTheFuture > ( 3L * ONE_HOUR_MSECS)) &&	// (AGR) 19 Dec 2005. New logic
 		         ( theMsecsInTheFuture <= ( 8L * ONE_HOUR_MSECS)))	// (AGR) 7 Jan 2006. Had to add this when I noticed a post 25.5 hours in the future!
 		{
 			// Assume US time (well, PST) if the time is as far into the future as this
 
-//			c.roll( Calendar.HOUR_OF_DAY, -8);
 			theItemDateMsecs -= ( 8L * ONE_HOUR_MSECS);
 		}
 		else
@@ -519,10 +541,6 @@ public final class FeedUtils
 
 			theItemDateMsecs -= ( numHoursToRollBack * ONE_HOUR_MSECS);
 		}
-
-		// Old logic (pre-19 Dec 2005)
-		// c.setTime(inItemDate);
-		// c.roll( Calendar.HOUR_OF_DAY, -1);	// subtract an hour
 
 		////////////////////////////////////////////////////////////////
 
