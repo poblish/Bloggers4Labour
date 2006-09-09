@@ -114,10 +114,9 @@ public class Poller
 			HeadlineFilter		theFilter = new HeadlineFilter( m_Installation, inChannel);
 
 			int[]			hCountArray = new int[ theHMgr.getHeadlinesCount() ];	// (AGR) 22 May 2005
-			ActivityTable		theActivityTable = m_Installation.getActivityTable();	// (AGR) 8 March 2006
+//			ActivityTable		theActivityTable = m_Installation.getActivityTable();	// (AGR) 8 March 2006
 			String			theChannelSiteURL = inChannel.getSite().toString();	// (AGR) 8 March 2006
 			CategoriesTable		theCatsTable = m_Installation.getCategories();
-//			long			oldRecentPostAgeMsecs = Long.MIN_VALUE;			// (AGR) 26 Feb 2006
 			int			recentPosts = 0;					// (AGR) 26 Feb 2006
 			List<ItemIF>		theItemsToRemoveFromChannel = new ArrayList<ItemIF>();	// (AGR) 3 March 2006
 			int			datelessPostCount = 0;					// (AGR) 4 March 2006
@@ -141,18 +140,6 @@ public class Poller
 					// System.out.println("+++  " + theItemsArray[i].getTitle() + " / " + theItemsArray[i].hashCode());
 				}
 
-				//////////////////////////////////////////////////////////////////  (AGR) 26 Feb 2006
-
-/*				if ( theAgeResult.getAgeMSecs() < MAX_AGE_FOR_RECENT_POST)
-				{
-					recentPosts++;
-
-					if ( theAgeResult.getAgeMSecs() > oldRecentPostAgeMsecs)
-					{
-						oldRecentPostAgeMsecs = theAgeResult.getAgeMSecs();
-					}
-				}
-*/
 				//////////////////////////////////////////////////////////////////  (AGR) 19 May 2005
 
 				if (( theCatsTable != null) && ( itemDate != null) && theAgeResult.getAgeMSecs() < CategoriesTable.getMaxPermissibleItemAge())
@@ -162,11 +149,11 @@ public class Poller
 
 				//////////////////////////////////////////////////////////////////  (AGR) 8 March 2006
 
-				if ( theActivityTable != null)
+/*				if ( theActivityTable != null)
 				{
 					theActivityTable.store( theAgeResult.getAgeMSecs(), theChannelSiteURL);
 				}
-
+*/
 				//////////////////////////////////////////////////////////////////
 
 				int	hIndex = 0;
@@ -228,21 +215,7 @@ public class Poller
 			{
 				s_Poll_Logger.info( m_Installation.getLogPrefix() + "WARNING. Found an undated post in \"" + FeedUtils.channelToString(inChannel) + "\"");
 			}
-
-			////////////////////////////////////////////////////////  (AGR) 26 Feb 2006
-
-/*			if ( recentPosts > 0)
-			{
-				if ( oldRecentPostAgeMsecs < MAX_AGE_FOR_RECENT_POST)
-				{
-					s_Poll_Logger.info("At least " + recentPosts + " recent posts for " + FeedUtils.channelToString(inChannel) + ", oldest: " + UDates.getFormattedTimeDiff(oldRecentPostAgeMsecs));
-				}
-				else
-				{
-					s_Poll_Logger.info("" + recentPosts + " recent posts for " + FeedUtils.channelToString(inChannel) + ", oldest: " + UDates.getFormattedTimeDiff(oldRecentPostAgeMsecs));
-				}
-			}
-*/		}
+		}
 	}
 
 	/*******************************************************************************
