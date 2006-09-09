@@ -14,7 +14,7 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.ResourceBundle;
 import javax.sql.DataSource;
-import org.bloggers4labour.activity.ActivityTable;
+import org.bloggers4labour.activity.*;
 import org.bloggers4labour.cats.CategoriesTable;
 import org.bloggers4labour.feed.*;
 import org.bloggers4labour.index.IndexMgr;
@@ -42,7 +42,8 @@ public class Installation implements InstallationIF
 	private DigestSender		m_DigestSender;
 	private IndexMgr		m_IndexMgr;
 
-	private ActivityTable		m_ActivityTable = new ActivityTable();
+	private ActivityTable		m_ActivityTable = null; // new ActivityTable();
+	private LastPostTable		m_LastPostTable;		// (AGR) 9 Sep 2006
 
 	private static Logger		s_Install_Logger = Logger.getLogger("Main");
 
@@ -60,8 +61,10 @@ public class Installation implements InstallationIF
 		m_Management = new Management( this, inStatsBeanName);
 
 		m_FeedList = new FeedList(this);
-//		m_HeadlinesMgr = new HeadlinesMgr(this);	// needs a FeedList...
-//		m_HeadlinesMgr = inHeadsMgr;			// (AGR) 21 March 2006. needs a FeedList...
+//		m_HeadlinesMgr = new HeadlinesMgr(this);		// needs a FeedList...
+//		m_HeadlinesMgr = inHeadsMgr;				// (AGR) 21 March 2006. needs a FeedList...
+
+		m_LastPostTable = new LastPostTable(m_FeedList);	// (AGR) 9 Sep 2006
 
 		// must call: complete() at some point!
 	}
@@ -200,6 +203,14 @@ public class Installation implements InstallationIF
 	}
 
 	/*******************************************************************************
+		(AGR) 9 Sep 2006
+	*******************************************************************************/
+	public LastPostTable getLastPostDateTable()
+	{
+		return m_LastPostTable;
+	}
+
+	/*******************************************************************************
 	*******************************************************************************/
 	public String toString()
 	{
@@ -219,6 +230,13 @@ public class Installation implements InstallationIF
 				m_ActivityTable.complete();
 
 				// s_Install_Logger.info( getLogPrefix() + "Activity table: " + m_ActivityTable);
+			}
+
+			if ( m_LastPostTable != null)
+			{
+				m_LastPostTable.complete();
+
+				s_Install_Logger.info( getLogPrefix() + "Last Posts table: " + m_LastPostTable);
 			}
 		}
 	}
