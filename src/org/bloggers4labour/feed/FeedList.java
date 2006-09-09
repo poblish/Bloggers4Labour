@@ -377,7 +377,47 @@ public class FeedList
 		// System.out.println("NO GOOD");
 		return null;
 	}
-	
+
+	/*******************************************************************************
+		(AGR) 9 Sep 2006. Based upon the above!
+	*******************************************************************************/
+	public Site lookupFeedLocationURL( String inChannelSiteURL)
+	{
+		if ( inChannelSiteURL == null)
+		{
+			return null;
+		}
+
+		////////////////////////////////////////////////////////////////
+
+		Site[]	sitesArray = getArrayToTraverse();
+
+		for ( int i = 0; i < sitesArray.length; i++)
+		{
+			ChannelIF	c = sitesArray[i].getChannel();
+
+			if ( c == null)
+			{
+				continue;	// good site, but no channel (site down?)
+			}
+
+			URL	theSiteURL = c.getLocation();
+			if ( theSiteURL == null)
+			{
+				continue;	// only get this for the dodgy Swift blog
+			}
+
+			if (inChannelSiteURL.equals( theSiteURL.toString() ))
+			{
+				// System.out.println(">>>> GOOD");
+				return sitesArray[i];
+			}
+		}
+
+		// System.out.println("NO GOOD");
+		return null;
+	}
+
 	/*******************************************************************************
 	*******************************************************************************/
 	public void generateOPML()
