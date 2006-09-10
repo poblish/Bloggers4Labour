@@ -64,7 +64,7 @@ public class Installation implements InstallationIF
 //		m_HeadlinesMgr = new HeadlinesMgr(this);		// needs a FeedList...
 //		m_HeadlinesMgr = inHeadsMgr;				// (AGR) 21 March 2006. needs a FeedList...
 
-		m_LastPostTable = new LastPostTable(m_FeedList);	// (AGR) 9 Sep 2006
+		m_LastPostTable = new LastPostTable( m_FeedList, m_Name.equals("b4l"));		// (AGR) 9 Sep 2006
 
 		// must call: complete() at some point!
 	}
