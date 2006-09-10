@@ -381,7 +381,7 @@ public class FeedList
 	/*******************************************************************************
 		(AGR) 9 Sep 2006. Based upon the above!
 	*******************************************************************************/
-	public Site lookupFeedLocationURL( String inChannelSiteURL)
+	public Site lookupFeedLocationURL( final String inChannelSiteURL)
 	{
 		if ( inChannelSiteURL == null)
 		{
