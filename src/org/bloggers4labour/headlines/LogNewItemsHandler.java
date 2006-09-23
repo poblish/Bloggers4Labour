@@ -28,7 +28,9 @@ public class LogNewItemsHandler implements AddHandler
 
 		org.bloggers4labour.jsp.DisplayItem	d = new org.bloggers4labour.jsp.DisplayItem( inInstall, inItem, System.currentTimeMillis());
 
-		Logger.getLogger("Main").info("... New post: \"" + FeedUtils.getDisplayTitle(inItem) + "\" for \"" + channelStr + "\"");
-		// Logger.getLogger("Main").info("... New post @ " + new java.util.Date() + " ... " + FeedUtils.getItemDate(inItem)  + "..." + d.getDateString() + " ... \"" + FeedUtils.getDisplayTitle(inItem) + "\" for \"" + channelStr + "\"");
+		// Logger.getLogger("Main").info("... New post: \"" + FeedUtils.getDisplayTitle(inItem) + "\" for \"" + channelStr + "\"");
+		Logger.getLogger("Main").info("... New post @ " + new java.util.Date() + " ... " + FeedUtils.getItemDate(inItem)  + "..." + d.getDateString() + " ... \"" + FeedUtils.getDisplayTitle(inItem) + "\" for \"" + channelStr + "\"");
+
+		// Logger.getLogger("Main").info("Channel = " + inItem.getChannel()); // .getItems());
 	}
 }
