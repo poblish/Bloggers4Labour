@@ -12,6 +12,7 @@ package org.bloggers4labour;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import javax.sql.DataSource;
+import org.bloggers4labour.activity.LastPostTable;
 import org.bloggers4labour.cats.CategoriesTable;
 import org.bloggers4labour.feed.FeedList;
 import org.bloggers4labour.index.IndexMgr;
@@ -33,6 +34,7 @@ public interface InstallationIF
 	public ResourceBundle getBundle( Locale inLocale);
 
 	public CategoriesTable getCategories();
+	public LastPostTable getLastPostDateTable();
 
 	public String getLogPrefix();
 	public void restart();

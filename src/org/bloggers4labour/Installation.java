@@ -236,7 +236,7 @@ public class Installation implements InstallationIF
 			{
 				m_LastPostTable.complete();
 
-				s_Install_Logger.info( getLogPrefix() + "Last Posts table: " + m_LastPostTable);
+				// s_Install_Logger.info( getLogPrefix() + "Last Posts table: " + m_LastPostTable);
 			}
 		}
 	}
