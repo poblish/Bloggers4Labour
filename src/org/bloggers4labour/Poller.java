@@ -12,6 +12,7 @@ import de.nava.informa.core.*;
 import de.nava.informa.utils.poller.*;
 import de.nava.informa.impl.basic.ChannelBuilder;
 import de.nava.informa.impl.basic.Item;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -19,7 +20,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import org.apache.log4j.Logger;
-import org.bloggers4labour.activity.ActivityTable;
+import org.bloggers4labour.activity.*;
 import org.bloggers4labour.cats.CategoriesTable;
 import org.bloggers4labour.feed.FeedList;
 import org.bloggers4labour.headlines.HeadlineFilter;
@@ -53,7 +54,7 @@ public class Poller
 	static
 	{
 		s_InformaPoller = new de.nava.informa.utils.poller.Poller();
-		s_InformaPoller.setPeriod( 2 * ONE_MINUTE_MSECS );	// default is 1 HOUR!
+		s_InformaPoller.setPeriod( 4 * ONE_MINUTE_MSECS );	// (AGR) 21 Sept 2006. Temporary increase from '2'. Default is 1 HOUR!
 
 		System.out.println("Informa Poller: created " + s_InformaPoller);
 	}
@@ -113,18 +114,31 @@ public class Poller
 			HeadlinesMgr		theHMgr = m_Installation.getHeadlinesMgr();
 			HeadlineFilter		theFilter = new HeadlineFilter( m_Installation, inChannel);
 
-			int[]			hCountArray = new int[ theHMgr.getHeadlinesCount() ];	// (AGR) 22 May 2005
-//			ActivityTable		theActivityTable = m_Installation.getActivityTable();	// (AGR) 8 March 2006
-			String			theChannelSiteURL = inChannel.getSite().toString();	// (AGR) 8 March 2006
+			int[]			hCountArray = new int[ theHMgr.getHeadlinesCount() ];		// (AGR) 22 May 2005
+//			ActivityTable		theActivityTable = m_Installation.getActivityTable();		// (AGR) 8 March 2006
+			LastPostTable		theLastPostTable = m_Installation.getLastPostDateTable();	// (AGR) 9 Sep 2006
+			String			theChannelSiteURL = inChannel.getSite().toString();		// (AGR) 8 March 2006
 			CategoriesTable		theCatsTable = m_Installation.getCategories();
-			int			recentPosts = 0;					// (AGR) 26 Feb 2006
-			List<ItemIF>		theItemsToRemoveFromChannel = new ArrayList<ItemIF>();	// (AGR) 3 March 2006
-			int			datelessPostCount = 0;					// (AGR) 4 March 2006
+			long			mostRecentPostAgeMsecs = Long.MIN_VALUE;			// (AGR) 26 Feb 2006
+			int			recentPosts = 0;						// (AGR) 26 Feb 2006
+			List<ItemIF>		theItemsToRemoveFromChannel = new ArrayList<ItemIF>();		// (AGR) 3 March 2006
+			int			datelessPostCount = 0;						// (AGR) 4 March 2006
 
 			for ( int i = 0; i < theItemsArray.length; i++)
 			{
 				Date		itemDate = FeedUtils.getItemDate( theItemsArray[i] );
 				AgeResult	theAgeResult = _getItemAgeMsecs( theItemsArray[i], itemDate, inCurrentTimeMSecs);
+
+				//////////////////////////////////////////////////////////////////  (AGR) 26 Feb 2006, 9 Sep 2006
+
+				long	adjustedPostMSecs = inCurrentTimeMSecs - theAgeResult.getAgeMSecs();
+
+				if ( adjustedPostMSecs > mostRecentPostAgeMsecs)
+				{
+					mostRecentPostAgeMsecs = adjustedPostMSecs;
+				}
+
+				//////////////////////////////////////////////////////////////////
 
 				if (!theAgeResult.isAllowable())	// (AGR) 14 Jan 2006
 				{
@@ -214,6 +228,15 @@ public class Poller
 			else if ( datelessPostCount == 1)
 			{
 				s_Poll_Logger.info( m_Installation.getLogPrefix() + "WARNING. Found an undated post in \"" + FeedUtils.channelToString(inChannel) + "\"");
+			}
+
+			////////////////////////////////////////////////////////  (AGR) 9 Sep 2006
+
+			if ( mostRecentPostAgeMsecs > 0)
+			{
+				// s_Poll_Logger.info("### " + inChannel.getSite() + " / " + inChannel.getLocation());
+
+				theLastPostTable.store( inChannel.getLocation(), mostRecentPostAgeMsecs);
 			}
 		}
 	}
@@ -442,8 +465,31 @@ public class Poller
 		*******************************************************************************/
 		public void itemFound( ItemIF inItem, ChannelIF ioChannel)
 		{
+			long		currTimeMSecs = System.currentTimeMillis();
+			URL		theChannelLoc = ioChannel.getLocation();
 			Date		itemDate = FeedUtils.getItemDate(inItem);
-			AgeResult	theAgeResult = _getItemAgeMsecs( inItem, itemDate, System.currentTimeMillis());
+			AgeResult	theAgeResult = _getItemAgeMsecs( inItem, itemDate, currTimeMSecs);
+
+			//////////////////////////////////////////////////////////////////  (AGR) 10 Sep 2006
+
+			Site		thisChannelsSite = m_Installation.getFeedList().lookupChannel(ioChannel);	// Moved up...
+			boolean		itemIsAPost;
+
+			if ( thisChannelsSite != null)
+			{
+				itemIsAPost = thisChannelsSite.getChannel().getLocation().equals( theChannelLoc );
+
+				if (itemIsAPost)
+				{
+					m_Installation.getLastPostDateTable().store( theChannelLoc, currTimeMSecs - theAgeResult.getAgeMSecs());
+				}
+			}
+			else
+			{
+				itemIsAPost = false;	// This FALSE value should never be used due to return below.
+			}
+
+			//////////////////////////////////////////////////////////////////
 
 			if (!theAgeResult.isAllowable())	// (AGR) 14 Jan 2006
 			{
@@ -475,7 +521,7 @@ public class Poller
 
 			//////////////////////////////////////////////////////////////////  (AGR) 30 Nov 2005. A comment or a post???
 
-			Site	thisChannelsSite = m_Installation.getFeedList().lookupChannel(ioChannel);
+//			Site	thisChannelsSite = m_Installation.getFeedList().lookupChannel(ioChannel);
 
 			if ( thisChannelsSite == null)
 			{
@@ -500,17 +546,8 @@ public class Poller
 			//
 			// ... would incorrectly fail to match the two. Should compare URLs instead!
 
-			boolean	itemIsAPost = thisChannelsSite.getChannel().getLocation().equals( ioChannel.getLocation() );
+//			boolean	itemIsAPost = thisChannelsSite.getChannel().getLocation().equals( theChannelLoc );
 
-/*			if (!itemIsAPost)
-			{
-				s_Poll_Logger.info( m_Installation.getLogPrefix() + "@@@@ itemIsAPost = " + itemIsAPost);
-				s_Poll_Logger.info( m_Installation.getLogPrefix() + "@@@@    the site = " + thisChannelsSite);
-				s_Poll_Logger.info( m_Installation.getLogPrefix() + "@@@@    the item = " + inItem);
-				s_Poll_Logger.info( m_Installation.getLogPrefix() + "@@@@       input = \"" + ioChannel + "\"");
-				s_Poll_Logger.info( m_Installation.getLogPrefix() + "@@@@    returned = \"" +  thisChannelsSite.getChannel() + "\"");
-			}
-*/
 			//////////////////////////////////////////////////////////////////
 
 			HeadlinesMgr	theHMgr = m_Installation.getHeadlinesMgr();
