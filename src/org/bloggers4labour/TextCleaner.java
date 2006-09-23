@@ -8,7 +8,6 @@ package org.bloggers4labour;
 
 import com.hiatus.UHTML;
 import com.hiatus.UText;
-import com.purpletech.util.*;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,6 +16,7 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.*;
+import org.bloggers4labour.html.Encoding;
 import org.bloggers4labour.tag.*;
 
 /**
@@ -39,6 +39,12 @@ public class TextCleaner
 	private final static String	I_CLOSE_UCASE = "</I>";
 	private final static String	I_CLOSE_LCASE = "</i>";
 
+	private final static String	BQ_OPEN_LCASE = "<blockquote[^>]*>";		// (AGR) 28 August 2006
+	private final static String	BQ_CLOSE_UCASE = "</BLOCKQUOTE>";
+	private final static String	BQ_CLOSE_LCASE = "</blockquote>";
+
+	private final static String	QUOT_STR = "&quot;";
+
 	private final static String	LINK_PATTERN_STR = "<a [^>]*href *= *";
 	public final static String	IMAGE_PATTERN_STR = "<img [^>]*src *= *";	// (AGR) 15 May 2005
 
@@ -47,7 +53,7 @@ public class TextCleaner
 	private static Pattern		s_GtPattern = Pattern.compile(">");
 
 	private static Pattern		s_LinkFinderPattern  = Pattern.compile("(" + LINK_PATTERN_STR + ")", Pattern.CASE_INSENSITIVE);
-	private static Pattern		s_TagFinderPattern   = Pattern.compile("(" + LINK_PATTERN_STR + ")|(<abbr [^>]*title *= *)|(<u[^>]*>)|(<sup[^>]*>)|(" + IMAGE_PATTERN_STR + ")|(<br>)|(" + STRIKE_OPEN_LCASE + ")|(" + I_OPEN_LCASE + ")", Pattern.CASE_INSENSITIVE);
+	private static Pattern		s_TagFinderPattern   = Pattern.compile("(" + LINK_PATTERN_STR + ")|(<abbr [^>]*title *= *)|(<u[^>]*>)|(<sup[^>]*>)|(" + IMAGE_PATTERN_STR + ")|(<br>)|(" + STRIKE_OPEN_LCASE + ")|(" + I_OPEN_LCASE + ")|(" + BQ_OPEN_LCASE + ")", Pattern.CASE_INSENSITIVE);
 
 	private static Pattern		s_PoundPattern  = Pattern.compile("&#163;");	// (AGR) 16 April 2005. This is pretty dodgy. Assumes certain charset
 	private static Pattern		s_eAcutePattern = Pattern.compile("&#233;");	// (AGR) 16 April 2005. This is pretty dodgy. Assumes certain charset
@@ -85,13 +91,6 @@ public class TextCleaner
 //		String	ss = "<p>Lets see if this works&#8230;</p>\n<p><object width=\"425\" height=\"350\"><br />\n<param name=\"movie\" value=\"http://www.youtube.com/v/z5e4L3LtYw4\"></param><embed src=\"http://www.youtube.com/v/z5e4L3LtYw4\" type=\"application/x-shockwave-flash\" width=\"425\" height=\"350\"></embed></object></p>\n<p>Hmmm&#8230; Seems to work OK, but what a lot of hoops to jump through!  I had to deactivate the WYSIWYG editing plugin AND create the post in Internet Explorer - for some reason it would not work properly in Firefox. I think I shall push my luck and try to embed the video for the single too.</p>\n<p><object width=\"425\" height=\"350\"><br />\n<param name=\"movie\" value=\"http://www.youtube.com/v/7p7XiPymhYw\"></param><embed src=\"http://www.youtube.com/v/7p7XiPymhYw\" type=\"application/x-shockwave-flash\" width=\"425\" height=\"350\"></embed></object></p>";
 		String	ss = "&lt;a href=\"http://eustonmanifesto.org/joomla/content/view/72/46/\">Nice paper&lt;/a> at euston, largely agree with it. Only reccomended for those with a serious case of time on hands!";
 
-	//	List	l = s.collectTags(ss);
-	//	System.out.println("l.1 = " + l);
-		// System.out.println("--------------------------------------------");
-
-		// System.out.println("l.2 = " + l);
-		// System.out.println("--------------------------------------------");
-
 		String	s2 = FeedUtils.newAdjustDescription( ss, 999 );
 //		String	s2 = FeedUtils.newAdjustDescription( ss, 250, EnumSet.of( FormatOption.ALLOW_IMAGES, FormatOption.ALLOW_BREAKS));
 //		String	s2 = FeedUtils.adjustDescription( ss, false).trim();
@@ -125,7 +124,7 @@ public class TextCleaner
 	public void oldDo()
 	{
 		String	x = "&uuml; <<< >>> £";
-		System.out.println("From \"" + x + "\" to \"" + Purple_Utils.htmlescape( x, false) + "\"");
+		System.out.println("From \"" + x + "\" to \"" + Encoding.htmlescape( x, false) + "\"");
 		
 //		String 	s = "It now appears that the leaflet referring to the <a href=\"http://erictheunred.blogspot.com/2005/04/protocols-of-nus.html\">Protocols of Zion at the NUS conference</a> was distributed by <a href=\"http://www.gups.org.uk/Home/HOME.htm\">The General Union of Palestinian Students</a> (GUPS). This has provoked a discussion at the <a href=\"http://www.educationet.org/messageboard/posts/47449.html\">Education.net bulletin board</a>, which is fairly illuminating.  The NUS seems to be having the same problems as much of the rest of the left, as Middle Eastern politics are dragged into their discussions, along with all the anti-semitic material which is sadly common currency in that area. At a recent meeting a GUPS spokesperson is described as saying the Holocaust was less important, than the \"holocaust\" being perpetrated by the Jews on the Palestinians.\n\n\n<a href=\"http://www.gups.org.uk/EVENTS/SHAKH-YASSEEN.htm\">GUPS have a nice line</a> in support of the recently departed suicide bomber dispatching <a href=\"http://hurryupharry.bloghouse.net/archives/2004/01/21/sheik_yassin_feminist.php\">Sheikh Yassin</a>: We in GUPS ask almighty Allah to reward Sheikh Yassin with Jannah and promise him and all the martyrs of Palestine that we shall be always steadfast until the day our Palestinian flag flies above Jerusalem, the capital of Palestine.";
 		String	s = "More of a nightmare, really. Find their <a href=\"http://www.conservatives.com/pdf/manifesto-uk-2005.pdf\">manifesto</a> here.  At the risk of falling foul of <a href=\"http://en.wikipedia.org/wiki/Godwin\">Godwin's law</a> myself, I was intrigued by the BBC's choice of photo to illustrate the launch.      'We will spend the same as Labour would on the NHS' Nope, Andrew Lansley reckons that the Tory private healthcare subsidy will take ?1.2 billion from the NHS to help the richest 10% in society.   'As well as keeping taxes low, we must reduce the burdens on business through deregulation. A Conservative Government will negotiate to restore our opt-out from the European Social Chapter and liberate small businesses from job destroying employment legislation.'   If you are in work, this little phrase should alarm you. The Social Chapter is designed to allow the EU to set European-wide policy on health and safety, equal pay, working conditions and consultation between management and workforce. The Tories will also force government departments to cap and reduce the costs of regulation, which must also have benefits that exceed the costs. How they will quantify those costs isn't clear, but I'll place a bet that your rights as an employee will suffer.  We will ensure proper discipline in schools by giving heads and governors full control over admissions and expulsions. So if your child is expelled unreasonably, tough. Watch out for schools disposing of those under-performing pupils and passing them onto the new 'Turnaround Schools'  '[We will] review all speed cameras to ensure they are there to save lives, not make money'  <a href=\"http://icbirmingham.icnetwork.co.uk/post/news/tm_objectid=14573204&method=full&amp;siteid=50002-name_page.html\">John Hemming is thinking what they're thinking</a>.  We will introduce a points-based system for work permits similar to the one used in Australia. This will give priority to people with the skills Britain needs. We'll start with <a href=\"http://politics.guardian.co.uk/conservatives/story/0,,1400369,00.html\">dodgy foreign political imports</a>, eh?  'We will take back powers from Brussels to ensure national control of asylum policy, withdraw from the 1951 Geneva Convention... Our objective is a system where we take a fixed number of refugees from the UNHCR rather than simply accepting those who are smuggled to our shores. Asylum seekers? applications will be processed outside Britain. We will set an overall annual limit on the numbers coming to Britain, including a fixed quota for the number of asylum seekers we accept. Parliament will set, and review, that number every year.' This fantasy island for asylum processing returns, as does the 'fixed quota.' This has already <a href=\"http://news.bbc.co.uk/1/hi/uk_politics/vote_2005/frontpage/4428517.stm\">been attacked </a>by Charles Wardle, a former Tory immigration minister, who said that Labour had the most practical policies and that these proposals show that Michael Howard is 'utterly unsuited' to be PM (we know that already, don't we?). If even the leader of the barkingly-mad UKIP party says that your policies on immigration are 'so unworkable it was almost laughable,' then I think you have a real problem. Don't forget that we take 2.8% of all the refugees in the world - making up around 0.4% of our population, hardly overwhelming us. <a href=\"http://politicalhackuk.blogspot.com/2005/01/howard-pulling-up-drawbridge.html\">Still, why let facts get in the way of easy political points scoring</a>?";		
@@ -268,12 +267,13 @@ public class TextCleaner
 			boolean	foundImage = (( groupCount >= 5) && inMatcher.group(5) != null);	// (AGR) 15 May 2005
 			boolean	foundBreak = (( groupCount >= 6) && inMatcher.group(6) != null);	// (AGR) 15 May 2005
 			boolean	foundStrike = (( groupCount >= 7) && inMatcher.group(7) != null);	// (AGR) 4 August 2005
-			boolean	foundItalics = (( groupCount >= 7) && inMatcher.group(8) != null);	// (AGR) 16 Jan 2006
+			boolean	foundItalics = (( groupCount >= 8) && inMatcher.group(8) != null);	// (AGR) 16 Jan 2006
+			boolean	foundBQuote = (( groupCount >= 9) && inMatcher.group(9) != null);	// (AGR) 28 August 2006
 
 			int	nextPos;
 			String	theURLString;
 
-			if ( foundUnderline || foundSuperscript || foundBreak || foundStrike || foundItalics)
+			if ( foundUnderline || foundSuperscript || foundBreak || foundStrike || foundItalics || foundBQuote)
 			{
 				theURLString = null;
 				nextPos = inMatcher.start();
@@ -351,6 +351,10 @@ public class TextCleaner
 			else if (foundItalics)	// (AGR) 16 Jan 2006
 			{
 				nextCloseLinkPos = _getNextClosePos( inStr, nextPos + 1, I_CLOSE_UCASE, I_CLOSE_LCASE);
+			}
+			else if (foundBQuote)	// (AGR) 28 August 2006
+			{
+				nextCloseLinkPos = _getNextClosePos( inStr, nextPos + 1, BQ_CLOSE_UCASE, BQ_CLOSE_LCASE);
 			}
 			else	continue;
 
@@ -474,7 +478,12 @@ public class TextCleaner
 				}
 				else if (foundItalics)		// (AGR) 16 Jan 2006 <i>
 				{
-					theList.add( new Italics( inMatcher.start(), nextCloseLinkPos + 3, theLinkString) );
+					theList.add( new Italics( inMatcher.start(), nextCloseLinkPos + I_OPEN_LCASE.length(), theLinkString) );
+				}
+				else if (foundBQuote)		// (AGR) 28 August 2006 <i>
+				{
+//					theList.add( new Blockquote( inMatcher.start(), nextCloseLinkPos + BQ_OPEN_LCASE.length(), theLinkString) );
+					theList.add( new Blockquote( inMatcher.start(), nextCloseLinkPos + 12, theLinkString) );
 				}
 			}
 		}
@@ -673,6 +682,24 @@ public class TextCleaner
 		{
 			ioBuf.append( I_OPEN_LCASE + inContentsStr + I_CLOSE_LCASE);
 		}
+		else if ( inTag instanceof Blockquote)		// (AGR) 28 August 2006
+		{
+			ioBuf.append("<span class=\"b4l-bq\">");
+
+			if (!inContentsStr.startsWith("&quot;"))
+			{
+				ioBuf.append(QUOT_STR);
+			}
+
+			ioBuf.append(inContentsStr);
+
+			if (!inContentsStr.endsWith("&quot;"))
+			{
+				ioBuf.append(QUOT_STR);
+			}
+
+			ioBuf.append("</span>");
+		}
 	}
 
 	/********************************************************************
@@ -697,7 +724,7 @@ public class TextCleaner
 					s_PoundPattern.matcher(inStr).replaceAll("£") ).replaceAll("Ž");
 		}
 
-		return Purple_Utils.htmlescape( inStr, false);
+		return Encoding.htmlescape( inStr, false);
 	}
 
 	/********************************************************************
