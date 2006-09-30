@@ -37,6 +37,19 @@ public abstract class AbstractDisplayable implements Displayable
 	}
 
 	/*******************************************************************************
+		(AGR) 25 September 2006
+	*******************************************************************************/
+	public String getReducedCreatorsStr()
+	{
+		if ( getSite() != null)
+		{
+			return getSite().getReducedCreatorsString("http://www.bloggers4labour.org/images/creators/");
+		}
+
+		return null;
+	}
+
+	/*******************************************************************************
 	*******************************************************************************/
 	public String getBlogName()
 	{
