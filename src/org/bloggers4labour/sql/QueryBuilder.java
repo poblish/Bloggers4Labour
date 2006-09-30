@@ -160,4 +160,14 @@ public class QueryBuilder
 	{
 		return s_Bundle.getString("sql.unapproved.query");
 	}
+
+	/*******************************************************************************
+		(AGR) 30 September 2006
+	*******************************************************************************/
+	public static String getRecommendationCountsQueryString( String inURLsList)
+	{
+		Formatter	theFormatter = new Formatter();
+		theFormatter.format( s_Bundle.getString("sql.recommendationcounts.query"), inURLsList);
+		return theFormatter.toString();
+	}
 }
