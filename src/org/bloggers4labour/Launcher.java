@@ -64,7 +64,7 @@ public class Launcher
 	{
 		Configuration.getInstance().setDirectoryIfNotSet("/Users/andrewre/www/htdocs/bloggers4labour/conf/");
 
-		m_Props.setProperty( "bm.docs_directory_path", "/usr/local/etc/httpd/sites/hiatus-uk.com/htdocs/bloggers4labour/htl/");
+		m_Props.setProperty( "bm.docs_directory_path", "/home/htdocs/bloggers4labour/htl/");
 		m_Props.setProperty( "bm.locales_dir_name", "locales/");
 		m_Props.setProperty( "bm.default_dir_name", "default");
 
