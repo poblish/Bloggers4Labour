@@ -272,12 +272,29 @@ public final class Site implements Serializable, Comparable<Site>	// (AGR) 6 Jun
 	}
 
 	/*******************************************************************************
+		(AGR) 25 September 2006
+	*******************************************************************************/
+	public String getReducedCreatorsString( String inBaseURL)
+	{
+		return getCreatorsString( inBaseURL, false);
+	}
+
+	/*******************************************************************************
 		(AGR) 24 March 2005
 	*******************************************************************************/
 	public String getCreatorsString( String inBaseURL)
 	{
+		return getCreatorsString( inBaseURL, true);
+	}
+
+	/*******************************************************************************
+		(AGR) 24 March 2005
+	*******************************************************************************/
+	private String getCreatorsString( String inBaseURL, boolean inAddSurroundingCell)
+	{
 		StringBuilder	sb = new StringBuilder();
 		String		imageName;
+		boolean		gotOne = false;
 
 		for ( String s : m_Creators)
 		{
@@ -306,7 +323,24 @@ public final class Site implements Serializable, Comparable<Site>	// (AGR) 6 Jun
 				continue;
 			}
 
-			sb.append("<td class=\"creator\"><img src=\"").append(inBaseURL).append(imageName).append("\" alt=\"\" /></td>");
+			////////////////////////////////////////////////////////
+
+			if (!gotOne)
+			{
+				if (inAddSurroundingCell)
+				{
+					sb.append("<td class=\"creator\">");
+				}
+
+				gotOne = true;
+			}
+
+			sb.append("<img src=\"").append(inBaseURL).append(imageName).append("\" alt=\"\" />");
+		}
+
+		if ( gotOne && inAddSurroundingCell)
+		{
+			sb.append("</td>");
 		}
 
 		return sb.toString();
