@@ -206,6 +206,19 @@ public class DisplayItem extends AbstractDisplayable
 	}
 
 	/*******************************************************************************
+		(AGR) 30 September 2006
+	*******************************************************************************/
+	public String getDescriptionStyle( int inNumRecommendations)
+	{
+		if ( inNumRecommendations > 0 && ( m_Site != null))
+		{
+			return  m_Site.getDescriptionStyle( null, inNumRecommendations);
+		}
+
+		return /* The default... */ m_DescriptionStyle;
+	}
+
+	/*******************************************************************************
 	*******************************************************************************/
 	public String getEncodedTitle()
 	{
