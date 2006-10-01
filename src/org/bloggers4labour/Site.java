@@ -427,6 +427,28 @@ public final class Site implements Serializable, Comparable<Site>	// (AGR) 6 Jun
 	*******************************************************************************/
 	public String getDescriptionStyle( final ItemIF inItem)
 	{
+		return getDescriptionStyle( inItem, 0);
+	}
+
+	/*******************************************************************************
+		(AGR) 30 September 2006. Added recommendations count arg
+
+		FIXME - tidy up
+	*******************************************************************************/
+	public String getDescriptionStyle( final ItemIF inItem, final int inNumRecommendations)
+	{
+		////////////////////////////////////////////////  (AGR) 30 September 2006
+
+		if ( inNumRecommendations > 5)
+		{
+			return "item-description-morevotes";
+		}
+
+		if ( inNumRecommendations >= 1)
+		{
+			return "item-description-" + inNumRecommendations + "votes";
+		}
+
 		////////////////////////////////////////////////  Look for RSS Categories
 
 		if ( inItem != null)
