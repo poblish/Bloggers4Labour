@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.Timer;
@@ -41,6 +42,7 @@ import org.bloggers4labour.opml.OPMLGenerator;
 import org.bloggers4labour.options.Options;
 import org.bloggers4labour.options.TaskOptionsBeanIF;
 import org.bloggers4labour.jmx.Stats;
+import org.bloggers4labour.sql.QueryBuilder;
 import org.bloggers4labour.tag.Link;
 
 /**
@@ -834,5 +836,81 @@ public class Headlines implements HeadlinesIF
 	public List<Number> getFilterCreatorStatuses()
 	{
 		return m_FilterCreatorStatuses;
+	}
+
+	/*******************************************************************************
+		(AGR) 30 September 2006
+	*******************************************************************************/
+	public String getRecommendationCountsQuery()
+	{
+		ItemIF[]	theContents = toArray();
+		StringBuilder	sb = new StringBuilder( 40 * theContents.length);
+
+		for ( int i = 0; i < theContents.length; i++)
+		{
+			sb.append(( i > 0) ? ",'" : "'").append( theContents[i].getLink() ).append("'");
+		}
+
+		return QueryBuilder.getRecommendationCountsQueryString( sb.toString() );
+	}
+
+	/*******************************************************************************
+		(AGR) 30 September 2006
+	*******************************************************************************/
+	public static String getRecommendationCountsQuery( final ItemIF[] inEntries)
+	{
+		return getRecommendationCountsQuery( inEntries, Integer.MAX_VALUE);
+	}
+
+	/*******************************************************************************
+		(AGR) 30 September 2006
+	*******************************************************************************/
+	public static String getRecommendationCountsQuery( final ItemIF[] inEntries, int inMaxEntries)
+	{
+		int		actualCount = inEntries.length > inMaxEntries ? inMaxEntries : inEntries.length;
+		StringBuilder	sb = new StringBuilder( 40 * actualCount);
+
+		for ( int i = 0; i < actualCount; i++)
+		{
+			sb.append(( i > 0) ? ",'" : "'").append( inEntries[i].getLink() ).append("'");
+		}
+
+		return QueryBuilder.getRecommendationCountsQueryString( sb.toString() );
+	}
+
+	/*******************************************************************************
+		(AGR) 1 October 2006. For Tags page.
+	*******************************************************************************/
+	public static String getRecommendationCountsQuery( final List<ItemIF> inEntries)
+	{
+		StringBuilder	sb = new StringBuilder( 40 * inEntries.size());
+		int		i = 0;
+
+		for ( ItemIF eachItem : inEntries)
+		{
+			sb.append(( i > 0) ? ",'" : "'").append( eachItem.getLink() ).append("'");
+			i++;
+		}
+
+		return QueryBuilder.getRecommendationCountsQueryString( sb.toString() );
+	}
+
+	/*******************************************************************************
+		(AGR) 30 September 2006
+	*******************************************************************************/
+	public static Map<String,Number> getRecommendationCountsMap( final java.sql.ResultSet ioRS) throws java.sql.SQLException
+	{
+		Map<String,Number>	theMap = new HashMap<String,Number>();
+
+		if (ioRS.next())
+		{
+			do
+			{
+				theMap.put( ioRS.getString(1), ioRS.getInt(2));
+			}
+			while (ioRS.next());
+		}
+
+		return theMap;
 	}
 }
