@@ -30,6 +30,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.regex.*;
 import javax.servlet.*;
@@ -43,6 +44,7 @@ import org.bloggers4labour.cats.CategoriesTable;
 import org.bloggers4labour.conf.Configuration;
 import org.bloggers4labour.index.IndexMgr;
 import org.bloggers4labour.index.SearchMatch;
+import org.bloggers4labour.jsp.DisplayItem;
 
 /**
  *
@@ -67,6 +69,10 @@ public class MainServlet extends HttpServlet
 		try
 		{
 			super.init(inConfig);
+
+			PropertyConfigurator.configure("/home/htdocs/WEB-INF/bio.properties");
+
+			////////////////////////////////////////
 
 			s_Servlet_Logger.info("===============================");
 			s_Servlet_Logger.info("In Servlet: " + this);
@@ -239,6 +245,150 @@ public class MainServlet extends HttpServlet
 				catch (Exception e)
 				{
 					s_Servlet_Logger.error("recommend...", e);
+
+					goHome( inRequest, inResponse);
+					theOutputBuffer = null;
+				}
+			}
+			else if (hasParameter( inRequest, "headlines"))		// (AGR) 23 September 2006
+			{
+				try
+				{
+					// s_Servlet_Logger.info("in");
+
+					int	theNumPosts = 3;
+
+					try
+					{
+						theNumPosts = Integer.parseInt( inRequest.getParameter("posts"));
+					}
+					catch (Exception e) { }
+
+					//////////////////////////////////////////////////////////////////////////////////////
+
+					Locale	theLocale = GetClientLocale(inRequest);
+
+					ensureNotCached(inResponse);
+
+					inResponse.setLocale(theLocale);
+					inResponse.setContentType("text/xml; charset=\"UTF-8\"");
+
+					//////////////////////////////////////////////////////////////////////////////////////
+
+					InstallationIF		defInstall = InstallationManager.getDefaultInstallation();
+					HeadlinesMgr		theHMgr = defInstall.getHeadlinesMgr();
+					Headlines		theHs = theHMgr.getRecentPostsInstance();
+					StringBuilder		sb = new StringBuilder("<?xml version=\"1.0\" ?><response>");
+					long			currentTimeMSecs = System.currentTimeMillis();
+
+					_addXMLCDataElement( sb, "currentTime", ULocale2.getClientDateTimeFormat( theLocale, DateFormat.LONG).format( new java.util.Date() ));
+
+					if ( theHs != null)
+					{
+						Map<String,Number>	theRecommendationCountMap = null;	// (AGR) 1 October 2006
+						ItemIF[]		headlineItemsArray = theHs.toArray();
+						int			actualNumPosts = theNumPosts > headlineItemsArray.length ? headlineItemsArray.length : theNumPosts;
+
+						if ( actualNumPosts > 0)	// (AGR) 1 October 2006
+						{
+							DataSourceConnection	theConnectionObject = null;
+
+							try
+							{
+								theConnectionObject = new DataSourceConnection( defInstall.getDataSource() );
+								if (theConnectionObject.Connect())
+								{
+									Statement	theS = null;
+
+									try
+									{
+										theS = theConnectionObject.createStatement();
+										theRecommendationCountMap = Headlines.getRecommendationCountsMap( theS.executeQuery( Headlines.getRecommendationCountsQuery( headlineItemsArray, actualNumPosts) ) );
+									}
+									catch (Exception e)
+									{
+										s_Servlet_Logger.error("creating statement", e);
+									}
+									finally
+									{
+										USQL_Utils.closeStatementCatch(theS);
+									}
+								}
+								else
+								{
+									s_Servlet_Logger.warn("Cannot connect!");
+								}
+							}
+							catch (Exception err)
+							{
+								s_Servlet_Logger.error("???", err);
+							}
+							finally
+							{
+								if ( theConnectionObject != null)
+								{
+									theConnectionObject.CloseDown();
+									theConnectionObject = null;
+								}
+							}
+						}
+
+						///////////////////////////////////////////////////////////////////
+
+						DisplayItem	di;
+						Site		theSiteObj;
+						String		theLinkStr;
+						int		theRecommendationsCount;
+
+						for ( int z = 0; z < actualNumPosts; z++)
+						{
+							di = new DisplayItem( defInstall, (Item) headlineItemsArray[z], currentTimeMSecs);
+							theSiteObj = di.getSite();
+
+							///////////////////////////////////////////////////////////////////  (AGR) 1 October 2006
+
+							theLinkStr = di.getLink().toString();
+
+							if ( theRecommendationCountMap != null)
+							{
+								try
+								{
+									theRecommendationsCount = theRecommendationCountMap.get(theLinkStr).intValue();
+								}
+								catch (Exception e)
+								{
+									theRecommendationsCount = 0;
+								}
+							}
+							else	theRecommendationsCount = 0;
+
+							///////////////////////////////////////////////////////////////////
+
+							sb.append("<headline index=\"").append(z).append("\">");
+
+							_addXMLCDataElement( sb, "blogName", di.getBlogName());
+							_addXMLElement( sb, "siteID", ( theSiteObj != null) ? theSiteObj.getRecno() : -1L);
+							_addXMLElement( sb, "siteURL", di.getSiteURL());
+							_addXMLCDataElement( sb, "link", theLinkStr);
+							_addXMLElement( sb, "date", di.getDateString());
+
+							_addXMLCDataElement( sb, "displayTitle", UText.isValidString( di.getDispTitle() ) ? di.getDispTitle() : "<i>Untitled</i>");
+							_addXMLCDataElement( sb, "desc", di.getDescription());
+							_addXMLElement( sb, "descStyle", di.getDescriptionStyle(theRecommendationsCount));
+							_addXMLElement( sb, "iconURL", UText.isValidString( di.getIconURL() ) ? di.getIconURL() : "");
+
+							_addXMLCDataElement( sb, "creator", di.getReducedCreatorsStr());
+							_addXMLElement( sb, "recommendations", Integer.toString(theRecommendationsCount));	// (AGR) 1 October 2006
+
+							sb.append("</headline>");
+						}
+					}
+
+					theOutputBuffer = sb.append("</response>").toString();
+				}
+				catch (Exception e)
+				{
+					s_Servlet_Logger.error("Headlines...", e);
 
 					goHome( inRequest, inResponse);
 					theOutputBuffer = null;
@@ -1074,11 +1224,11 @@ s_Servlet_Logger.info( inRequest.getMethod() + " query = " + inRequest.getQueryS
 
 	/*******************************************************************************
 	*******************************************************************************/
-	static public void myOutputBuffer( HttpServletResponse inResponse, StringBuffer inBuffer)
+	static public void myOutputBuffer( HttpServletResponse inResponse, CharSequence inBuffer) // StringBuffer inBuffer)
 	{
 		myOutputBuffer( inResponse, inBuffer, false);
 	}
-		
+
 	/*******************************************************************************
 	*******************************************************************************/
 	static public void myOutputBuffer( HttpServletResponse inResponse, CharSequence inBuffer, boolean inThisIsAllWeOutput)
@@ -1099,6 +1249,20 @@ s_Servlet_Logger.info( inRequest.getMethod() + " query = " + inRequest.getQueryS
 				s_Servlet_Logger.error("???", e);
 			}
 		}
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	private static StringBuilder _addXMLElement( StringBuilder ioS, final String inElementName, final Object inContent)
+	{
+		return ioS.append("<" + inElementName + ">").append(inContent).append("</" + inElementName + ">");
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	private static StringBuilder _addXMLCDataElement( StringBuilder ioS, final String inElementName, final Object inContent)
+	{
+		return ioS.append("<" + inElementName + "><![CDATA[").append(inContent).append("]]></" + inElementName + ">");
 	}
 
 	/*******************************************************************************
