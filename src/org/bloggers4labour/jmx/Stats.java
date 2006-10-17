@@ -74,12 +74,7 @@ public class Stats implements StatsMBean
 				{
 					theS = theConnectionObject.createStatement();
 
-					ResultSet	theRS = theS.executeQuery( QueryBuilder.getBlogsTotalQuery() );
-
-					if (theRS.next())
-					{
-						m_BlogsCount = theRS.getLong(1);
-					}
+					getBlogsCount(theS);
 				}
 				catch (Exception e)
 				{
@@ -110,8 +105,33 @@ public class Stats implements StatsMBean
 	}
 
 	/*******************************************************************************
+		(AGR) 15 October 2006
 	*******************************************************************************/
-	public long getBlogsCount()
+	public long getBlogsCount( final Statement inS) throws java.sql.SQLException
+	{
+		ResultSet	theRS = null;
+
+		try
+		{
+			theRS = inS.executeQuery( QueryBuilder.getBlogsTotalQuery() );
+			if (theRS.next())
+			{
+				m_BlogsCount = theRS.getLong(1);
+
+				return m_BlogsCount;
+			}
+		}
+		finally
+		{
+			USQL_Utils.closeResultSetCatch(theRS);
+		}
+
+		return -1;	//Don't ever return a cached value from this function
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public long getCachedBlogsCount()
 	{
 		return m_BlogsCount;
 	}

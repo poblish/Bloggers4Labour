@@ -19,7 +19,7 @@ public interface StatsMBean
 {
 	/*******************************************************************************
 	*******************************************************************************/
-	public long getBlogsCount();
+	public long getBlogsCount( final java.sql.Statement inS) throws java.sql.SQLException;
 	public int getFeedCount();
 	public int getSuccessfulFeedCount();	// (AGR) 7 October 2005
 	public List getFailedFeedsList();	// (AGR) 7 October 2005
