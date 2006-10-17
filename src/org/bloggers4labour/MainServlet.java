@@ -44,7 +44,7 @@ import org.bloggers4labour.cats.CategoriesTable;
 import org.bloggers4labour.conf.Configuration;
 import org.bloggers4labour.index.IndexMgr;
 import org.bloggers4labour.index.SearchMatch;
-import org.bloggers4labour.jsp.DisplayItem;
+import org.bloggers4labour.jsp.*;
 
 /**
  *
@@ -188,7 +188,7 @@ public class MainServlet extends HttpServlet
 			}
 			else if (hasParameter( inRequest, "search"))		// (AGR) 17 July 2005. Ok, can be GET too
 			{
-				handleSearch( inRequest, inResponse);
+				theOutputBuffer = handleSearch( inRequest, inResponse);
 			}
 			else if (hasParameter( inRequest, "dsw"))		// (AGR) 20 September 2005
 			{
@@ -196,7 +196,11 @@ public class MainServlet extends HttpServlet
 				// s_Servlet_Logger.info("... theOutputBuffer = \"" + theOutputBuffer + "\"");
 				// keepAlive = false;
 			}
-			else if (hasParameter( inRequest, "recommendations"))	// (AGR) 31 August 2006
+/*			else if (hasParameter( inRequest, "hatemytory"))	// (AGR) 14 October 2006
+			{
+				theOutputBuffer = handleHateMyTory( inRequest, inResponse).toString();
+			}
+*/			else if (hasParameter( inRequest, "recommendations"))	// (AGR) 31 August 2006
 			{
 				theOutputBuffer = handleRecommendations( inRequest, inResponse).toString();
 			}
@@ -366,7 +370,9 @@ public class MainServlet extends HttpServlet
 
 							sb.append("<headline index=\"").append(z).append("\">");
 
-							_addXMLCDataElement( sb, "blogName", di.getBlogName());
+							addDisplayable( sb, di, theSiteObj, theRecommendationsCount);
+
+/*							_addXMLCDataElement( sb, "blogName", di.getBlogName());
 							_addXMLElement( sb, "siteID", ( theSiteObj != null) ? theSiteObj.getRecno() : -1L);
 							_addXMLElement( sb, "siteURL", di.getSiteURL());
 							_addXMLCDataElement( sb, "link", theLinkStr);
@@ -374,11 +380,11 @@ public class MainServlet extends HttpServlet
 
 							_addXMLCDataElement( sb, "displayTitle", UText.isValidString( di.getDispTitle() ) ? di.getDispTitle() : "<i>Untitled</i>");
 							_addXMLCDataElement( sb, "desc", di.getDescription());
-							_addXMLElement( sb, "descStyle", di.getDescriptionStyle(theRecommendationsCount));
-							_addXMLElement( sb, "iconURL", UText.isValidString( di.getIconURL() ) ? di.getIconURL() : "");
-
-							_addXMLCDataElement( sb, "creator", di.getReducedCreatorsStr());
 							_addXMLElement( sb, "recommendations", Integer.toString(theRecommendationsCount));	// (AGR) 1 October 2006
+							_addXMLElement( sb, "iconURL", UText.isValidString( di.getIconURL() ) ? di.getIconURL() : "");
+*/
+							_addXMLElement( sb, "descStyle", di.getDescriptionStyle(theRecommendationsCount));
+							_addXMLCDataElement( sb, "creator", di.getReducedCreatorsStr());
 
 							sb.append("</headline>");
 						}
@@ -460,14 +466,14 @@ public class MainServlet extends HttpServlet
 	/*******************************************************************************
 		(AGR) 17 July 2005
 	*******************************************************************************/
-	private void handleSearch( HttpServletRequest inRequest, HttpServletResponse inResponse) throws IOException
+	private String handleSearch( HttpServletRequest inRequest, HttpServletResponse inResponse) throws IOException
 	{
-s_Servlet_Logger.info( inRequest.getMethod() + " query = " + inRequest.getQueryString());
+// s_Servlet_Logger.info( inRequest.getMethod() + " query = " + inRequest.getQueryString());
 
 		HttpSession	theSsn = inRequest.getSession();
 		String		theQueryStr = inRequest.getParameter("q");
 
-		s_Servlet_Logger.info("q = \"" + theQueryStr  + "\"");
+		s_Servlet_Logger.info("handleSearch() q = \"" + theQueryStr  + "\"");
 
 		boolean		gotQuery = UText.isValidString(theQueryStr);
 		String		theWhereStr = inRequest.getParameter("where");
@@ -535,14 +541,134 @@ s_Servlet_Logger.info( inRequest.getMethod() + " query = " + inRequest.getQueryS
 
 		////////////////////////////////////////////////
 
+		InstallationIF		theInstall;
+		List<SearchMatch>	theSearchResults;
+
 		if ( theQuery != null)
 		{
 			s_Servlet_Logger.info("Search2: " + theQuery);
 
-			InstallationIF		theInstall = InstallationManager.getDefaultInstallation();
-			List<SearchMatch>	x = theInstall.getIndexMgr().runQuery(theQuery);
+			theInstall = InstallationManager.getDefaultInstallation();
+			theSearchResults = theInstall.getIndexMgr().runQuery(theQuery);
+		}
+		else	theSearchResults = null;
 
-			theSsn.setAttribute("search_matches", x);
+		////////////////////////////////////////////////  (AGR) 10 October 2006
+
+		String	theDispositionStr = inRequest.getParameter("disp");
+
+		if ( theDispositionStr != null && theDispositionStr.equals("xml"))
+		{
+			////////////////////////////////////////////////  (AGR) 11 October 2006. Calculate recommendation counts
+
+			DataSourceConnection	theConnectionObject = null;
+			Map<String,Number>	theRecommendationCountMap = null;
+
+			try
+			{
+				InstallationIF		defInstall = InstallationManager.getDefaultInstallation();
+
+				theConnectionObject = new DataSourceConnection( defInstall.getDataSource() );
+				if (theConnectionObject.Connect())
+				{
+					Statement	theS = null;
+
+					try
+					{
+						theS = theConnectionObject.createStatement();
+						theRecommendationCountMap = Headlines.getRecommendationCountsMap( theS.executeQuery( Headlines.getSearchRecommendationCountsQuery(theSearchResults) ) );
+					}
+					catch (Exception e)
+					{
+						s_Servlet_Logger.error("creating statement", e);
+					}
+					finally
+					{
+						USQL_Utils.closeStatementCatch(theS);
+					}
+				}
+				else
+				{
+					s_Servlet_Logger.warn("Cannot connect!");
+				}
+			}
+			catch (Exception err)
+			{
+				s_Servlet_Logger.error("???", err);
+			}
+			finally
+			{
+				if ( theConnectionObject != null)
+				{
+					theConnectionObject.CloseDown();
+					theConnectionObject = null;
+				}
+			}
+
+			////////////////////////////////////////////////////////
+
+			StringBuilder	sb = new StringBuilder(1000);
+			sb.append("<?xml version=\"1.0\" ?><response>");
+
+			////////////////////////////////////////////////////////
+
+			Locale		theLocale = GetClientLocale(inRequest);
+			Site		theSiteObj;
+			String		theLinkStr;
+			int		theRecommendationsCount;
+			int		z = 0;
+
+			ensureNotCached(inResponse);
+
+			inResponse.setLocale(theLocale);
+			inResponse.setContentType("text/xml; charset=\"UTF-8\"");
+
+			for ( SearchMatch eachMatch : theSearchResults)
+			{
+//				di = new DisplayItem( defInstall, (Item) headlineItemsArray[z], currentTimeMSecs);
+				theSiteObj = eachMatch.getSite();
+
+				///////////////////////////////////////////////////////////////////  (AGR) 11 October 2006
+
+				if ( theRecommendationCountMap != null)
+				{
+					try
+					{
+						theLinkStr = eachMatch.getLink().toString();
+
+						theRecommendationsCount = theRecommendationCountMap.get(theLinkStr).intValue();
+					}
+					catch (Exception e)
+					{
+						theRecommendationsCount = 0;
+					}
+				}
+				else	theRecommendationsCount = 0;
+
+				///////////////////////////////////////////////////////////////////
+
+				sb.append("<match index=\"").append(z).append("\">");
+
+				addDisplayable( sb, eachMatch, theSiteObj, theRecommendationsCount);
+
+				_addXMLElement( sb, "descStyle", eachMatch.getDescriptionStyle(theRecommendationsCount));
+				_addXMLCDataElement( sb, "creator", eachMatch.getReducedCreatorsStr());
+				_addXMLElement( sb, "score", eachMatch.getScore());
+
+				sb.append("</match>");
+
+				z++;
+			}
+
+			return sb.append("</response>").toString();
+		}
+
+		////////////////////////////////////////////////
+		////////////////////////////////////////////////
+
+		if ( theQuery != null)
+		{
+			theSsn.setAttribute("search_matches", theSearchResults);
 		}
 		else	theSsn.removeAttribute("search_matches");
 
@@ -554,6 +680,8 @@ s_Servlet_Logger.info( inRequest.getMethod() + " query = " + inRequest.getQueryS
 			inResponse.sendRedirect( inResponse.encodeRedirectURL(theRedirURLStr) );
 		}
 		else	inResponse.sendRedirect( inResponse.encodeRedirectURL("http://www.bloggers4labour.org/") );
+
+		return null;
 	}
 
 	/*******************************************************************************
@@ -1113,6 +1241,35 @@ s_Servlet_Logger.info( inRequest.getMethod() + " query = " + inRequest.getQueryS
 	}
 
 	/*******************************************************************************
+		(AGR) 14 October 2006
+	*******************************************************************************
+	public CharSequence handleHateMyTory( HttpServletRequest inRequest, HttpServletResponse inResponse)
+	{
+		StringBuilder	cs = new StringBuilder();
+		String		theFormatStr = inRequest.getParameter("format");
+
+		inResponse.setLocale( GetClientLocale(inRequest) );
+		inResponse.setContentType("text/javascript");
+
+		if (UText.isValidString(theFormatStr))
+		{
+			if (theFormatStr.equals("b4l"))
+			{
+				cs.append("document.writeln('")
+				  .append("<style type=\"text/css\">")
+					.append("@import url(\"http://www.bloggers4labour.org/css/hateMyTory.css\");")
+				  .append("</style>');\n");
+			}
+		}
+
+		cs.append("document.writeln('")
+			.append("<iframe src=\"http://hatemytory.com/tory-cgi/cleanptory.pl\" style=\"width:150px;height:260px;\" frameborder=\"1\" scrolling=\"no\" marginwidth=\"0\" marginheight=\"0\" frameborder=\"0\"></iframe>")
+		  .append("');");
+
+		return cs;
+	} */
+
+	/*******************************************************************************
 		11 February 2002
 	*******************************************************************************/
 	public static boolean hasParameter( HttpServletRequest inRequest, String inParamName)
@@ -1263,6 +1420,31 @@ s_Servlet_Logger.info( inRequest.getMethod() + " query = " + inRequest.getQueryS
 	private static StringBuilder _addXMLCDataElement( StringBuilder ioS, final String inElementName, final Object inContent)
 	{
 		return ioS.append("<" + inElementName + "><![CDATA[").append(inContent).append("]]></" + inElementName + ">");
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	private static StringBuilder addDisplayable( StringBuilder ioS, final Displayable inObj, final Site inSite, int inReccCount)
+	{
+		_addXMLCDataElement( ioS, "blogName", inObj.getBlogName());
+		_addXMLElement( ioS, "siteID", ( inSite != null) ? inSite.getRecno() : -1L);
+		_addXMLElement( ioS, "siteURL", inObj.getSiteURL());
+		_addXMLCDataElement( ioS, "link", inObj.getLink().toString());
+		_addXMLElement( ioS, "date", inObj.getDateString());
+
+		_addXMLCDataElement( ioS, "displayTitle", UText.isValidString( inObj.getDispTitle() ) ? inObj.getDispTitle() : "<i>Untitled</i>");
+		_addXMLCDataElement( ioS, "desc", inObj.getDescription());
+//		_addXMLElement( ioS, "descStyle", di.getDescriptionStyle(theRecommendationsCount));
+		_addXMLElement( ioS, "iconURL", UText.isValidString( inObj.getIconURL() ) ? inObj.getIconURL() : "");
+
+//		_addXMLCDataElement( ioS, "creator", di.getReducedCreatorsStr());
+
+//		if ( inReccCount != 0)    // (AGR) 11 October 2006
+		{
+			_addXMLElement( ioS, "votes", Integer.toString(inReccCount));    // (AGR) 1 October 2006
+		}
+
+		return ioS;
 	}
 
 	/*******************************************************************************
