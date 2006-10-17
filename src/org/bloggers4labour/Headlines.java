@@ -38,6 +38,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.log4j.Logger;
 import org.bloggers4labour.feed.FeedList;
 import org.bloggers4labour.headlines.*;
+import org.bloggers4labour.index.SearchMatch;
 import org.bloggers4labour.opml.OPMLGenerator;
 import org.bloggers4labour.options.Options;
 import org.bloggers4labour.options.TaskOptionsBeanIF;
@@ -512,39 +513,30 @@ public class Headlines implements HeadlinesIF
 		*******************************************************************************/
 		public void run()
 		{
-/*			if (Options.CLEANER_MEMORY_CHECKS)
-			{
-				FeedUtils.logMemory();
-			}
-*/
-//			System.out.println("##### count = " + getBlogsCount() + ", set size = " + getBlogs().size());
-
-			//////////////////////////////////////////////////////////////
-			
 			List<ItemIF>	keysList = null;
 			long		currMS = System.currentTimeMillis();
 
-			for ( ItemIF theItem : m_Coll.keySet())		// FIXME. Should this be sync-ed?
+			synchronized (m_Parent)		// (AGR) 5 Oct 2006. Moved up here, because of ConcurrentModException seen at (1)
 			{
-				if (isOutOfDate( currMS, theItem))
+				for ( ItemIF theItem : m_Coll.keySet())		// (1). CME seen here
 				{
-					if ( keysList == null)
+					if (isOutOfDate( currMS, theItem))
 					{
-						keysList = new ArrayList<ItemIF>();
+						if ( keysList == null)
+						{
+							keysList = new ArrayList<ItemIF>();
+						}
+
+						keysList.add(theItem);	// (AGR) 5 Oct 2006. Still reqd??? FIXME ... (AGR) '05. do this to prevent ConcurrentModificationExceptions!
 					}
-
-					keysList.add(theItem);	// do this to prevent ConcurrentModificationExceptions!
 				}
-			}
 
-			////////////////////////////////////////////
+				////////////////////////////////////////////
 
-			if ( keysList != null)
-			{
-				// info("removing keys: " + keysList);
-
-				synchronized (m_Parent)		// (AGR) 24 June 2005
+				if ( keysList != null)
 				{
+					// info("removing keys: " + keysList);
+
 					for ( ItemIF remItem : keysList)
 					{
 						for ( ExpiryHandler eh : m_ExpiryHandlers)	// (AGR) 26 June 2005
@@ -555,9 +547,12 @@ public class Headlines implements HeadlinesIF
 						_remove(remItem);
 					}
 				}
+			}
 
-				/////////////////////  (AGR) 23 May 2005
+			///////////////////////////  (AGR) 5 Oct 2006. This stuff does not need to be sync-ed
 
+			if ( keysList != null)
+			{
 				keysList.clear();
 				keysList = null;
 			}
@@ -887,6 +882,23 @@ public class Headlines implements HeadlinesIF
 		int		i = 0;
 
 		for ( ItemIF eachItem : inEntries)
+		{
+			sb.append(( i > 0) ? ",'" : "'").append( eachItem.getLink() ).append("'");
+			i++;
+		}
+
+		return QueryBuilder.getRecommendationCountsQueryString( sb.toString() );
+	}
+
+	/*******************************************************************************
+		(AGR) 11 October 2006
+	*******************************************************************************/
+	public static String getSearchRecommendationCountsQuery( final List<SearchMatch> inEntries)
+	{
+		StringBuilder	sb = new StringBuilder( 40 * inEntries.size());
+		int		i = 0;
+
+		for ( SearchMatch eachItem : inEntries)
 		{
 			sb.append(( i > 0) ? ",'" : "'").append( eachItem.getLink() ).append("'");
 			i++;
