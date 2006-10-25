@@ -45,6 +45,7 @@ public class Score
 		else
 		{
 			m = s_1Day1stInningsPattern.matcher(inStringToParse);
+
 			if (m.find())
 			{
 				battingTeam = m.group(1);
@@ -56,7 +57,6 @@ public class Score
 			else
 			{
 				displayString = "\"" + inStringToParse + "\"";
-//				unparseableString = "\"" + FeedUtils.getDisplayTitle(inItem) + "\"";
 			}
 		}
 	}
@@ -85,11 +85,11 @@ public class Score
 	/**
 	 * Setter for property battingTeam.
 	 * @param battingTeam New value of property battingTeam.
-	 */
+	
 	public void setBattingTeam(String battingTeam)
 	{
 		this.battingTeam = battingTeam;
-	}
+	} */
 
 	/**
 	 * Holds value of property fieldingTeam.
@@ -108,11 +108,11 @@ public class Score
 	/**
 	 * Setter for property fieldingTeam.
 	 * @param fieldingTeam New value of property fieldingTeam.
-	 */
+	
 	public void setFieldingTeam(String fieldingTeam)
 	{
 		this.fieldingTeam = fieldingTeam;
-	}
+	} */
 
 	/**
 	 * Holds value of property currentScore.
@@ -131,11 +131,11 @@ public class Score
 	/**
 	 * Setter for property currentScore.
 	 * @param currentScore New value of property currentScore.
-	 */
+	
 	public void setCurrentScore(String currentScore)
 	{
 		this.currentScore = currentScore;
-	}
+	} */
 
 	/**
 	 * Holds value of property lastScore.
@@ -154,11 +154,11 @@ public class Score
 	/**
 	 * Setter for property lastScore.
 	 * @param lastScore New value of property lastScore.
-	 */
+	
 	public void setLastScore(String lastScore)
 	{
 		this.lastScore = lastScore;
-	}
+	} */
 
 	private transient String displayString;
 	

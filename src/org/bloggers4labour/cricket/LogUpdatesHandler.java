@@ -15,6 +15,7 @@ import org.apache.log4j.Logger;
 import org.bloggers4labour.*;
 import org.bloggers4labour.headlines.AddHandler;
 import org.bloggers4labour.headlines.HeadlinesIF;
+import org.bloggers4labour.jsp.DisplayItem;
 
 /**
  *
@@ -22,25 +23,20 @@ import org.bloggers4labour.headlines.HeadlinesIF;
  */
 public class LogUpdatesHandler implements AddHandler
 {
-	private static Pattern	s_MatchPattern = Pattern.compile("([A-Za-z]* *[A-Za-z]+) (.*) v ([A-Za-z]* *[A-Za-z]+) (.*)");
+	private static Pattern	s_1Day1stInningsPattern = Pattern.compile("([A-Za-z]* *[A-Za-z]+) (.*) v ([A-Za-z]* *[A-Za-z]+)$");
+	private static Pattern	s_MatchPattern = Pattern.compile("([A-Za-z]* *[A-Za-z]+) (.*) v ([A-Za-z]* *[A-Za-z]+) ([0-9\\-]*)");
 
 	/*******************************************************************************
 	*******************************************************************************/
 	public void onAdd( final Installation inInstall, HeadlinesIF inHeads, final ItemIF inItem, final ItemContext inCtxt)
 	{
-		String	channelStr = FeedUtils.channelToString( inItem.getChannel() );
-		String	scoreStr = inItem.getTitle();
-		Matcher	m = s_MatchPattern.matcher(scoreStr);
+		DisplayItem	d = new DisplayItem( inInstall, inItem, System.currentTimeMillis());
+		String		channelStr = FeedUtils.channelToString( inItem.getChannel() );
+	//	String		scoreStr = inItem.getTitle();
+		String		scoreStr = inItem.getDescription().trim();
+	//	Matcher		m = s_MatchPattern.matcher(scoreStr);
+		Score		theScore = Score.parse( inItem.getDescription().trim() );
 
-		org.bloggers4labour.jsp.DisplayItem	d = new org.bloggers4labour.jsp.DisplayItem( inInstall, inItem, System.currentTimeMillis());
-
-		if (m.find())
-		{
-			Logger.getLogger("Main").info("... New post @ " + new java.util.Date() + " ... " + FeedUtils.getItemDate(inItem)  + "..." + d.getDateString() + " ... " + m.group(1) + " are " + m.group(2) + ", against " + m.group(3) + " who got " + m.group(4));
-		}
-		else
-		{
-			Logger.getLogger("Main").info("... New post @ " + new java.util.Date() + " ... " + FeedUtils.getItemDate(inItem)  + "..." + d.getDateString() + " ... \"" + FeedUtils.getDisplayTitle(inItem) + "\"");
-		}
+		Logger.getLogger("Main").info("... New post @ " + new java.util.Date() + " ... " + FeedUtils.getItemDate(inItem)  + " ... " + d.getDateString() + " ... " + theScore);
 	}
 }
