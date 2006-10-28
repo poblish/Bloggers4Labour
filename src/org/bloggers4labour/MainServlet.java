@@ -341,7 +341,6 @@ public class MainServlet extends HttpServlet
 
 						DisplayItem	di;
 						Site		theSiteObj;
-						String		theLinkStr;
 						int		theRecommendationsCount;
 
 						for ( int z = 0; z < actualNumPosts; z++)
@@ -351,20 +350,23 @@ public class MainServlet extends HttpServlet
 
 							///////////////////////////////////////////////////////////////////  (AGR) 1 October 2006
 
-							theLinkStr = di.getLink().toString();
+							theRecommendationsCount = 0;
 
-							if ( theRecommendationCountMap != null)
+							if ( di.getLink() != null)	// (AGR) 28 October 2006. Something wrong with Warren Morgan's blog produces null links. So test here.
 							{
-								try
+								String	theLinkStr = di.getLink().toString();
+
+								if ( theRecommendationCountMap != null)
 								{
-									theRecommendationsCount = theRecommendationCountMap.get(theLinkStr).intValue();
-								}
-								catch (Exception e)
-								{
-									theRecommendationsCount = 0;
+									try
+									{
+										theRecommendationsCount = theRecommendationCountMap.get(theLinkStr).intValue();
+									}
+									catch (Exception e)
+									{
+									}
 								}
 							}
-							else	theRecommendationsCount = 0;
 
 							///////////////////////////////////////////////////////////////////
 
@@ -372,17 +374,6 @@ public class MainServlet extends HttpServlet
 
 							addDisplayable( sb, di, theSiteObj, theRecommendationsCount);
 
-/*							_addXMLCDataElement( sb, "blogName", di.getBlogName());
-							_addXMLElement( sb, "siteID", ( theSiteObj != null) ? theSiteObj.getRecno() : -1L);
-							_addXMLElement( sb, "siteURL", di.getSiteURL());
-							_addXMLCDataElement( sb, "link", theLinkStr);
-							_addXMLElement( sb, "date", di.getDateString());
-
-							_addXMLCDataElement( sb, "displayTitle", UText.isValidString( di.getDispTitle() ) ? di.getDispTitle() : "<i>Untitled</i>");
-							_addXMLCDataElement( sb, "desc", di.getDescription());
-							_addXMLElement( sb, "recommendations", Integer.toString(theRecommendationsCount));	// (AGR) 1 October 2006
-							_addXMLElement( sb, "iconURL", UText.isValidString( di.getIconURL() ) ? di.getIconURL() : "");
-*/
 							_addXMLElement( sb, "descStyle", di.getDescriptionStyle(theRecommendationsCount));
 							_addXMLCDataElement( sb, "creator", di.getReducedCreatorsStr());
 
@@ -395,6 +386,75 @@ public class MainServlet extends HttpServlet
 				catch (Exception e)
 				{
 					s_Servlet_Logger.error("Headlines...", e);
+
+					goHome( inRequest, inResponse);
+					theOutputBuffer = null;
+				}
+			}
+			else if (hasParameter( inRequest, "cricket"))		// (AGR) 25 October 2006
+			{
+				try
+				{
+//					int	theNumPosts = 1;
+
+					//////////////////////////////////////////////////////////////////////////////////////
+
+					Locale	theLocale = GetClientLocale(inRequest);
+
+					ensureNotCached(inResponse);
+
+					inResponse.setLocale(theLocale);
+					inResponse.setContentType("text/xml; charset=\"UTF-8\"");
+
+					//////////////////////////////////////////////////////////////////////////////////////
+
+					InstallationIF		defInstall = InstallationManager.getInstallation("cricket");
+					HeadlinesMgr		theHMgr = defInstall.getHeadlinesMgr();
+					Headlines		theHs = theHMgr.getRecentPostsInstance();
+					StringBuilder		sb = new StringBuilder("<?xml version=\"1.0\" ?><response>");
+					long			currentTimeMSecs = System.currentTimeMillis();
+
+					_addXMLCDataElement( sb, "currentTime", ULocale2.getClientDateTimeFormat( theLocale, DateFormat.LONG).format( new java.util.Date() ));
+
+					if ( theHs != null)
+					{
+						ItemIF[]	headlineItemsArray = theHs.toArray();
+//						int		actualNumPosts = theNumPosts > headlineItemsArray.length ? headlineItemsArray.length : theNumPosts;
+
+						///////////////////////////////////////////////////////////////////
+
+						DisplayItem				di;
+						String					theTitleStr;
+						org.bloggers4labour.cricket.Score	theScore;
+
+//						for ( int z = 0; z < actualNumPosts; z++)
+						for ( int z = 0; z < headlineItemsArray.length; z++)
+						{
+							di = new DisplayItem( defInstall, (Item) headlineItemsArray[z], currentTimeMSecs);
+
+							theTitleStr = di.getDispTitle();
+							theScore = org.bloggers4labour.cricket.Score.parse( theTitleStr );
+
+							sb.append("<score index=\"").append(z).append("\">");
+
+							// addDisplayable( sb, di, theSiteObj, 0);
+
+							this._addXMLCDataElement( sb, "link", di.getLink());
+							_addXMLElement( sb, "batting", theScore.getBattingTeam());
+							_addXMLElement( sb, "score", theScore.getCurrentScore());
+							_addXMLElement( sb, "fielding", theScore.getFieldingTeam());
+							_addXMLElement( sb, "lastScore", theScore.getLastScore());
+							_addXMLElement( sb, "display", theScore.toString());
+
+							sb.append("</score>");
+						}
+					}
+
+					theOutputBuffer = sb.append("</response>").toString();
+				}
+				catch (Exception e)
+				{
+					s_Servlet_Logger.error("Scores...", e);
 
 					goHome( inRequest, inResponse);
 					theOutputBuffer = null;
@@ -1429,7 +1489,17 @@ public class MainServlet extends HttpServlet
 		_addXMLCDataElement( ioS, "blogName", inObj.getBlogName());
 		_addXMLElement( ioS, "siteID", ( inSite != null) ? inSite.getRecno() : -1L);
 		_addXMLElement( ioS, "siteURL", inObj.getSiteURL());
-		_addXMLCDataElement( ioS, "link", inObj.getLink().toString());
+
+		///////////////////////////////////////////////////////
+
+		if ( inObj.getLink() != null)	// (AGR) 28 October 2006. Something wrong with Warren Morgan's blog produces null links. So test here.
+		{
+			_addXMLCDataElement( ioS, "link", inObj.getLink().toString());
+		}
+		else	_addXMLCDataElement( ioS, "link", "");	// Is this acceptable?
+
+		///////////////////////////////////////////////////////
+
 		_addXMLElement( ioS, "date", inObj.getDateString());
 
 		_addXMLCDataElement( ioS, "displayTitle", UText.isValidString( inObj.getDispTitle() ) ? inObj.getDispTitle() : "<i>Untitled</i>");
