@@ -31,28 +31,28 @@ public class Score
 	*******************************************************************************/
 	private Score( final String inStringToParse)
 	{
-		Matcher		m = s_MatchPattern.matcher(inStringToParse);
+		Matcher		m = s_1Day1stInningsPattern.matcher(inStringToParse);
 
 		if (m.find())
 		{
 			battingTeam = m.group(1);
 			currentScore = m.group(2);
 			fieldingTeam = m.group(3);
-			lastScore = m.group(4);
 
-			displayString = battingTeam + " are " + currentScore + ", against " + fieldingTeam + " who got " + lastScore;
+			displayString = battingTeam + " are " + currentScore + ", against " + fieldingTeam + " (yet to bat)";
 		}
 		else
 		{
-			m = s_1Day1stInningsPattern.matcher(inStringToParse);
+			m = s_MatchPattern.matcher(inStringToParse);
 
 			if (m.find())
 			{
 				battingTeam = m.group(1);
 				currentScore = m.group(2);
 				fieldingTeam = m.group(3);
+				lastScore = m.group(4);
 
-				displayString = battingTeam + " are " + currentScore + ", against " + fieldingTeam + " (yet to bat)";
+				displayString = battingTeam + " are " + currentScore + ", against " + fieldingTeam + " who got " + lastScore;
 			}
 			else
 			{
