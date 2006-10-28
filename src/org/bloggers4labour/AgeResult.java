@@ -21,7 +21,7 @@ import org.bloggers4labour.cats.CategoriesTable;
 	Why? Because some item ages are no longer permissible (items a week or
 	more in the future)
 *******************************************************************************/
-class AgeResult
+public class AgeResult
 {
 	private long		m_AgeMSecs;
 	private boolean		m_Allowable;
