@@ -24,6 +24,7 @@ import javax.xml.xpath.XPathFactory;
 import org.apache.log4j.Logger;
 import org.bloggers4labour.conf.Configuration;
 import org.w3c.dom.*;
+import static org.bloggers4labour.Constants.*;
 
 /**
  *
@@ -54,6 +55,7 @@ public class InstallationManager
 			Document		theDocument = docBuilder.parse( theConf.findFile("installations.xml") );
 			XPathExpression		theInstallsExpr = theXPathObj.compile("installations/install");
 			XPathExpression		theURLExpr = theXPathObj.compile("jdbc_url[1]/text()");
+			XPathExpression		thePollerFreqExpr = theXPathObj.compile("poller_frequency_ms[1]/text()");
 			XPathExpression		theHMgrExpr = theXPathObj.compile("headlinesMgr[1]");
 			NodeList		theInstallsNodes = (NodeList) theInstallsExpr.evaluate( theDocument, XPathConstants.NODESET);
 
@@ -70,6 +72,19 @@ public class InstallationManager
 					theSource.setUrl(theURLNodeStr);
 				}
 
+				/////////////////////////////////////////////////////////////////////////////  (AGR) 26 October 2006. Poller freq [ms]
+
+				long	thePollerFreqMS = 4 * ONE_MINUTE_MSECS;
+
+				try
+				{
+					thePollerFreqMS = Long.parseLong( (String) thePollerFreqExpr.evaluate( theElement, XPathConstants.STRING) );
+				}
+				catch (Exception e)
+				{
+					;
+				}
+
 				/////////////////////////////////////////////////////////////////////////////
 
 				Element		theHeadMgrElem = (Element) theHMgrExpr.evaluate( theElement, XPathConstants.NODE);
@@ -77,7 +92,8 @@ public class InstallationManager
 				Installation	theInstall = new Installation( theName,
 										( theBundleNameNode != null) ? theBundleNameNode.getTextContent() : theName,
 										theSource,
-										theElement.getAttributes().getNamedItem("mbean_name").getTextContent());
+										theElement.getAttributes().getNamedItem("mbean_name").getTextContent(),
+										thePollerFreqMS);
 
 				theInstall.setHeadlinesMgr( new HeadlinesMgr( theHeadMgrElem, theInstall) );
 				theInstall.complete();

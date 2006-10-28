@@ -45,12 +45,15 @@ public class Installation implements InstallationIF
 	private ActivityTable		m_ActivityTable = null; // new ActivityTable();
 	private LastPostTable		m_LastPostTable;		// (AGR) 9 Sep 2006
 
+	private long			m_PollerFrequencyMS;		// (AGR) 26 October 2006
+
 	private static Logger		s_Install_Logger = Logger.getLogger("Main");
 
 	/*******************************************************************************
 		(AGR) 19 Feb 2006
 	*******************************************************************************/
-	public Installation( String inName, String inBundleName, DataSource inDataSource, String inStatsBeanName) //, HeadlinesMgr inHeadsMgr)
+	public Installation( String inName, String inBundleName, DataSource inDataSource, String inStatsBeanName,
+				/* (AGR) 26 October 2006 */ long inPollerFrequencyMS)
 	{
 		m_Name = inName;
 		m_BundleName = inBundleName;
@@ -61,8 +64,6 @@ public class Installation implements InstallationIF
 		m_Management = new Management( this, inStatsBeanName);
 
 		m_FeedList = new FeedList(this);
-//		m_HeadlinesMgr = new HeadlinesMgr(this);		// needs a FeedList...
-//		m_HeadlinesMgr = inHeadsMgr;				// (AGR) 21 March 2006. needs a FeedList...
 
 		m_LastPostTable = new LastPostTable( m_FeedList, m_Name.equals("b4l"));		// (AGR) 9 Sep 2006
 
@@ -86,7 +87,7 @@ public class Installation implements InstallationIF
 		m_IndexMgr = new IndexMgr(this);
 
 		m_Categories = new CategoriesTable(this);
-		m_Poller = new Poller(this);
+		m_Poller = new Poller( this, m_PollerFrequencyMS);
 		m_DigestSender = new DigestSender(this);
 	}
 
