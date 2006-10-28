@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
@@ -69,6 +70,9 @@ public final class FeedUtils
 
 	private static NumberFormat	s_MemoryNumFormat;		// (AGR) 22 May 2005
 	private static DateFormat	s_BigIssueDotNetDateFormat;	// (AGR) 12 July 2006
+//	private static DateFormat	s_ECBScoresDateFormat;		// (AGR) 24 October 2006
+
+	private static TimeZone		s_GMTZone = TimeZone.getTimeZone("GMT");	// (AGR) 24 October 2006
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -102,6 +106,9 @@ public final class FeedUtils
 
 		s_BigIssueDotNetDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.US);	// (AGR) 12 July 2006. Shudder...
 		s_BigIssueDotNetDateFormat.setTimeZone( ULocale2.getBestTimeZone( Locale.UK ));		// Assume published in London time
+
+//		s_ECBScoresDateFormat = new SimpleDateFormat("EEE, dd MMM yy HH:mm:ss z", Locale.US);	// (AGR) 24 October 2006. Shudder...
+//		s_ECBScoresDateFormat.setTimeZone( ULocale2.getBestTimeZone( Locale.UK ));		// Assume published in London time
 	}
 
 	/*******************************************************************************
@@ -378,9 +385,22 @@ public final class FeedUtils
 	{
 		if ( inItem != null)
 		{
-			if ( inItem.getDate() != null)
+			Date	theDate = inItem.getDate();
+
+			if ( theDate != null)
 			{
-				return inItem.getDate();
+				Calendar	theCal = Calendar.getInstance(s_GMTZone);
+
+				theCal.setTimeInMillis( theDate.getTime() );	// (AGR) 24 October 2006. For the ECB cricket score feed's benefit
+
+				if ( theCal.get( Calendar.YEAR ) < 10)
+				{
+					theCal.roll( Calendar.YEAR, 2000);
+					// s_Utils_Logger.info("From \"" + theDate + "\" to \"" + theCal.getTime() + "\"");
+					return theCal.getTime();
+				}
+
+				return theDate;	// (AGR) 24 October 2006. Change as little as possible!
 			}
 
 			try
@@ -411,7 +431,16 @@ public final class FeedUtils
 					}
 					catch (Exception e3)
 					{
-						;
+						/* // (AGR) 24 October 2006. For the ECB cricket score feed's benefit, handle this bogus date format...
+
+						try
+						{
+							return s_ECBScoresDateFormat.parse( inItem.getElementValue("pubDate") );
+						}
+						catch (Exception e4)
+						{
+							;
+						} */
 					}
 				}
 			}
