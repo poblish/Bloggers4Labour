@@ -548,9 +548,9 @@ public final class FeedUtils
 			// Leave the date alone, and let the AgeResult record flag us as unacceptable
 		}
 		else if ( theMsecsInTheFuture > 0 &&
-			  theMsecsInTheFuture <= ( 5L * ONE_MINUTE_MSECS))	// (AGR) 3 Sep 2006. Any thing <= 5 mins in the future I take to be a problem with the clock on the feed server (see: http://www.bloggers4labour.org/2006/09/up-on-bricks-results-so-far.jsp) ...
+			  theMsecsInTheFuture <= ( 10L * ONE_MINUTE_MSECS))	// (AGR) 28 Oct 2006. Raised this to 10 minutes - clocks are more than 5 mins out now! (AGR) 3 Sep 2006. Any thing <= 5 mins in the future I take to be a problem with the clock on the feed server (see: http://www.bloggers4labour.org/2006/09/up-on-bricks-results-so-far.jsp) ...
 		{
-			theItemDateMsecs -= ( 5L * ONE_MINUTE_MSECS);		// ... so imply shift back by 5 minutes.
+			theItemDateMsecs -= ( 10L * ONE_MINUTE_MSECS);		// ... so imply shift back by 10 minutes.
 		}
 		else if (( theMsecsInTheFuture > ( 3L * ONE_HOUR_MSECS)) &&	// (AGR) 19 Dec 2005. New logic
 		         ( theMsecsInTheFuture <= ( 8L * ONE_HOUR_MSECS)))	// (AGR) 7 Jan 2006. Had to add this when I noticed a post 25.5 hours in the future!
