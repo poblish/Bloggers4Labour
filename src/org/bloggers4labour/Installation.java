@@ -20,6 +20,7 @@ import org.bloggers4labour.feed.*;
 import org.bloggers4labour.index.IndexMgr;
 import org.bloggers4labour.jmx.Management;
 import org.bloggers4labour.mail.DigestSender;
+import org.bloggers4labour.polling.Poller;
 import org.bloggers4labour.sql.*;
 import org.apache.log4j.Logger;
 
@@ -53,7 +54,7 @@ public class Installation implements InstallationIF
 		(AGR) 19 Feb 2006
 	*******************************************************************************/
 	public Installation( String inName, String inBundleName, DataSource inDataSource, String inStatsBeanName,
-				/* (AGR) 26 October 2006 */ long inPollerFrequencyMS)
+				/* (AGR) 28 October 2006. May be null! */ Poller inPoller)
 	{
 		m_Name = inName;
 		m_BundleName = inBundleName;
@@ -66,6 +67,12 @@ public class Installation implements InstallationIF
 		m_FeedList = new FeedList(this);
 
 		m_LastPostTable = new LastPostTable( m_FeedList, m_Name.equals("b4l"));		// (AGR) 9 Sep 2006
+
+		if ( inPoller != null)
+		{
+			m_Poller = inPoller;			// (AGR) 28 October 2006
+			m_Poller.setInstallation(this);
+		}
 
 		// must call: complete() at some point!
 	}
@@ -87,7 +94,12 @@ public class Installation implements InstallationIF
 		m_IndexMgr = new IndexMgr(this);
 
 		m_Categories = new CategoriesTable(this);
-		m_Poller = new Poller( this, m_PollerFrequencyMS);
+
+		if ( m_Poller != null)	// (AGR) 28 October 2006
+		{
+			m_Poller.startPolling();
+		}
+
 		m_DigestSender = new DigestSender(this);
 	}
 
@@ -132,7 +144,11 @@ public class Installation implements InstallationIF
 	{
 		m_FeedList.reconnect();
 		m_Categories.reconnect();
-		m_Poller.startPolling();
+
+		if ( m_Poller != null)	// (AGR) 28 October 2006
+		{
+			m_Poller.startPolling();
+		}
 	}
 
 	/*******************************************************************************
@@ -141,7 +157,12 @@ public class Installation implements InstallationIF
 	{
 		m_Categories.clearTable();
 		m_FeedList.disconnect();
-		m_Poller.cancelPolling();
+
+		if ( m_Poller != null)	// (AGR) 28 October 2006
+		{
+			m_Poller.cancelPolling();
+		}
+
 		m_HeadlinesMgr.shutdown();
 
 		m_DigestSender.cancelTimer();
