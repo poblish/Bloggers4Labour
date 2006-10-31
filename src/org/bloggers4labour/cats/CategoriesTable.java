@@ -133,7 +133,7 @@ public class CategoriesTable
 				theList = new ArrayList<ItemIF>();
 				m_Map.put( theKey, theList);
 
-				// s_Headlines_Logger.info("  => Add category \"" + theKey + "\" from \"" + ch.getTitle() + "\"");
+				// s_Headlines_Logger.info( m_LogPrefix + "  => Add category \"" + theKey + "\" from \"" + ch.getTitle() + "\""); // to #" + Integer.toHexString( hashCode() ).toUpperCase() );
 			}
 
 			// (AGR) 25 May 2005. We need to supply a Channel, because otherwise the Site
