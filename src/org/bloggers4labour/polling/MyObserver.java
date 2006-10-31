@@ -33,7 +33,7 @@ public class MyObserver implements PollerObserverIF
 	private String		m_LogPrefix;
 	private HeadlinesMgr	m_HMgr;
 
-	private static Logger	s_Poll_Logger = Logger.getLogger("Main");
+	private static Logger	s_Poll_Logger = Logger.getLogger( MyObserver.class );
 	private static byte[]	s_itemFound_locker = new byte[0];	// (AGR) 21 October 2006
 
 	/*******************************************************************************
@@ -49,14 +49,14 @@ public class MyObserver implements PollerObserverIF
 	*******************************************************************************/
 	public void pollStarted( ChannelIF inChannel)
 	{
-		// s_Poll_Logger.info("... Polling started for " + inChannel);
+		// s_Poll_Logger.info( m_LogPrefix + "... Polling started for " + inChannel);
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
 	public void pollFinished( ChannelIF inChannel)
 	{
-		s_Poll_Logger.warn("... Polling FINISHED for " + inChannel);	// (AGR) 28 October 2006
+		// s_Poll_Logger.warn( m_LogPrefix + "... Polling FINISHED for " + inChannel);	// (AGR) 28 October 2006
 	}
 
 	/*******************************************************************************
@@ -93,7 +93,7 @@ public class MyObserver implements PollerObserverIF
 		long		currTimeMSecs = System.currentTimeMillis();
 		URL		theChannelLoc = ioChannel.getLocation();
 		Date		itemDate = FeedUtils.getItemDate(inItem);
-		AgeResult	theAgeResult = org.bloggers4labour.Poller.getItemAgeMsecs( inItem, itemDate, currTimeMSecs);
+		AgeResult	theAgeResult = Util.getItemAgeMsecs( inItem, itemDate, currTimeMSecs);
 
 		//////////////////////////////////////////////////////////////////  (AGR) 10 Sep 2006
 
@@ -123,7 +123,7 @@ public class MyObserver implements PollerObserverIF
 
 		//////////////////////////////////////////////////////////////////
 
-		if (org.bloggers4labour.Poller.ITEMS_PREPEND_INSTALL_NAME)
+		if (org.bloggers4labour.polling.Poller.ITEMS_PREPEND_INSTALL_NAME)
 		{
 			inItem.setTitle( m_LogPrefix + "- " + inItem.getTitle());
 			// System.out.println("@@@  " + inItem.getTitle() + " / " + inItem.hashCode());
@@ -203,7 +203,7 @@ public class MyObserver implements PollerObserverIF
 			{
 				itemResult = AddResult.FAILED_NO_DATE;
 			}
-			else	itemResult = org.bloggers4labour.Poller.processItem( h, inItem, theAgeResult.getAgeMSecs(), ItemContext.UPDATE);
+			else	itemResult = Util.processItem( h, inItem, theAgeResult.getAgeMSecs(), ItemContext.UPDATE);
 
 			//////////////////////////////////////////////////////////////////
 
