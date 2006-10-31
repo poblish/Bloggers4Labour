@@ -11,6 +11,8 @@ package org.bloggers4labour;
 
 import com.hiatus.UText;
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
+import java.lang.reflect.*;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -23,6 +25,8 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
 import org.apache.log4j.Logger;
 import org.bloggers4labour.conf.Configuration;
+import org.bloggers4labour.polling.Poller;
+import org.bloggers4labour.polling.PollerConfig;
 import org.w3c.dom.*;
 import static org.bloggers4labour.Constants.*;
 
@@ -53,28 +57,22 @@ public class InstallationManager
 
 			Configuration		theConf = Configuration.getInstance();
 			Document		theDocument = docBuilder.parse( theConf.findFile("installations.xml") );
-			XPathExpression		theInstallsExpr = theXPathObj.compile("installations/install");
-			XPathExpression		theURLExpr = theXPathObj.compile("jdbc_url[1]/text()");
-			XPathExpression		thePollerFreqExpr = theXPathObj.compile("poller_frequency_ms[1]/text()");
-			XPathExpression		theHMgrExpr = theXPathObj.compile("headlinesMgr[1]");
-			NodeList		theInstallsNodes = (NodeList) theInstallsExpr.evaluate( theDocument, XPathConstants.NODESET);
+			Element			theElement;
 
-			for ( int i = 0; i < theInstallsNodes.getLength(); i++)
+			XPathExpression			thePollersExpr = theXPathObj.compile("installations/pollers/poller");
+			XPathExpression			thePollerClassExpr = theXPathObj.compile("class[1]/text()");
+			XPathExpression			thePollerFreqExpr = theXPathObj.compile("frequency_ms[1]/text()");
+			NodeList			thePollersNodes = (NodeList) thePollersExpr.evaluate( theDocument, XPathConstants.NODESET);
+			Map<String,PollerConfig>	thePollerIdsMap = new HashMap<String,PollerConfig>();
+
+			for ( int k = 0; k < thePollersNodes.getLength(); k++)
 			{
-				Element		theElement = (Element) theInstallsNodes.item(i);
-				String		theURLNodeStr = (String) theURLExpr.evaluate( theElement, XPathConstants.STRING);
-				String		theName = theElement.getAttributes().getNamedItem("name").getTextContent();
-				Node		theBundleNameNode = theElement.getAttributes().getNamedItem("bundle_name");
-				MysqlDataSource	theSource = new MysqlDataSource();
+				theElement = (Element) thePollersNodes.item(k);
 
-				if (UText.isValidString(theURLNodeStr))
-				{
-					theSource.setUrl(theURLNodeStr);
-				}
+				String		theId = theElement.getAttributes().getNamedItem("id").getTextContent();
+				String		theClassStr = (String) thePollerClassExpr.evaluate( theElement, XPathConstants.STRING);
 
-				/////////////////////////////////////////////////////////////////////////////  (AGR) 26 October 2006. Poller freq [ms]
-
-				long	thePollerFreqMS = 4 * ONE_MINUTE_MSECS;
+				long	thePollerFreqMS = 5 * ONE_MINUTE_MSECS;
 
 				try
 				{
@@ -87,13 +85,63 @@ public class InstallationManager
 
 				/////////////////////////////////////////////////////////////////////////////
 
+				try
+				{
+					Constructor	ctor = Class.forName(theClassStr).getConstructors()[0];
+
+					thePollerIdsMap.put( theId, new PollerConfig( ctor, thePollerFreqMS));
+				}
+				catch (Exception e)
+				{
+					s_Installations_Logger.error("Failure when accessing \"" + theClassStr + "\". Will not be able to poll for this Installation.");
+				}
+			}
+
+			/////////////////////////////////////////////////////////////////////////////////////
+
+			XPathExpression		theInstallsExpr = theXPathObj.compile("installations/install");
+			XPathExpression		theURLExpr = theXPathObj.compile("jdbc_url[1]/text()");
+			XPathExpression		theHMgrExpr = theXPathObj.compile("headlinesMgr[1]");
+			NodeList		theInstallsNodes = (NodeList) theInstallsExpr.evaluate( theDocument, XPathConstants.NODESET);
+
+			for ( int i = 0; i < theInstallsNodes.getLength(); i++)
+			{
+				theElement = (Element) theInstallsNodes.item(i);
+
+				String		theURLNodeStr = (String) theURLExpr.evaluate( theElement, XPathConstants.STRING);
+				String		theName = theElement.getAttributes().getNamedItem("name").getTextContent();
+				Node		theBundleNameNode = theElement.getAttributes().getNamedItem("bundle_name");
+				MysqlDataSource	theSource = new MysqlDataSource();
+
+				if (UText.isValidString(theURLNodeStr))
+				{
+					theSource.setUrl(theURLNodeStr);
+				}
+
+				/////////////////////////////////////////////////////////////////////////////  (AGR) 28 October 2006
+
+				String		thePollerId = theElement.getAttributes().getNamedItem("poller").getTextContent();
+				PollerConfig	thePollerConfigToUse = thePollerIdsMap.get(thePollerId);
+				Poller		theNewPoller;
+
+				try
+				{
+					theNewPoller = thePollerConfigToUse.newInstance();
+				}
+				catch (Exception e)
+				{
+					theNewPoller = null;
+				}
+
+				/////////////////////////////////////////////////////////////////////////////
+
 				Element		theHeadMgrElem = (Element) theHMgrExpr.evaluate( theElement, XPathConstants.NODE);
 
 				Installation	theInstall = new Installation( theName,
 										( theBundleNameNode != null) ? theBundleNameNode.getTextContent() : theName,
 										theSource,
 										theElement.getAttributes().getNamedItem("mbean_name").getTextContent(),
-										thePollerFreqMS);
+										theNewPoller);
 
 				theInstall.setHeadlinesMgr( new HeadlinesMgr( theHeadMgrElem, theInstall) );
 				theInstall.complete();
