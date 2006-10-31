@@ -52,6 +52,19 @@ public class SearchMatch extends AbstractDisplayable implements java.io.Serializ
 	}
 
 	/*******************************************************************************
+		(AGR) 10 October 2006
+	*******************************************************************************/
+	public String getDescriptionStyle( int inNumRecommendations)
+	{
+		if ( inNumRecommendations > 0 && ( m_Site != null))
+		{
+			return  m_Site.getDescriptionStyle( null, inNumRecommendations);
+		}
+
+		return DEFAULT_DESCRIPTION_STYLE;
+	}
+
+	/*******************************************************************************
 	*******************************************************************************/
 	public Site getSite()
 	{
