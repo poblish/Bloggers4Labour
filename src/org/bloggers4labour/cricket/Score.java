@@ -17,8 +17,11 @@ import java.util.regex.*;
  */
 public class Score
 {
-	private static Pattern	s_1Day1stInningsPattern = Pattern.compile("([A-Za-z]* *[A-Za-z]+) (.*) v ([A-Za-z]* *[A-Za-z]+)$");
-	private static Pattern	s_MatchPattern = Pattern.compile("([A-Za-z]* *[A-Za-z]+) (.*) v ([A-Za-z]* *[A-Za-z]+) ([0-9\\-]*)");
+	private final static String	COUNTRY_NAME = "([A-Za-z]* *[A-Za-z]+)";
+
+	private static Pattern	s_NotStartedPattern = Pattern.compile( COUNTRY_NAME + " v " + COUNTRY_NAME + " Match not started");  // (AGR) 2 November 2006
+	private static Pattern	s_1Day1stInningsPattern = Pattern.compile( COUNTRY_NAME + " (.*) v " + COUNTRY_NAME + "$");
+	private static Pattern	s_MatchPattern = Pattern.compile( COUNTRY_NAME + " (.*) v " + COUNTRY_NAME + " ([0-9\\-]*)");
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -31,7 +34,19 @@ public class Score
 	*******************************************************************************/
 	private Score( final String inStringToParse)
 	{
-		Matcher		m = s_1Day1stInningsPattern.matcher(inStringToParse);
+		Matcher		m = s_NotStartedPattern.matcher(inStringToParse);		// (AGR) 2 November 2006
+
+		if (m.find())
+		{
+			battingTeam = m.group(1);
+			fieldingTeam = m.group(2);
+			displayString = battingTeam + " against " + fieldingTeam + " (yet to start)";
+			return;
+		}
+
+		////////////////////////////////////////////////////////////////
+
+		m = s_1Day1stInningsPattern.matcher(inStringToParse);
 
 		if (m.find())
 		{
