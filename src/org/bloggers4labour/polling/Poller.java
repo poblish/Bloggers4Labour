@@ -31,13 +31,14 @@ import static org.bloggers4labour.Constants.*;
  *
  * @author andrewre
  */
-public class Poller
+public abstract class Poller
 {
-	private Installation					m_Installation;
+//	static de.nava.informa.utils.poller.Poller		s_InformaPoller;
+
+	protected Installation					m_Installation;
 	private PollerObserverIF				m_Observer;
 
-	private static Logger					s_Poll_Logger = Logger.getLogger("Main");
-	private static de.nava.informa.utils.poller.Poller	s_InformaPoller;
+	private static Logger					s_Poll_Logger = Logger.getLogger( Poller.class );
 
 	private static Item[]					s_EmptyItemsArray = new Item[0];
 
@@ -46,49 +47,13 @@ public class Poller
 
 	private final static long				MAX_AGE_FOR_RECENT_POST = Constants.ONE_DAY_MSECS * 14;
 
-	public final static boolean				ITEMS_PREPEND_INSTALL_NAME = false;	// (AGR) 2 March 2006
-
-	/*******************************************************************************
-		(AGR) 27 May 2005
-		Only want one of these - it contains a Thread Pool
-	*******************************************************************************/
-	static
-	{
-		s_InformaPoller = new de.nava.informa.utils.poller.Poller();
-		s_InformaPoller.setPeriod( 4 * ONE_MINUTE_MSECS );	// (AGR) 21 Sept 2006. Temporary increase from '2'. Default is 1 HOUR!
-
-		System.out.println("Informa Poller: created " + s_InformaPoller);
-	}
+	final static boolean					ITEMS_PREPEND_INSTALL_NAME = false;	// (AGR) 2 March 2006
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public Poller( final Installation inInstallation, /* (AGR) 26 October 2006 */ long inPollerFrequencyMS)
-	{
-		m_Installation = inInstallation;
-
-		_startPolling();
-	}
-
-	/*******************************************************************************
-	*******************************************************************************/
-	private void _startPolling()
-	{
-		m_Observer = new MyObserver( m_Installation );
-
-		s_InformaPoller.addObserver(m_Observer);
-
-		// s_Poll_Logger.info("Poller: add Observer: " + m_Observer);
-	}
-
-	/*******************************************************************************
-	*******************************************************************************/
-	public synchronized void startPolling()
-	{
-		if ( m_Observer == null)
-		{
-			_startPolling();
-		}
-	}
+	public abstract void startPolling();
+	public abstract void setInstallation( final Installation inInstallation);
+	public abstract de.nava.informa.utils.poller.Poller getInformaPoller();
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -98,7 +63,7 @@ public class Poller
 		{
 			s_Poll_Logger.info( m_Installation.getLogPrefix() + "Poller: removing Observer: " + m_Observer + " and stopping");
 
-			s_InformaPoller.removeObserver(m_Observer);
+			getInformaPoller().removeObserver(m_Observer);
 
 			m_Observer = null;
 		}
@@ -349,7 +314,7 @@ public class Poller
 	*******************************************************************************/
 	public boolean registerChannel( ChannelIF inChannel, long inCurrentTimeMSecs)
 	{
-		// s_Poll_Logger.info( m_Installation.getLogPrefix() + "Poller: registering " + inChannel + " @ " + inCurrentTimeMSecs);
+		s_Poll_Logger.debug( m_Installation.getLogPrefix() + "Registering: " + inChannel);
 
 		if ( inChannel == null)
 		{
@@ -357,7 +322,7 @@ public class Poller
 			return false;
 		}
 
-		s_InformaPoller.registerChannel( inChannel, /* Note Channel polling every 5 minutes! */ 5 * ONE_MINUTE_MSECS);
+		getInformaPoller().registerChannel(inChannel);	// (AGR) 29 October 2006. Removed custom schedule so each uses the configured value for the Poller
 
 		_processChannelItems( inChannel, inCurrentTimeMSecs);
 
@@ -369,7 +334,7 @@ public class Poller
 	*******************************************************************************/
 	public boolean registerCommentsChannel( ChannelIF inChannel, long inCurrentTimeMSecs)
 	{
-		s_InformaPoller.registerChannel( inChannel, /* Note Channel polling every 5 minutes! */ 5 * ONE_MINUTE_MSECS);
+		getInformaPoller().registerChannel(inChannel);	// (AGR) 29 October 2006. Removed custom schedule so each uses the configured value for the Poller
 
 		_processCommentChannelItems( inChannel, inCurrentTimeMSecs);
 
@@ -382,7 +347,7 @@ public class Poller
 	{
 		s_Poll_Logger.info("Poller: UN-registering " + inChannel);
 
-		s_InformaPoller.unregisterChannel(inChannel);
+		getInformaPoller().unregisterChannel(inChannel);
 
 		return true;
 	}
