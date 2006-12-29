@@ -324,7 +324,7 @@ public class HeadlinesMgr
 
 	/*******************************************************************************
 	*******************************************************************************/
-	protected List<Headlines> getHeadlinesList()
+	public List<Headlines> getHeadlinesList()
 	{
 		return m_HeadlinesList;
 	}
