@@ -9,7 +9,9 @@
 
 package org.bloggers4labour.cricket;
 
+import com.hiatus.UDates;
 import de.nava.informa.utils.poller.*;
+import org.apache.log4j.Logger;
 import org.bloggers4labour.Installation;
 import org.bloggers4labour.polling.MyObserver;
 
@@ -25,6 +27,7 @@ public class ScoresPoller extends org.bloggers4labour.polling.Poller
 	private de.nava.informa.utils.poller.Poller	m_InformaPoller;
 
 	private static long				s_TempVal;
+	private static Logger				s_Logger = Logger.getLogger( ScoresPoller.class );
 
 	/*******************************************************************************
 		(AGR) 28 October 2006
@@ -33,6 +36,8 @@ public class ScoresPoller extends org.bloggers4labour.polling.Poller
 	{
 		m_InformaPoller = new de.nava.informa.utils.poller.Poller();
 		m_InformaPoller.setPeriod( inPollerFrequencyMS );
+
+		s_Logger.info("ScoresPoller created Informa Poller, freq = " + UDates.getFormattedTimeDiff( inPollerFrequencyMS ));
 	}
 
 	/*******************************************************************************
@@ -59,7 +64,7 @@ public class ScoresPoller extends org.bloggers4labour.polling.Poller
 
 			m_InformaPoller.addObserver(m_Observer);
 
-			// s_Poll_Logger.info("Poller: add Observer: " + m_Observer);
+			// s_Logger.info("Poller: add Observer: " + m_Observer);
 		}
 	}
 }
