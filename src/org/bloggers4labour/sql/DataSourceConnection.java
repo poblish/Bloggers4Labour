@@ -143,6 +143,21 @@ public class DataSourceConnection
 	}
 
 	/*******************************************************************************
+		29 November 2006
+	*******************************************************************************/
+	public CallableStatement prepareCall( String inQueryStr) throws SQLException
+	{
+		if (isConnected())
+		{
+			return m_DbConnection.prepareCall("{call " + inQueryStr + "}");
+		}
+		else
+		{
+			throw new SQLException("Cannot create CallableStatement - we're not connected!");
+		}
+	}
+
+	/*******************************************************************************
 		1 April 2002
 	*******************************************************************************/
 	public Statement createStatement( int inResultSetType, int inResultSetConcurrency) throws SQLException
