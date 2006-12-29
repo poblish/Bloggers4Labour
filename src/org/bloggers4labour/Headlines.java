@@ -840,10 +840,20 @@ public class Headlines implements HeadlinesIF
 	{
 		ItemIF[]	theContents = toArray();
 		StringBuilder	sb = new StringBuilder( 40 * theContents.length);
+		int		count = 0;
 
 		for ( int i = 0; i < theContents.length; i++)
 		{
-			sb.append(( i > 0) ? ",'" : "'").append( theContents[i].getLink() ).append("'");
+			if ( theContents[i].getLink() != null)	// (AGR) 29 October 2006 (!)
+			{
+				sb.append(( i > 0) ? ",'" : "'").append( theContents[i].getLink() ).append("'");
+				count++;
+			}
+		}
+
+		if ( count == 0)	// (AGR 29 October 2006
+		{
+			return null;
 		}
 
 		return QueryBuilder.getRecommendationCountsQueryString( sb.toString() );
@@ -864,10 +874,22 @@ public class Headlines implements HeadlinesIF
 	{
 		int		actualCount = inEntries.length > inMaxEntries ? inMaxEntries : inEntries.length;
 		StringBuilder	sb = new StringBuilder( 40 * actualCount);
+		int		count = 0;
 
 		for ( int i = 0; i < actualCount; i++)
 		{
-			sb.append(( i > 0) ? ",'" : "'").append( inEntries[i].getLink() ).append("'");
+			if ( inEntries[i].getLink() != null)	// (AGR) 29 October 2006 (!)
+			{
+				sb.append(( count > 0) ? ",'" : "'").append( inEntries[i].getLink() ).append("'");
+				count++;
+			}
+		}
+
+		// s_Headlines_Logger.info("RCQ -> \"" + QueryBuilder.getRecommendationCountsQueryString( sb.toString() ) + "\", list = " + Arrays.deepToString(inEntries));
+
+		if ( count == 0)	// (AGR 29 October 2006
+		{
+			return null;
 		}
 
 		return QueryBuilder.getRecommendationCountsQueryString( sb.toString() );
@@ -883,8 +905,16 @@ public class Headlines implements HeadlinesIF
 
 		for ( ItemIF eachItem : inEntries)
 		{
-			sb.append(( i > 0) ? ",'" : "'").append( eachItem.getLink() ).append("'");
-			i++;
+			if ( eachItem.getLink() != null)	// (AGR) 29 October 2006 (!)
+			{
+				sb.append(( i > 0) ? ",'" : "'").append( eachItem.getLink() ).append("'");
+				i++;
+			}
+		}
+
+		if ( i == 0)	// (AGR 29 October 2006
+		{
+			return null;
 		}
 
 		return QueryBuilder.getRecommendationCountsQueryString( sb.toString() );
@@ -900,8 +930,18 @@ public class Headlines implements HeadlinesIF
 
 		for ( SearchMatch eachItem : inEntries)
 		{
-			sb.append(( i > 0) ? ",'" : "'").append( eachItem.getLink() ).append("'");
-			i++;
+			if ( eachItem.getLink() != null)	// (AGR) 29 October 2006 (!)
+			{
+				sb.append(( i > 0) ? ",'" : "'").append( eachItem.getLink() ).append("'");
+				i++;
+			}
+		}
+
+		// s_Headlines_Logger.info("SRCQ -> \"" + QueryBuilder.getRecommendationCountsQueryString( sb.toString() ) + "\", list = " + inEntries);
+
+		if ( i == 0)	// (AGR 29 October 2006
+		{
+			return null;
 		}
 
 		return QueryBuilder.getRecommendationCountsQueryString( sb.toString() );
