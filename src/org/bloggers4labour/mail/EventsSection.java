@@ -10,10 +10,13 @@
 package org.bloggers4labour.mail;
 
 import com.hiatus.htl.*;
+import com.hiatus.sql.ResultSetList;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.text.DateFormat;
+import java.util.Map;
 import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.sql.QueryBuilder;
 
@@ -38,8 +41,13 @@ public class EventsSection
 	{
 		String		theUpcomingEventsQuery = QueryBuilder.getUpcomingEventsQuery();
 		ResultSet	theEventsRS = inS.executeQuery(theUpcomingEventsQuery);
+		ResultSetList	theRSL = new ResultSetList(theEventsRS);
 
-		if (theEventsRS.next())
+		theEventsRS.close();
+
+		////////////////////////////////////////////////////////////////////////
+
+		if (!theRSL.isEmpty())
 		{
 			StringBuilder	textBuilder = new StringBuilder();
 			StringBuilder	htmlBuilder = new StringBuilder();
@@ -47,12 +55,17 @@ public class EventsSection
 			MessageBuilder	textB = new TextMessageBuilder( inInstall, inDF);
 			MessageBuilder	htmlB = new HTMLMessageBuilder( inInstall, inDF);
 
-			do
-			{
-				m_GotEvents = true;
+			int		count = 1;
+			Integer		eventsCount = new Integer( theRSL.getRowsList().size() );
 
-				String		locStr = theEventsRS.getString("event_location");
-				String		pcStr = theEventsRS.getString("event_postcode");
+			m_GotEvents = true;
+
+			for ( Object obj : theRSL.getRowsList())
+			{
+				Map	m = (Map) obj;
+
+				String		locStr = (String) m.get("event_location");
+				String		pcStr = (String) m.get("event_postcode");
 				StringBuilder	locationStr = new StringBuilder();
 
 				if (locStr.endsWith("."))
@@ -63,27 +76,42 @@ public class EventsSection
 
 				////////////////////////////////////////////////////////////////////////
 
-				textB.put( "event_name", theEventsRS.getString("event_name"));
-				textB.put( "event_start_date", theEventsRS.getTimestamp("event_start"));
-				textB.put( "event_end_date", theEventsRS.getTimestamp("event_end"));
-				textB.put( "event_desc", theEventsRS.getString("event_description"));
+				String	theNameStr = (String) m.get("event_name");
+				String	theDescStr = (String) m.get("event_description");
+				String	urlStr = (String) m.get("event_URL");
+				String	theStartTimeStr = inDF.format( (Timestamp) m.get("event_start") );
+				String	theEndTimeStr = inDF.format( (Timestamp) m.get("event_end") );
+
+				textB.put( "event_index", Integer.toString(count));
+				textB.put( "event_count", eventsCount);
+				textB.put( "event_name", theNameStr);
+				textB.put( "event_start_date", theStartTimeStr);
+				textB.put( "event_end_date", theEndTimeStr);
+				textB.put( "event_desc", theDescStr);
 				textB.put( "event_location", locStr);
 				textB.put( "event_postcode", pcStr);
 				textB.put( "event_location_str", locationStr);
+				textB.put( "event_URL", urlStr);
 
 				textBuilder.append( textB.mergeTemplate(s_EachTextEventTemplate) );
 
-				htmlB.put( "event_name", theEventsRS.getString("event_name"));
-				htmlB.put( "event_start_date", theEventsRS.getTimestamp("event_start"));
-				htmlB.put( "event_end_date", theEventsRS.getTimestamp("event_end"));
-				htmlB.put( "event_desc", theEventsRS.getString("event_description"));
+				htmlB.put( "event_index", Integer.toString(count));
+				htmlB.put( "event_count", eventsCount);
+				htmlB.put( "event_name", theNameStr);
+				htmlB.put( "event_start_date", theStartTimeStr);
+				htmlB.put( "event_end_date", theEndTimeStr);
+				htmlB.put( "event_desc", theDescStr);
 				htmlB.put( "event_location", locStr);
 				htmlB.put( "event_postcode", pcStr);
 				htmlB.put( "event_location_str", locationStr);
+				htmlB.put( "event_URL", urlStr);
 
 				htmlBuilder.append( textB.mergeTemplate(s_EachHTMLEventTemplate) );
+
+				count++;
 			}
-			while (theEventsRS.next());
+
+			////////////////////////////////////////////////////////////////////////
 
 			textB.put( "events_body", textBuilder);
 			htmlB.put( "events_body", htmlBuilder);
