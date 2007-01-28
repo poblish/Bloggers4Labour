@@ -449,9 +449,9 @@ public final class Site implements Serializable, Comparable<Site>	// (AGR) 6 Jun
 			return "item-description-" + inNumRecommendations + "votes";
 		}
 
-		////////////////////////////////////////////////  Look for RSS Categories
+		////////////////////////////////////////////////  (AGR) 21 Jan 2007. Deactivated - not useful, just confusing. Look for RSS Categories
 
-		if ( inItem != null)
+/*		if ( inItem != null)
 		{
 			final Collection	theCatList = inItem.getCategories();
 
@@ -472,7 +472,7 @@ public final class Site implements Serializable, Comparable<Site>	// (AGR) 6 Jun
 				}
 			}
 		}
-
+*/
 		////////////////////////////////////////////////  Check the DB Category
 
 		if (UText.isValidString(m_DB_Category))
