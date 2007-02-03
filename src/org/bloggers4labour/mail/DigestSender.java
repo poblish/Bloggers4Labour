@@ -39,6 +39,7 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import org.apache.log4j.Logger;
+import org.bloggers4labour.conf.Configuration;
 import org.bloggers4labour.feed.FeedList;
 import org.bloggers4labour.sql.DataSourceConnection;
 import org.bloggers4labour.sql.QueryBuilder;
@@ -61,11 +62,14 @@ public class DigestSender
 	private Locale			m_Locale = Locale.UK;
 	private InstallationIF		m_Install;
 
-	private static DigestSender	s_List;
+//	private static DigestSender	s_List;    // (AGR) 3 Feb 2007. See below.
+
 	private static Logger		s_DS_Logger = Logger.getLogger("Main");
 
 	private final static long	IDEAL_INTERVAL = 15;
 	private final static long	INTERVAL = IDEAL_INTERVAL;
+
+	private final static boolean	TESTING_EMAIL_NEWSLETTERS = false;	// (AGR) 17 Jan 2007
 
 	private final static String	OUR_EMAIL_STR = "us@bloggers4labour.org";
 
@@ -84,9 +88,13 @@ public class DigestSender
 		HTL.initHTL(p);
 		HTLCache.init();
 
-		InstallationManager.getDefaultInstallation();
+		//////////////////////////////////////////////////////
 
-		new DigestSender( InstallationManager.getDefaultInstallation() ).test();
+		Configuration.getInstance().setDirectoryIfNotSet("/Users/andrewre/www/htdocs/bloggers4labour/conf/");	// (AGR) 15 Jan 2007
+
+		FeedList	theFL = InstallationManager.getDefaultInstallation().getFeedList();
+
+		new DigestSender( InstallationManager.getDefaultInstallation() ).test(theFL);
 	}
 
 	/*******************************************************************************
@@ -119,7 +127,11 @@ public class DigestSender
 
 		s_DS_Logger.info( prefix + "m_CheckerTimer " + m_CheckerTimer + " starting at " + m_DF.format( timeToStart.getTime() ));
 
-		m_CheckerTimer.scheduleAtFixedRate( m_CheckerTask, timeToStart.getTime(), INTERVAL * ONE_MINUTE_MSECS);
+		if (TESTING_EMAIL_NEWSLETTERS)
+		{
+			m_CheckerTimer.scheduleAtFixedRate( m_CheckerTask, 0, INTERVAL * ONE_MINUTE_MSECS);
+		}
+		else	m_CheckerTimer.scheduleAtFixedRate( m_CheckerTask, timeToStart.getTime(), INTERVAL * ONE_MINUTE_MSECS);
 
 		s_DS_Logger.info( prefix + "created " + this);
 
@@ -138,29 +150,12 @@ public class DigestSender
 	}
 	
 	/*******************************************************************************
-	*******************************************************************************
-	private synchronized static DigestSender getInstance( boolean inCreateIfNeeded)
-	{
-		if ( s_List == null && inCreateIfNeeded)
-		{
-			s_List = new DigestSender();
-		}
-		
-		return s_List;
-	}/
-
-	/*******************************************************************************
-	*******************************************************************************
-	public synchronized static DigestSender getInstance()
-	{
-		return getInstance(true);
-	}/
-
-	/*******************************************************************************
+		(AGR) 3 Feb 2007. WTF is this doing?? Would weever need this
+		cancel functionality in in real-life? Comment-out for now.
 	*******************************************************************************/
 	public static void cancelTimer()
 	{
-		if ( s_List != null)
+/*		if ( s_List != null)
 		{
 			if ( s_List.m_CheckerTimer != null)
 			{
@@ -174,13 +169,14 @@ public class DigestSender
 
 			s_List = null;	// (AGR) 27 May 2005
 		}
+*/
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public static void test()
+	public void test( FeedList ioFL)
 	{
-		// FeedList.getInstance().addObserver( new MailTester() );
+		ioFL.addObserver( new MailTester() );
 	}
 
 	/*******************************************************************************
@@ -199,6 +195,61 @@ public class DigestSender
 		*******************************************************************************/
 		private synchronized void runIt( MessageBuilder ioBuilder)
 		{
+			DataSourceConnection	theConnectionObject = null;
+			StringBuffer		theBuf;
+			boolean			isGood = false;
+
+			// s_DS_Logger.info("CheckerTask.run() called at " + m_DF.format( new Date() ));
+
+			try
+			{
+				theConnectionObject = new DataSourceConnection( m_Install.getDataSource() );
+
+				if (theConnectionObject.Connect())
+				{
+					Statement	theS = null;
+
+					try
+					{
+						theS = theConnectionObject.createStatement();
+						_runIt( ioBuilder, theS);
+					}
+					catch (Exception e)
+					{
+						s_DS_Logger.error("creating statement", e);
+					}
+					finally
+					{
+						USQL_Utils.closeStatementCatch(theS);
+					}
+				}
+				else
+				{
+					s_DS_Logger.warn("Cannot connect!");
+				}
+			}
+			catch (Exception err)
+			{
+				s_DS_Logger.error("???", err);
+			}
+			finally
+			{
+				if ( theConnectionObject != null)
+				{
+					theConnectionObject.CloseDown();
+					theConnectionObject = null;
+				}
+			}
+		}
+
+		/*******************************************************************************
+		*******************************************************************************/
+		private void _runIt( MessageBuilder ioBuilder, final Statement inS) throws SQLException
+		{
+			EventsSection	theEventsSection = new EventsSection( m_Install, m_DF, inS);
+
+			////////////////////////////////////////////////////////////////////////////
+
 			ItemIF[]	theItemsA = m_Install.getHeadlinesMgr().getEmailPostsInstance().toArray();
 			long		theCurrMSecs = System.currentTimeMillis();
 			long		theItemAgeMSecs;
@@ -232,12 +283,18 @@ public class DigestSender
 				////////////////////////////////////////////////////////////////////
 
 				ioBuilder.startNewItem(theItem);
+
+				if (theEventsSection.gotEvents())	// (AGR) 17 Jan 2007
+				{
+					ioBuilder.put( "events_section", ( ioBuilder instanceof HTMLMessageBuilder) ? theEventsSection.getHTMLContent() : theEventsSection.getTextContent());
+				}
+
 				ioBuilder.buildMail( theItemAgeMSecs, "hellO", z, theItemDate, 1);
 				ioBuilder.handleCategories();
 
 				///////////////////////////////////////////////////////////////////////////
 
-				sb.append( ioBuilder.generateMessageBody() );
+				sb.append(( z == 0) ? ioBuilder.generate1stMessageBody() : ioBuilder.generateMessageBody());
 			}
 
 			ioBuilder.setMessageBody(sb);
@@ -271,9 +328,25 @@ public class DigestSender
 
 			// s_DS_Logger.info("CURRENT hr=" + currLocalHour + ", currLocalMinute=" + currLocalMinute);
 
+			////////////////////////////////////////////////////////////////////////////////////  (AGR) 16 Jan 2007
+
+			EventsSection	theEventsSection = new EventsSection( m_Install, m_DF, inS);
+
 			////////////////////////////////////////////////////////////////////////////////////
 
-			String		theQuery = QueryBuilder.getDigestEmailQuery((long) currLocalHour, adjustedMins);
+			String	theQuery;
+
+/*			if (TESTING_EMAIL_NEWSLETTERS)
+			{
+				theQuery = QueryBuilder.getTestDigestEmailQuery((long) currLocalHour, adjustedMins);
+			}
+			else
+			{ */
+				theQuery = QueryBuilder.getDigestEmailQuery((long) currLocalHour, adjustedMins);
+		/*	} */
+
+			////////////////////////////////////////////////////////////////////////////////////
+
 			ResultSet	theRS = inS.executeQuery(theQuery);
 
 			if (theRS.next())
@@ -364,6 +437,15 @@ public class DigestSender
 
 					s_DS_Logger.info( prefix + "created: " + mb);
 
+					////////////////////////////////////////////////////////////////////  (AGR) 16 Jan 2007
+
+					if (theEventsSection.gotEvents())
+					{
+						mb.put( "events_section", wantsHTML ? theEventsSection.getHTMLContent() : theEventsSection.getTextContent());
+					}
+
+					////////////////////////////////////////////////////////////////////
+
 					mb.setCount(theEligibleItemsCount);
 
 					for ( int z = 0; z < theItemsA.length; z++)
@@ -384,7 +466,7 @@ public class DigestSender
 
 						///////////////////////////////////////////////////////////////////////////
 
-						recipientsMsgBuf.append( mb.generateMessageBody() );
+						recipientsMsgBuf.append(( z == 0) ? mb.generate1stMessageBody() : mb.generateMessageBody());
 					}
 
 					mb.setMessageBody(recipientsMsgBuf);
@@ -486,5 +568,4 @@ public class DigestSender
 			}
 		}
 	}
-
 }
