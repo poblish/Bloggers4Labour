@@ -17,10 +17,10 @@ import java.util.HashSet;
  */
 public class TimeEntry implements TimerEntryIF
 {
-	private int				m_PostsCount;
-	private int				m_BlogsUsed;
+	private int			m_PostsCount;
+	private int			m_BlogsUsed;
 
-	private transient HashSet<String>	m_SiteURLs;
+	private HashSet<String>		m_SiteURLs;	// (AGR) 29 Jan 2007. Removed pointless 'transient'
 
 	/*******************************************************************************
 	*******************************************************************************/
