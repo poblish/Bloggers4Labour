@@ -22,10 +22,10 @@ import org.bloggers4labour.Site;
  */
 public class HeadlineFilter
 {
-	private Installation		m_Install;
-	private ChannelIF		m_Channel;
+	private Installation	m_Install;
+	private ChannelIF	m_Channel;
 
-	private transient  Site		m_Site;
+	private Site		m_Site;		// (AGR) 29 Jan 2007. Removed pointless 'transient'
 
 	/*******************************************************************************
 	*******************************************************************************/

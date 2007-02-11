@@ -48,7 +48,7 @@ public class Stats implements StatsMBean
 	private int			m_ActiveSiteHandlerTasks;
 	private Calendar		m_LastFeedCheckTime;		// (AGR) 23 July 2005
 
-	private transient Installation	m_Install;			// (AGR) 19 Feb 2006
+	private Installation		m_Install;			// (AGR) 19 Feb 2006, (AGR) 29 Jan 2007. Removed pointless 'transient'
 
 	private static Logger		s_Stats_Logger = Logger.getLogger("Main");
 	private static TimeZone		s_TZ = ULocale2.getBestTimeZone( Locale.UK );
@@ -137,14 +137,18 @@ public class Stats implements StatsMBean
 	}
 
 	/*******************************************************************************
+		(AGR) 3 Feb 2007. FindBugs said I should sync in accordance with the
+		corresponding set...() method. Eeek!
 	*******************************************************************************/
-	public int getFeedCount()
+	public synchronized int getFeedCount()
 	{
 		return m_FeedCount;
 	}
 
 	/*******************************************************************************
 		(AGR) 7 October 2005
+		(AGR) 3 Feb 2007. FindBugs said I should sync in accordance with the
+		corresponding set...() method. Eeek!
 	*******************************************************************************/
 	public int getSuccessfulFeedCount()
 	{
@@ -216,6 +220,8 @@ public class Stats implements StatsMBean
 	}
 
 	/*******************************************************************************
+		(AGR) 3 Feb 2007. FindBugs said I should sync in accordance with the
+		corresponding set...() method. Eeek!
 	*******************************************************************************/
 	public int getSuccessfulCommentFeedCount()
 	{
