@@ -25,7 +25,7 @@ public class LogNewCommentHandler implements AddHandler
 	{
 		org.bloggers4labour.jsp.DisplayItem	d = new org.bloggers4labour.jsp.DisplayItem( inInstall, inItem, System.currentTimeMillis());
 
-//		Logger.getLogger("Main").info("... New comment: \"" + FeedUtils.getDisplayTitle(inItem) + "\" from \"" + FeedUtils.getCommentAuthor(inItem) + "\"");
-		Logger.getLogger("Main").info("... New comment: \"" + d.getCommentTitle() + "\" by \"" + d.getCommentAuthor() + "\"");
+//		Logger.getLogger("B4L_NewPosts").info("... New comment: \"" + FeedUtils.getDisplayTitle(inItem) + "\" from \"" + FeedUtils.getCommentAuthor(inItem) + "\"");
+		Logger.getLogger("B4L_NewPosts").info("... New comment: \"" + d.getCommentTitle() + "\" by \"" + d.getCommentAuthor() + "\"");
 	}
 }
