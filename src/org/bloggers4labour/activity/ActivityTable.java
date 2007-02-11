@@ -16,7 +16,7 @@ import static org.bloggers4labour.Constants.*;
  *
  * @author andrewre
  */
-public class ActivityTable
+@Deprecated public class ActivityTable
 {
 	private int		m_TotalPosts;
 
@@ -24,7 +24,7 @@ public class ActivityTable
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public ActivityTable()
+	@Deprecated public ActivityTable()
 	{
 	}
 
