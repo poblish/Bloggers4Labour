@@ -10,20 +10,15 @@
 
 package org.bloggers4labour.links;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 /**
  *
  * @author andrewre
  */
-public class StoreHostNameComparator implements Comparator
+public class StoreHostNameComparator implements Comparator, /* (AGR) 3 Feb 2007. FindBugs recommended this */ Serializable
 {
-	/*******************************************************************************
-	*******************************************************************************/
-	public StoreHostNameComparator()
-	{
-	}
-
 	/*******************************************************************************
 	*******************************************************************************/
 	public int compare( Object a, Object b)

@@ -10,20 +10,15 @@
 
 package org.bloggers4labour.links;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 /**
  *
  * @author andrewre
  */
-public class HostNameComparator implements Comparator<HostNameCount>
+public class HostNameComparator implements Comparator<HostNameCount>, /* (AGR) 3 Feb 2007. FindBugs recommended this */ Serializable
 {
-	/*******************************************************************************
-	*******************************************************************************/
-	public HostNameComparator()
-	{
-	}
-
 	/*******************************************************************************
 	*******************************************************************************/
 	public int compare( HostNameCount sa, HostNameCount sb)
