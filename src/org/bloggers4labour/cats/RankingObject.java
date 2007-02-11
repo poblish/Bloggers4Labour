@@ -57,6 +57,27 @@ public class RankingObject implements Comparable<RankingObject>
 	}
 
 	/*******************************************************************************
+		(AGR) 29 Jan 2007. FindBugs made me add this!
+	*******************************************************************************/
+	public boolean equals( Object inOther)
+	{
+		if ( inOther == null)
+		{
+			return false;
+		}
+
+		return ( compareTo((RankingObject) inOther) == 0);
+	}
+
+	/*******************************************************************************
+		(AGR) 3 Feb 2007. FindBugs made me add (something like!) this! Yuk?
+	*******************************************************************************/
+	public int hashCode()
+	{
+		return ( Integer.toString(m_Score) + ":" + m_Key).hashCode();
+	}
+
+	/*******************************************************************************
 	*******************************************************************************/
 	public String toString()
 	{
