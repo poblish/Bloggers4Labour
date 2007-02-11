@@ -24,7 +24,7 @@ import org.bloggers4labour.tag.Link;
  */
 public class MaintenanceForm extends javax.swing.JFrame
 {
-	private Launcher	m_Launcher;
+	private transient Launcher	m_Launcher;	// (AGR) 3 Feb 2007. FindBugs made me make this transient
 
 	/** Creates new form MaintenanceForm */
 	public MaintenanceForm()
@@ -279,6 +279,12 @@ public class MaintenanceForm extends javax.swing.JFrame
 
 			System.out.println("[" + z + "]: \"" + di.getDispTitle() + "\" from: " + di.getSiteURL());
 		}
+
+		FeedList	flst = theInstall.getFeedList();
+		Site		theSite = flst.lookup(144);
+		de.nava.informa.core.ChannelIF	channel = theSite.getChannel();
+
+		System.out.println("==> " + channel.getItems());
 
 		headlineItemsArray = null;
 	}//GEN-LAST:event_m_GenerateActionPerformed
