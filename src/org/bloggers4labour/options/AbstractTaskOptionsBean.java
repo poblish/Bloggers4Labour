@@ -55,25 +55,27 @@ public abstract class AbstractTaskOptionsBean implements TaskOptionsBeanIF,
 	}
 
 	/*******************************************************************************
+		(AGR) 29 Jan 2007. FindBugs told me to replace "new Long()" calls
 	*******************************************************************************/
 	public void setDelayMsecs( long inVal) throws PropertyVetoException
 	{
-		Long	oldValue = new Long(m_Delay);
+		Long	oldValue = Long.valueOf(m_Delay);
 
-		m_VetoSupport.fireVetoableChange( PROPERTY_DELAY, oldValue, new Long(inVal));
+		m_VetoSupport.fireVetoableChange( PROPERTY_DELAY, oldValue, Long.valueOf(inVal));
 		m_Delay = inVal;
-		m_PropChangeSupport.firePropertyChange( PROPERTY_DELAY, oldValue, new Long(m_Delay));
+		m_PropChangeSupport.firePropertyChange( PROPERTY_DELAY, oldValue, Long.valueOf(m_Delay));
 	}
 
 	/*******************************************************************************
+		(AGR) 29 Jan 2007. FindBugs told me to replace "new Long()" calls
 	*******************************************************************************/
 	public void setPeriodMsecs( long inVal) throws PropertyVetoException
 	{
-		Long	oldValue = new Long(m_Period);
+		Long	oldValue = Long.valueOf(m_Period);
 
-		m_VetoSupport.fireVetoableChange( PROPERTY_PERIOD, oldValue, new Long(inVal));
+		m_VetoSupport.fireVetoableChange( PROPERTY_PERIOD, oldValue, Long.valueOf(inVal));
 		m_Period = inVal;
-		m_PropChangeSupport.firePropertyChange( PROPERTY_PERIOD, oldValue, new Long(m_Period));
+		m_PropChangeSupport.firePropertyChange( PROPERTY_PERIOD, oldValue, Long.valueOf(m_Period));
 	}
 
 	/*******************************************************************************
