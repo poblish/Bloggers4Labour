@@ -33,9 +33,9 @@ public class QueryBuilder
 	public static String getDigestEmailQuery( long inHrs, long inMins)
 	{
 		Formatter	theFormatter = new Formatter();
-//		String		s = s_Bundle.getString("sql.digest.email.query");
-//		theFormatter.format( s, inHrs, inMins);
+
 		theFormatter.format( s_Bundle.getString("sql.digest.email.query"), inHrs, inMins);
+
 		return theFormatter.toString();
 	}
 
@@ -169,5 +169,13 @@ public class QueryBuilder
 		Formatter	theFormatter = new Formatter();
 		theFormatter.format( s_Bundle.getString("sql.recommendationcounts.query"), inURLsList);
 		return theFormatter.toString();
+	}
+
+	/*******************************************************************************
+		(AGR) 16 January 2007
+	*******************************************************************************/
+	public static String getUpcomingEventsQuery()
+	{
+		return s_Bundle.getString("sql.events.upcoming");
 	}
 }
