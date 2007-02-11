@@ -29,7 +29,7 @@ public class RecommendationHandler
 
 	public final static String	CONVERTED_URL = "IF( LOCATE(\"http://www.\",url)=1, CONCAT('http://',LCASE( SUBSTRING(url, 12, LENGTH(url)-11))), LCASE(url))";
 	public final static String	LENGTH_URL = "IF( LOCATE(\"http://www.\",url)=1, LENGTH(url)-4, LENGTH(url))";
-	private final static String	SITE_VALIDITY = " AND is_blog=1 AND approved=1 AND show_on_feed_page=1";
+	private final static String	SITE_VALIDITY = " AND is_blog=1 AND approved=1 AND is_dead=0 AND show_on_feed_page=1";
 
 	/********************************************************************
 	********************************************************************/
@@ -139,6 +139,8 @@ public class RecommendationHandler
 			}
 			else	theSiteRecno = inSiteRecno;
 
+// s_Logger.info("NULL, theSiteRecno = " + theSiteRecno);
+
 			if ( theSiteRecno <= 0)
 			{
 				s_Logger.warn("Recommend: could not find site for: " + inURL);
@@ -156,6 +158,7 @@ public class RecommendationHandler
 			{
 				inStatement.executeUpdate("INSERT INTO recommendedURLs (originating_site_recno,url) VALUES (" +
 							   USQL_Utils.getQuoted(theSiteRecno) + "," + theAdjustedURL + ")");
+// s_Logger.info("NULL, insert OK");
 			}
 			catch (SQLException e)
 			{
@@ -174,6 +177,7 @@ public class RecommendationHandler
 				if (theRS.next())	// phew...
 				{
 					urlRecno = theRS.getLong(1);
+// s_Logger.info("NULL, urlRecno = " + urlRecno);
 					theRS.close();
 
 					theVoteCount = 1L;
@@ -192,6 +196,8 @@ public class RecommendationHandler
 			urlRecno = theRS.getLong(1);
 			theVoteCount = theRS.getLong(2) + /* Add one for our new vote */ 1;
 			theRS.close();
+
+// s_Logger.info("NOT NULL, urlRecno = " + urlRecno);
 		}
 
 		////////////////////////////////////////////////////////////////
