@@ -40,22 +40,11 @@ public class LastPostTable
 	private FeedList			m_FL;
 //	private boolean				m_AddDefault;
 
-/*	private int				m_LastHour;
-	private int				m_Last2Hours;
-	private int				m_Last12Hours;
-	private int				m_LastDay;
-	private int				m_Last2Days;
-	private int				m_Last3Days;
-	private int				m_LastWeek;
-	private int				m_Last2Weeks;
-	private int				m_LastMonth;
-	private int				m_Last2Months;
-	private int				m_Over2Months;
-*/	private int				m_Unknown;
+//	private int				m_Unknown;
 	private int[]				m_Stats = new int[11];
 	private int				m_Total;
 
-	private transient byte[]		m_CompletionLocker = new byte[0];
+	private byte[]				m_CompletionLocker = new byte[0];	// (AGR) 29 Jan 2007. Removed pointless 'transient'
 
 	private static Map<Long,Date>		s_LegacySiteData = new TreeMap<Long,Date>();
 	private static Logger			s_Logger = Logger.getLogger("Main");
@@ -102,7 +91,6 @@ public class LastPostTable
 	public LastPostTable( final FeedList inFL, boolean inAddDefault)
 	{
 		m_FL = inFL;
-		// m_AddDefault = inAddDefault;
 
 		if (inAddDefault)
 		{
@@ -162,18 +150,16 @@ public class LastPostTable
 					m_Stats[i] = 0;
 				}
 
-				/* m_Stats[0] = m_Last2Hours = m_Last12Hours = m_LastDay = m_Last2Days = m_Last3Days =
-					m_LastWeek = m_Last2Weeks = m_LastMonth = m_Last2Months = m_Over2Months = */ m_Total = 0;
+				m_Total = 0;
 
-				int		x = m_FL.countURLs() - m_ChannelData.size();
-
-				m_Unknown =  ( x > 0 ) ? x : 0;
+				// int		x = m_FL.countURLs() - m_ChannelData.size();	(AGR) 29 Jan 2007. Commented-out
+				// m_Unknown =  ( x > 0 ) ? x : 0;				(AGR) 29 Jan 2007. Commented-out
 
 				long		oneMonthDiffMSecs = currTimeMSecs - thePrevMonthCal.getTimeInMillis();
 				long		twoMonthDiffMSecs = currTimeMSecs - thePrevPrevMonthCal.getTimeInMillis();
 
-				// System.out.println("oneMonthDiffMSecs = " + oneMonthDiffMSecs);
-				// System.out.println("twoMonthDiffMSecs = " + twoMonthDiffMSecs);
+				// System.out.println("oneMonthDiffMSecs = " + oneMonthDiffMSecs + " (" + thePrevMonthCal.getTimeInMillis() + ")");
+				// System.out.println("twoMonthDiffMSecs = " + twoMonthDiffMSecs + " (" + thePrevPrevMonthCal.getTimeInMillis() + ")");
 
 				/////////////////////////////////////////////////////////////////////////
 
@@ -204,9 +190,7 @@ public class LastPostTable
 				// s_Logger.info("keys = " + m_SiteData.keySet());
 
 				for ( Date eachSitesLastDate : m_SiteData.values())
-//				for ( Long eachSiteRecno : m_SiteData.keySet())
 				{
-//					long	diffMSecs = currTimeMSecs - m_SiteData.get(eachSiteRecno).getTime();
 					long	diffMSecs = currTimeMSecs - eachSitesLastDate.getTime();
 
 					if ( diffMSecs <= ONE_HOUR_MSECS)
@@ -257,18 +241,6 @@ public class LastPostTable
 					m_Total++;
 				}
 			}
-
-			////////////////////////////////////////////////////////
-
-/*			Site[] sArray = m_FL.getArrayToTraverse();
-			for ( Site s : sArray)
-			{
-				if (!m_SiteData.containsKey( new Long( s.getRecno() ) ))
-				{
-					m_SiteData.put( s.getRecno(), null);
-				}
-			}
-*/
 		}
 	}
 
@@ -318,7 +290,7 @@ public class LastPostTable
 
 			theCtxt.put( "opt_name", theCtxt.loadString("activity.stat.name." + (j++) ));
 
-			Object	theObjs[] = { new Integer( m_Stats[i] ) };
+			Object	theObjs[] = { Integer.valueOf( m_Stats[i] ) };	// (AGR) 29 Jan 2007. FindBugs: changed from new Integer
 
 			theCtxt.put( "opt_votes", theFormat.format(theObjs));
 			theCtxt.put( "opt_width_0", PERC_BAR_WIDTH - temp);
