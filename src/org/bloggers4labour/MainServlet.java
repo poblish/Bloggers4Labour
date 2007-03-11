@@ -6,16 +6,13 @@
 
 package org.bloggers4labour;
 
-import org.bloggers4labour.feed.FeedList;
-import org.bloggers4labour.recommend.RecommendationHandler;
-import org.bloggers4labour.recommend.RecommendationResult;
-import org.bloggers4labour.sql.DataSourceConnection;
 import com.hiatus.CharEncoding;
 import com.hiatus.UDates;
 import com.hiatus.UHTML;
 import com.hiatus.ULocale2;
 import com.hiatus.USQL_Utils;
 import com.hiatus.UText;
+import com.hiatus.htl.*;
 import de.nava.informa.core.*;
 import de.nava.informa.impl.basic.Item;
 import java.io.IOException;
@@ -42,9 +39,14 @@ import org.apache.lucene.queryParser.*;
 import org.apache.lucene.search.Query;
 import org.bloggers4labour.cats.CategoriesTable;
 import org.bloggers4labour.conf.Configuration;
+import org.bloggers4labour.feed.FeedList;
+import org.bloggers4labour.htl.B4LHTLContext;
 import org.bloggers4labour.index.IndexMgr;
 import org.bloggers4labour.index.SearchMatch;
 import org.bloggers4labour.jsp.*;
+import org.bloggers4labour.recommend.RecommendationHandler;
+import org.bloggers4labour.recommend.RecommendationResult;
+import org.bloggers4labour.sql.DataSourceConnection;
 
 /**
  *
@@ -393,64 +395,72 @@ public class MainServlet extends HttpServlet
 			}
 			else if (hasParameter( inRequest, "cricket"))		// (AGR) 25 October 2006
 			{
+				Locale	theLocale = GetClientLocale(inRequest);
+
+				ensureNotCached(inResponse);
+
+				inResponse.setLocale(theLocale);
+
+				//////////////////////////////////////////////////////////////////////////////////////
+
 				try
 				{
-//					int	theNumPosts = 1;
-
-					//////////////////////////////////////////////////////////////////////////////////////
-
-					Locale	theLocale = GetClientLocale(inRequest);
-
-					ensureNotCached(inResponse);
-
-					inResponse.setLocale(theLocale);
-					inResponse.setContentType("text/xml; charset=\"UTF-8\"");
-
-					//////////////////////////////////////////////////////////////////////////////////////
-
-					InstallationIF		defInstall = InstallationManager.getInstallation("cricket");
-					HeadlinesMgr		theHMgr = defInstall.getHeadlinesMgr();
-					Headlines		theHs = theHMgr.getRecentPostsInstance();
-					StringBuilder		sb = new StringBuilder("<?xml version=\"1.0\" ?><response>");
-					long			currentTimeMSecs = System.currentTimeMillis();
-
-					_addXMLCDataElement( sb, "currentTime", ULocale2.getClientDateTimeFormat( theLocale, DateFormat.LONG).format( new java.util.Date() ));
-
-					if ( theHs != null)
+					if (inRequest.getParameter("cricket").equals("initialise"))	// (AGR) 1 November 2006
 					{
-						ItemIF[]	headlineItemsArray = theHs.toArray();
-//						int		actualNumPosts = theNumPosts > headlineItemsArray.length ? headlineItemsArray.length : theNumPosts;
-
-						///////////////////////////////////////////////////////////////////
-
-						DisplayItem				di;
-						String					theTitleStr;
-						org.bloggers4labour.cricket.Score	theScore;
-
-//						for ( int z = 0; z < actualNumPosts; z++)
-						for ( int z = 0; z < headlineItemsArray.length; z++)
-						{
-							di = new DisplayItem( defInstall, (Item) headlineItemsArray[z], currentTimeMSecs);
-
-							theTitleStr = di.getDispTitle();
-							theScore = org.bloggers4labour.cricket.Score.parse( theTitleStr );
-
-							sb.append("<score index=\"").append(z).append("\">");
-
-							// addDisplayable( sb, di, theSiteObj, 0);
-
-							this._addXMLCDataElement( sb, "link", di.getLink());
-							_addXMLElement( sb, "batting", theScore.getBattingTeam());
-							_addXMLElement( sb, "score", theScore.getCurrentScore());
-							_addXMLElement( sb, "fielding", theScore.getFieldingTeam());
-							_addXMLElement( sb, "lastScore", theScore.getLastScore());
-							_addXMLElement( sb, "display", theScore.toString());
-
-							sb.append("</score>");
-						}
+						theOutputBuffer = handleCricketInitialisation( inRequest, inResponse, theLocale);
 					}
+					else
+					{
+	//					int	theNumPosts = 1;
 
-					theOutputBuffer = sb.append("</response>").toString();
+						inResponse.setContentType("text/xml; charset=\"UTF-8\"");
+
+						//////////////////////////////////////////////////////////////////////////////////////
+
+						InstallationIF		defInstall = InstallationManager.getInstallation("cricket");
+						HeadlinesMgr		theHMgr = defInstall.getHeadlinesMgr();
+						Headlines		theHs = theHMgr.getRecentPostsInstance();
+						StringBuilder		sb = new StringBuilder("<?xml version=\"1.0\" ?><response>");
+						long			currentTimeMSecs = System.currentTimeMillis();
+
+						_addXMLCDataElement( sb, "currentTime", ULocale2.getClientDateTimeFormat( theLocale, DateFormat.LONG).format( new java.util.Date() ));
+
+						if ( theHs != null)
+						{
+							ItemIF[]	headlineItemsArray = theHs.toArray();
+	//						int		actualNumPosts = theNumPosts > headlineItemsArray.length ? headlineItemsArray.length : theNumPosts;
+
+							///////////////////////////////////////////////////////////////////
+
+							DisplayItem				di;
+							String					theTitleStr;
+							org.bloggers4labour.cricket.Score	theScore;
+
+	//						for ( int z = 0; z < actualNumPosts; z++)
+							for ( int z = 0; z < headlineItemsArray.length; z++)
+							{
+								di = new DisplayItem( defInstall, (Item) headlineItemsArray[z], currentTimeMSecs);
+
+								theTitleStr = di.getDescription();	// getDispTitle();
+								theScore = org.bloggers4labour.cricket.Score.parse( theTitleStr );
+
+								sb.append("<score index=\"").append(z).append("\">");
+
+								// addDisplayable( sb, di, theSiteObj, 0);
+
+								this._addXMLCDataElement( sb, "link", di.getLink());
+								_addXMLElement( sb, "batting", theScore.getBattingTeam());
+								_addXMLElement( sb, "score", theScore.getCurrentScore());
+								_addXMLElement( sb, "fielding", theScore.getFieldingTeam());
+								_addXMLElement( sb, "lastScore", theScore.getLastScore());
+								_addXMLElement( sb, "display", theScore.toString());
+
+								sb.append("</score>");
+							}
+						}
+
+						theOutputBuffer = sb.append("</response>").toString();
+					}
 				}
 				catch (Exception e)
 				{
@@ -623,45 +633,49 @@ public class MainServlet extends HttpServlet
 
 			DataSourceConnection	theConnectionObject = null;
 			Map<String,Number>	theRecommendationCountMap = null;
+			String			theReccQueryStr = Headlines.getSearchRecommendationCountsQuery(theSearchResults);
 
-			try
+			if (UText.isValidString(theReccQueryStr))
 			{
-				InstallationIF		defInstall = InstallationManager.getDefaultInstallation();
-
-				theConnectionObject = new DataSourceConnection( defInstall.getDataSource() );
-				if (theConnectionObject.Connect())
+				try
 				{
-					Statement	theS = null;
+					InstallationIF		defInstall = InstallationManager.getDefaultInstallation();
 
-					try
+					theConnectionObject = new DataSourceConnection( defInstall.getDataSource() );
+					if (theConnectionObject.Connect())
 					{
-						theS = theConnectionObject.createStatement();
-						theRecommendationCountMap = Headlines.getRecommendationCountsMap( theS.executeQuery( Headlines.getSearchRecommendationCountsQuery(theSearchResults) ) );
+						Statement	theS = null;
+
+						try
+						{
+							theS = theConnectionObject.createStatement();
+							theRecommendationCountMap = Headlines.getRecommendationCountsMap( theS.executeQuery(theReccQueryStr) );
+						}
+						catch (Exception e)
+						{
+							s_Servlet_Logger.error("creating statement", e);
+						}
+						finally
+						{
+							USQL_Utils.closeStatementCatch(theS);
+						}
 					}
-					catch (Exception e)
+					else
 					{
-						s_Servlet_Logger.error("creating statement", e);
-					}
-					finally
-					{
-						USQL_Utils.closeStatementCatch(theS);
+						s_Servlet_Logger.warn("Cannot connect!");
 					}
 				}
-				else
+				catch (Exception err)
 				{
-					s_Servlet_Logger.warn("Cannot connect!");
+					s_Servlet_Logger.error("???", err);
 				}
-			}
-			catch (Exception err)
-			{
-				s_Servlet_Logger.error("???", err);
-			}
-			finally
-			{
-				if ( theConnectionObject != null)
+				finally
 				{
-					theConnectionObject.CloseDown();
-					theConnectionObject = null;
+					if ( theConnectionObject != null)
+					{
+						theConnectionObject.CloseDown();
+						theConnectionObject = null;
+					}
 				}
 			}
 
@@ -889,7 +903,7 @@ public class MainServlet extends HttpServlet
 		}
 		else if (inTypeStr.equalsIgnoreCase("week"))
 		{
-			int	theCurrDayOfTheWeek = theCurrLocalTime.get( Calendar.DAY_OF_WEEK );
+//			int	theCurrDayOfTheWeek = theCurrLocalTime.get( Calendar.DAY_OF_WEEK );
 			int	theFirstDayOfTheWeek = theCurrLocalTime.getFirstDayOfWeek();
 
 			theCurrLocalTime.set( Calendar.DAY_OF_WEEK, theFirstDayOfTheWeek);
@@ -1238,8 +1252,8 @@ public class MainServlet extends HttpServlet
 
 		if (theRS.next())
 		{
-			HashMap<Number,Site>	theSitesMap = new HashMap<Number,Site>();
-			FeedList		theFL = inInstall.getFeedList();
+	//		HashMap<Number,Site>	theSitesMap = new HashMap<Number,Site>();
+	//		FeedList		theFL = inInstall.getFeedList();
 			Site			theSiteObj;
 			int			numPostsPerLevel = inNumber / 5;
 	//		int			currentLevel = 1;
@@ -1381,11 +1395,11 @@ public class MainServlet extends HttpServlet
 		if ( inRequest == null)		return Locale.ENGLISH;
 		else
 		{
-			HttpSession    theSession = inRequest.getSession(false);
+/*			HttpSession    theSession = inRequest.getSession(false);
 
 			if ( theSession != null)
 			{
-/*				String    theLangStr = SessionUtils.GetCurrentLanguage(theSession);
+				String    theLangStr = SessionUtils.GetCurrentLanguage(theSession);
 
 				if (UText.isValidString(theLangStr))
 				{
@@ -1393,8 +1407,8 @@ public class MainServlet extends HttpServlet
 
 					return new Locale( theLangStr, ( theCountryStr != null) ? theCountryStr : "");
 				}
-*/			}
-
+			}
+*/
 			return inRequest.getLocale();    // the previous default!
 		}
 	}
@@ -1498,9 +1512,18 @@ public class MainServlet extends HttpServlet
 		}
 		else	_addXMLCDataElement( ioS, "link", "");	// Is this acceptable?
 
-		///////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////  (AGR) 30 Nov 2006. May be "< 1 min", so may need CDATA!
 
-		_addXMLElement( ioS, "date", inObj.getDateString());
+		String	dateStr = inObj.getDateString();
+
+//		if ( UText.isValidString(dateStr) && dateStr.charAt(0) == '<')
+		if ( UText.isValidString(dateStr) && dateStr.contains("<"))	// (AGR) 21 Feb 2007. Bug-fix. Previous was causing "(< 1 min)" to go through unencoded, breaking validation.
+		{
+			_addXMLCDataElement( ioS, "date", dateStr);
+		}
+		else	_addXMLElement( ioS, "date", dateStr);
+
+		///////////////////////////////////////////////////////
 
 		_addXMLCDataElement( ioS, "displayTitle", UText.isValidString( inObj.getDispTitle() ) ? inObj.getDispTitle() : "<i>Untitled</i>");
 		_addXMLCDataElement( ioS, "desc", inObj.getDescription());
@@ -1515,6 +1538,88 @@ public class MainServlet extends HttpServlet
 		}
 
 		return ioS;
+	}
+
+	/*******************************************************************************
+		(AGR) 1 November 2006
+	*******************************************************************************/
+	public String handleCricketInitialisation( HttpServletRequest inRequest, HttpServletResponse inResponse, final Locale inLocale)
+	{
+		String	theReferrer = inRequest.getHeader("Referer");
+
+		// s_Servlet_Logger.debug("referer = \"" + theReferrer + "\"");
+
+		if ( UText.isNullOrBlank(theReferrer) || !theReferrer.startsWith("http://www.bloggers4labour.org/"))
+		{
+			s_Servlet_Logger.warn("referer not accepted: " + theReferrer);
+			// return "";
+		}
+
+		////////////////////////////////////////////////////////////////
+
+		HttpSession	theSession = inRequest.getSession(true);
+		Long		theLastRefreshedTimeMS = (Long) theSession.getAttribute("b4l_cricket_last_refreshed");
+
+		if ( theLastRefreshedTimeMS == null)
+		{
+			theLastRefreshedTimeMS = Long.valueOf( System.currentTimeMillis() );	// (AGR) 29 Jan 2007. FindBugs: changed from new Long
+			theSession.setAttribute( "b4l_cricket_last_refreshed", theLastRefreshedTimeMS);
+		}
+
+		////////////////////////////////////////////////////////////////
+
+		inResponse.setContentType("text/javascript");
+
+		B4LHTLContext		theCtxt = new B4LHTLContext(inLocale);
+		HTLTemplate		theSectionTemplate = HTL.createTemplate( "cricket_score_layout.vm", inLocale);
+		HTLTemplate		theTeam1Template = HTL.createTemplate( "cricket_score_team1_score.vm", inLocale);
+		HTLTemplate		theTeam2Template = HTL.createTemplate( "cricket_score_team2_score.vm", inLocale);
+		StringBuilder		sb = new StringBuilder(2000);
+
+		theCtxt.put( "info", "1st Test at Melbourne");
+
+		theCtxt.put( "team1_name", "Eng");
+		theCtxt.put( "team1_score", "203-3");
+		theCtxt.put( "team2_name", "Aus");
+		theCtxt.put( "team2_score", "305");
+
+		theCtxt.put( "team1_buf", HTL.mergeTemplate( theTeam1Template, theCtxt));
+		theCtxt.put( "team2_buf", HTL.mergeTemplate( theTeam2Template, theCtxt));
+
+		sb.append("document.writeln('");
+
+		StringBuffer	x = HTL.mergeTemplate( theSectionTemplate, theCtxt);
+		int		len = x.length();
+		boolean		isEncoded = false;
+
+		for ( int k = 0; k < len; k++)	// Yuk!!!
+		{
+			char	c = x.charAt(k);
+
+			if ( c == '\n' || c == '\r')
+			{
+				continue;
+			}
+			else if ( c == '\'')
+			{
+				sb.append("\\\'");
+				isEncoded = false;
+			}
+			else if (isEncoded)
+			{
+				sb.append("\\").append(c);
+				isEncoded = false;
+			}
+			else if ( c == '\\')
+			{
+				isEncoded = true;
+			}
+			else	sb.append(c);
+		}
+
+		sb.append("');");
+
+		return sb.toString();
 	}
 
 	/*******************************************************************************
