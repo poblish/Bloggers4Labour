@@ -21,6 +21,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import org.apache.log4j.Logger;
@@ -47,7 +48,7 @@ public class LastPostTable
 	private byte[]				m_CompletionLocker = new byte[0];	// (AGR) 29 Jan 2007. Removed pointless 'transient'
 
 	private static Map<Long,Date>		s_LegacySiteData = new TreeMap<Long,Date>();
-	private static Logger			s_Logger = Logger.getLogger("Main");
+	private static Logger			s_Logger = Logger.getLogger( LastPostTable.class );
 
 	private final static int		PERC_BAR_WIDTH = 200;
 
@@ -139,11 +140,18 @@ public class LastPostTable
 				long		currTimeMSecs = theCal.getTimeInMillis();
 
 				thePrevMonthCal.roll( Calendar.MONTH, -1);
-				thePrevPrevMonthCal.roll( Calendar.MONTH, -2);
+				if (thePrevMonthCal.after(theCal))		// (AGR) 22 Feb 2007. Careful we don't roll Jan 07 -> Dec 07 !
+				{
+					thePrevMonthCal.roll( Calendar.YEAR, -1);
+				}
 
-				// System.out.println("  :: " + theCal.getTime());
-				// System.out.println(" ::: " + thePrevMonthCal.getTime());
-				// System.out.println(":::: " + thePrevPrevMonthCal.getTime());
+				thePrevPrevMonthCal.roll( Calendar.MONTH, -2);
+				if (thePrevPrevMonthCal.after(thePrevMonthCal))	// (AGR) 22 Feb 2007. Careful we don't roll Jan 07 -> Nov 07 !
+				{
+					thePrevPrevMonthCal.roll( Calendar.YEAR, -1);
+				}
+
+				/////////////////////////////////////////////////////////////////////////
 
 				for ( int i = 0; i < 11; i++)
 				{
@@ -152,8 +160,7 @@ public class LastPostTable
 
 				m_Total = 0;
 
-				// int		x = m_FL.countURLs() - m_ChannelData.size();	(AGR) 29 Jan 2007. Commented-out
-				// m_Unknown =  ( x > 0 ) ? x : 0;				(AGR) 29 Jan 2007. Commented-out
+				/////////////////////////////////////////////////////////////////////////
 
 				long		oneMonthDiffMSecs = currTimeMSecs - thePrevMonthCal.getTimeInMillis();
 				long		twoMonthDiffMSecs = currTimeMSecs - thePrevPrevMonthCal.getTimeInMillis();
@@ -173,6 +180,11 @@ public class LastPostTable
 						long	dateMsecs = dateVal.longValue();
 						Date	lastSiteDate = m_SiteData.get( eachSite.getRecno() );
 
+/*						if ( lastSiteDate == null)
+						{
+							s_Logger.info("*** " + eachSite.getRecno() + " *** c = " + eachChannel + ", dv = " + dateVal);
+						}
+*/
 						if ( lastSiteDate == null || lastSiteDate.getTime() < dateMsecs)
 						{
 							// System.out.println("@ Setting #" + eachSite.getRecno() + " to " + new Date(dateMsecs));
@@ -187,14 +199,25 @@ public class LastPostTable
 
 				////////////////////////////////////////////////////////
 
+				// s_Logger.debug("Data: " + m_SiteData);
 				// s_Logger.info("keys = " + m_SiteData.keySet());
 
-				for ( Date eachSitesLastDate : m_SiteData.values())
+				for ( Map.Entry<Long,Date> each : m_SiteData.entrySet())
+			//	for ( Date eachSitesLastDate : m_SiteData.values())
 				{
+					Date	eachSitesLastDate = each.getValue();
 					long	diffMSecs = currTimeMSecs - eachSitesLastDate.getTime();
 
-					if ( diffMSecs <= ONE_HOUR_MSECS)
+					if ( diffMSecs <= -ONE_HOUR_MSECS)	// (AGR) 25 Feb 2007. Even further in the future than one hour!
 					{
+						// s_Logger.warn("Too far in the future - bogus entry " + each);
+
+						continue;
+					}
+					else if ( diffMSecs <= ONE_HOUR_MSECS)	// (AGR) 25 Feb 2007. Now includes up yo 1 hr in the future!
+					{
+//						s_Logger.warn("-1 < x <= 1 hour for " + each + ", diff = " + diffMSecs);
+
 						m_Stats[0]++;
 					}
 					else if ( diffMSecs <= 2 * ONE_HOUR_MSECS)
@@ -242,6 +265,8 @@ public class LastPostTable
 				}
 			}
 		}
+
+		s_Logger.debug("Results: " + toString());
 	}
 
 	/*******************************************************************************
@@ -353,5 +378,40 @@ public class LastPostTable
 	public int getTotal()
 	{
 		return m_Total;
+	}
+
+	/*******************************************************************************
+		(AGR) 22 Feb 2007
+	*******************************************************************************/
+	public static void main( String[] args)
+	{
+		Calendar	theCal = Calendar.getInstance();
+//		theCal.set(2007,10,30);
+//		System.out.println("month: " + theCal.getTime());
+
+		Calendar	thePrevMonthCal = (Calendar) theCal.clone();
+		Calendar	thePrevPrevMonthCal = (Calendar) theCal.clone();
+		long		currTimeMSecs = theCal.getTimeInMillis();
+
+		thePrevMonthCal.roll( Calendar.MONTH, -1);
+		if (thePrevMonthCal.after(theCal))
+		{
+			thePrevMonthCal.roll( Calendar.YEAR, -1);
+		}
+
+		thePrevPrevMonthCal.roll( Calendar.MONTH, -2);
+		if (thePrevPrevMonthCal.after(thePrevMonthCal))
+		{
+			thePrevPrevMonthCal.roll( Calendar.YEAR, -1);
+		}
+
+		System.out.println("month -1: " + thePrevMonthCal.getTime());
+		System.out.println("month -2: " + thePrevPrevMonthCal.getTime());
+
+		long		oneMonthDiffMSecs = currTimeMSecs - thePrevMonthCal.getTimeInMillis();
+		long		twoMonthDiffMSecs = currTimeMSecs - thePrevPrevMonthCal.getTimeInMillis();
+
+		System.out.println("oneMonthDiffMSecs = " + oneMonthDiffMSecs + " (" + thePrevMonthCal.getTimeInMillis() + ")");
+		System.out.println("twoMonthDiffMSecs = " + twoMonthDiffMSecs + " (" + thePrevPrevMonthCal.getTimeInMillis() + ")");
 	}
 }
