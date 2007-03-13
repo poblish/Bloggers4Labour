@@ -14,7 +14,7 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.ResourceBundle;
 import javax.sql.DataSource;
-import org.bloggers4labour.activity.*;
+import org.bloggers4labour.activity.LastPostTable;
 import org.bloggers4labour.cats.CategoriesTable;
 import org.bloggers4labour.feed.*;
 import org.bloggers4labour.index.IndexMgr;
@@ -43,12 +43,13 @@ public class Installation implements InstallationIF
 	private DigestSender		m_DigestSender;
 	private IndexMgr		m_IndexMgr;
 
-	private ActivityTable		m_ActivityTable = null; // new ActivityTable();
+//	private ActivityTable		m_ActivityTable = new ActivityTable();
+
 	private LastPostTable		m_LastPostTable;		// (AGR) 9 Sep 2006
 
 	private long			m_PollerFrequencyMS;		// (AGR) 26 October 2006
 
-	private static Logger		s_Install_Logger = Logger.getLogger("Main");
+//	private static Logger		s_Install_Logger = Logger.getLogger("Main");
 
 	/*******************************************************************************
 		(AGR) 19 Feb 2006
@@ -218,11 +219,11 @@ public class Installation implements InstallationIF
 	}
 
 	/*******************************************************************************
-	*******************************************************************************/
+	******************************************************************************
 	public ActivityTable getActivityTable()
 	{
 		return m_ActivityTable;
-	}
+	} */
 
 	/*******************************************************************************
 		(AGR) 9 Sep 2006
@@ -247,13 +248,13 @@ public class Installation implements InstallationIF
 		*******************************************************************************/
 		public void update( Observable inFeedList, Object inUnusedArgs)
 		{
-			if ( m_ActivityTable != null)
+/*			if ( m_ActivityTable != null)
 			{
 				m_ActivityTable.complete();
 
 				// s_Install_Logger.info( getLogPrefix() + "Activity table: " + m_ActivityTable);
 			}
-
+*/
 			if ( m_LastPostTable != null)
 			{
 				m_LastPostTable.complete();
