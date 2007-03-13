@@ -16,6 +16,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.sql.DataSource;
 import javax.xml.parsers.*;
 import javax.xml.transform.TransformerException;
 import javax.xml.xpath.XPath;
@@ -100,22 +103,51 @@ public class InstallationManager
 			/////////////////////////////////////////////////////////////////////////////////////
 
 			XPathExpression		theInstallsExpr = theXPathObj.compile("installations/install");
+			XPathExpression		theDSNExpr = theXPathObj.compile("dataSourceName[1]/text()");	// (AGR) 14 Feb 2007
 			XPathExpression		theURLExpr = theXPathObj.compile("jdbc_url[1]/text()");
 			XPathExpression		theHMgrExpr = theXPathObj.compile("headlinesMgr[1]");
 			NodeList		theInstallsNodes = (NodeList) theInstallsExpr.evaluate( theDocument, XPathConstants.NODESET);
+			InitialContext		initContext = new InitialContext();	// (AGR) 14 Feb 2007
+
+			// s_Installations_Logger.info("initContext: " + initContext);
+
+			Context			appContext = (Context) initContext.lookup("java:comp/env");
+
+			// s_Installations_Logger.info("appContext: " + appContext);
 
 			for ( int i = 0; i < theInstallsNodes.getLength(); i++)
 			{
 				theElement = (Element) theInstallsNodes.item(i);
 
-				String		theURLNodeStr = (String) theURLExpr.evaluate( theElement, XPathConstants.STRING);
 				String		theName = theElement.getAttributes().getNamedItem("name").getTextContent();
 				Node		theBundleNameNode = theElement.getAttributes().getNamedItem("bundle_name");
-				MysqlDataSource	theSource = new MysqlDataSource();
+				DataSource	theSource;
 
-				if (UText.isValidString(theURLNodeStr))
+				try	// (AGR) 14 Feb 2007. Pooling - at last!
 				{
-					theSource.setUrl(theURLNodeStr);
+					String		theDSNStr = (String) theDSNExpr.evaluate( theElement, XPathConstants.STRING);
+
+					s_Installations_Logger.info("[IMgr] Looking up: " + theDSNStr);
+
+					theSource = (DataSource) appContext.lookup(theDSNStr);
+
+					s_Installations_Logger.info("[IMgr] Obtained: " + theSource);
+
+					// java.sql.Connection	c = theSource.getConnection();
+					// s_Installations_Logger.info("c: " + c);
+				}
+				catch (Exception e)
+				{
+					s_Installations_Logger.info("Resorting to use JDBC URL: " + e);
+
+					String		theURLNodeStr = (String) theURLExpr.evaluate( theElement, XPathConstants.STRING);
+
+					theSource = new MysqlDataSource();
+
+					if (UText.isValidString(theURLNodeStr))
+					{
+						((MysqlDataSource) theSource).setUrl(theURLNodeStr);
+					}
 				}
 
 				/////////////////////////////////////////////////////////////////////////////  (AGR) 28 October 2006
