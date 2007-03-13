@@ -15,6 +15,7 @@ import javax.servlet.jsp.*;
 import javax.servlet.jsp.tagext.*;
 import javax.sql.DataSource;
 import org.apache.log4j.Logger;
+import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.InstallationManager;
 
 /**
@@ -24,6 +25,7 @@ import org.bloggers4labour.InstallationManager;
 public class DataSourceConnTag extends TagSupport implements TryCatchFinally
 {
 	private String			m_InstallationStr;
+	private String			m_InstallName;		// (AGR) 19 Feb 2007
 	private Logger			m_Logger;
 
 	private DataSourceConnection	m_Connection;
@@ -64,6 +66,7 @@ public class DataSourceConnTag extends TagSupport implements TryCatchFinally
 	}
 
 	/*******************************************************************************
+		from TagLib descriptor
  	*******************************************************************************/
 	public void setInstallation( String x)
 	{
@@ -71,10 +74,27 @@ public class DataSourceConnTag extends TagSupport implements TryCatchFinally
 	}
 
 	/*******************************************************************************
-	*******************************************************************************/
+		from TagLib descriptor
+ 	*******************************************************************************/
 	public String getInstallation()
 	{
 		return m_InstallationStr;
+	}
+
+	/*******************************************************************************
+ 		from TagLib descriptor. (AGR) 19 Feb 2007
+ 	*******************************************************************************/
+	public void setInstallName( String x)
+	{
+		m_InstallName = x;
+	}
+
+	/*******************************************************************************
+		from TagLib descriptor. (AGR) 19 Feb 2007
+ 	*******************************************************************************/
+	public String getInstallName()
+	{
+		return m_InstallName;
 	}
 
 	/*******************************************************************************
@@ -85,6 +105,23 @@ public class DataSourceConnTag extends TagSupport implements TryCatchFinally
 
 		try
 		{
+			////////////////////////////////////////////////////////  (AGR) 19 Feb 2007
+
+			if (UText.isValidString(m_InstallName))
+			{
+				InstallationIF theInstall = InstallationManager.getInstallation(m_InstallName);
+				if ( theInstall != null)
+				{
+					m_Connection = new DataSourceConnection( theInstall.getDataSource() );
+					// System.out.println("Using new DSC  with a " + theInstall.getDataSource());
+					m_ConnectedOK = m_Connection.Connect();
+
+					return BodyTag.EVAL_BODY_INCLUDE;
+				}
+			}
+
+			////////////////////////////////////////////////////////
+
 		//	System.out.println("in doStartTag(), def = " + InstallationManager.getDefaultInstallation());
 		//	System.out.println("install = " + InstallationManager.getInstallation(m_InstallationStr));
 		//	DataSource	theDS = InstallationManager.getInstallation(m_InstallationStr).getDataSource();
