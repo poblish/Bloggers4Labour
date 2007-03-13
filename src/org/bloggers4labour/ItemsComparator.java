@@ -11,6 +11,7 @@
 package org.bloggers4labour;
 
 import de.nava.informa.core.ItemIF;
+import java.io.Serializable;
 // import de.nava.informa.impl.basic.Item;
 import java.util.Comparator;
 import java.util.Date;
@@ -19,14 +20,8 @@ import java.util.Date;
  *
  * @author andrewre
  */
-public class ItemsComparator implements Comparator<ItemIF>
+public class ItemsComparator implements Comparator<ItemIF>, /* (AGR) 3 Feb 2007. FindBugs recommended this */ Serializable
 {
-	/*******************************************************************************
-	*******************************************************************************/
-	public ItemsComparator()
-	{
-	}
-
 	/*******************************************************************************
 	*******************************************************************************/
 	public int compare( ItemIF ia, ItemIF ib)
