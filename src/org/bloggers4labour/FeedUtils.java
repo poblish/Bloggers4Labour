@@ -55,7 +55,7 @@ public final class FeedUtils
 	private static Pattern		s_ObjectPattern = Pattern.compile( "<object *>|<object [^>]*>", Pattern.CASE_INSENSITIVE);	// (AGR) 11 June 2006
 	private static Pattern		s_ObjectEndPattern = Pattern.compile( "</object>", Pattern.CASE_INSENSITIVE);			// (AGR) 11 June 2006
 
-	private static Logger		s_Utils_Logger = Logger.getLogger("Main");
+//	private static Logger		s_Utils_Logger = Logger.getLogger("Main");
 
 //	private static final String	ITALIC_STRIPPER = "<i>|<i +[^>]*>|</i>";	// (AGR) 16 Jan 2006. Keep these now. (AGR) 13 May 2005. Made less greedy.
 	private static final String	BOLD_STRIPPER = "<b>|<b +[^>]*>|</b>";		// (AGR) 15 May 2005. Made less greedy.
