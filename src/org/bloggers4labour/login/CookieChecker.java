@@ -17,6 +17,7 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import javax.servlet.http.*;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
@@ -49,6 +50,18 @@ public class CookieChecker
 	*******************************************************************************/
 	public LoginResult checkLogin( final HttpServletRequest inReq, HttpSession ioSession)
 	{
+		Object	theObj = ioSession.getAttribute("b4l_user_recno");
+
+		if ( theObj != null && theObj instanceof Long)
+		{
+			m_LoggedInUserRecno = ((Long) theObj).longValue();
+			m_LoggedInUsername = (String) ioSession.getAttribute("b4l_user_name");
+
+			return LoginResult.VALID_SESSION_FOUND;
+		}
+
+		////////////////////////////////////////////////////////////////
+
 		Cookie[]	theLoadedCookies = inReq.getCookies();
 
 		if ( theLoadedCookies != null)
@@ -98,20 +111,7 @@ public class CookieChecker
 			}
 		}
 
-		////////////////////////////////////////////////////////////////
-
-		Object	theObj = ioSession.getAttribute("b4l_user_recno");
-
-		if ( theObj == null || !(theObj instanceof Long))
-		{
-			// response.sendRedirect("http://www.bloggers4labour.org/login.jsp");
-			return LoginResult.NOT_LOGGED_IN;
-		}
-
-		m_LoggedInUserRecno = ((Long) theObj).longValue();
-		m_LoggedInUsername = (String) ioSession.getAttribute("b4l_user_name");
-
-		return LoginResult.VALID_SESSION_FOUND;
+		return LoginResult.NOT_LOGGED_IN;
 	}
 
 	/*******************************************************************************
@@ -184,11 +184,23 @@ public class CookieChecker
 
 		if ( x && theRS.next())
 		{
+			Timestamp	thePrevLoginDate = theRS.getTimestamp("last_login");
+
 			s_Logger.info("Populating Session...");
 
 			ioSession.setAttribute( "b4l_user_recno", Long.valueOf(inUserId));
 			ioSession.setAttribute( "b4l_user_name", theRS.getString("username"));
-			ioSession.setAttribute( "b4l_prev_login_date", theRS.getTimestamp("last_login"));
+			ioSession.setAttribute( "b4l_prev_login_date", thePrevLoginDate);
+
+			theRS.close();
+			USQL_Utils.closeStatementCatch(theS);
+
+			////////////////////////////////////////////////////////  Update last login time each time the user auto-logs-in...
+
+			theS = inConn.prepareCall("updateUsersLastLogin( ?, ? )");
+			theS.setString( 1, inUserId);
+			theS.setTimestamp( 2, thePrevLoginDate);
+			theS.execute();
 		}
 		else
 		{
@@ -202,8 +214,6 @@ public class CookieChecker
 //		m_ResultsCopy = new ResultSetList(theRS);
 
 //		s_Logger.info("m_ResultsCopy " + m_ResultsCopy);
-
-		theRS.close();
 
 		return theS;
 	}
