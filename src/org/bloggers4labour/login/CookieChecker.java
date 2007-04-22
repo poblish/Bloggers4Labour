@@ -12,6 +12,7 @@ package org.bloggers4labour.login;
 import com.hiatus.USQL_Utils;
 import com.hiatus.UText;
 import com.hiatus.sql.ResultSetList;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -62,6 +63,55 @@ public class CookieChecker
 
 		////////////////////////////////////////////////////////////////
 
+		Cookie	ourCookie = _findOurCookie(inReq);
+
+		if ( ourCookie != null)
+		{
+			String	theCookieVal = ourCookie.getValue();
+
+			if (UText.isValidString(theCookieVal))
+			{
+				int	idx = theCookieVal.indexOf('.');
+
+				if ( idx > 0)
+				{
+					String	userId = theCookieVal.substring( 0, idx);
+					String	encodedHashedPass = theCookieVal.substring( idx + 1);
+
+					s_Logger.info("user \"" + userId + "\", enc_h_p \"" + encodedHashedPass + "\".");
+
+					try
+					{
+						byte[]	theHashedPassBytes = Base64.decodeBase64( encodedHashedPass.getBytes(STRING_ENCODING) );
+						String	theHashedPassStr = new String( theHashedPassBytes, STRING_ENCODING);
+
+						s_Logger.info("=> h_p \"" + theHashedPassStr + "\".");
+
+						if (_checkCookie( ourCookie, userId, theHashedPassStr, ioSession))
+						{
+							return LoginResult.VALID_COOKIE_FOUND;
+						}
+					}
+					catch (UnsupportedEncodingException e)
+					{
+						;
+					}
+				}
+			}
+
+			// Remove this bad cookie!
+
+			ourCookie.setMaxAge(0);
+		}
+
+		return LoginResult.NOT_LOGGED_IN;
+	}
+
+	/*******************************************************************************
+		(AGR) 21 April 2007
+	*******************************************************************************/
+	private Cookie _findOurCookie( final HttpServletRequest inReq)
+	{
 		Cookie[]	theLoadedCookies = inReq.getCookies();
 
 		if ( theLoadedCookies != null)
@@ -70,48 +120,16 @@ public class CookieChecker
 
 			for ( Cookie eachCookie : theLoadedCookies)
 			{
-				s_Logger.info("COOKIE \"" + eachCookie.getName() + "\" / value \"" + eachCookie.getValue() + "\"");
+				// s_Logger.info("COOKIE \"" + eachCookie.getName() + "\" / value \"" + eachCookie.getValue() + "\"");
 
 				if (eachCookie.getName().equals(LOGIN_COOK_NAME))
 				{
-					String	theCookieVal = eachCookie.getValue();
-
-					if (UText.isValidString(theCookieVal))
-					{
-						int	idx = theCookieVal.indexOf('.');
-
-						if ( idx > 0)
-						{
-							String	userId = theCookieVal.substring( 0, idx);
-							String	encodedHashedPass = theCookieVal.substring( idx + 1);
-
-							s_Logger.info("user \"" + userId + "\", enc_h_p \"" + encodedHashedPass + "\".");
-
-							try
-							{
-								byte[]	theHashedPassBytes = Base64.decodeBase64( encodedHashedPass.getBytes(STRING_ENCODING) );
-								String	theHashedPassStr = new String( theHashedPassBytes, STRING_ENCODING);
-
-								s_Logger.info("=> h_p \"" + theHashedPassStr + "\".");
-
-								if (_checkCookie( eachCookie, userId, theHashedPassStr, ioSession))
-								{
-									return LoginResult.VALID_COOKIE_FOUND;
-								}
-							}
-							catch (UnsupportedEncodingException e)
-							{
-								;
-							}
-						}
-					}
-
-					// Remove this bad cookie!
+					return eachCookie;
 				}
 			}
 		}
 
-		return LoginResult.NOT_LOGGED_IN;
+		return null;
 	}
 
 	/*******************************************************************************
@@ -211,10 +229,6 @@ public class CookieChecker
 			ioSession.removeAttribute( "b4l_prev_login_date");
 		}
 
-//		m_ResultsCopy = new ResultSetList(theRS);
-
-//		s_Logger.info("m_ResultsCopy " + m_ResultsCopy);
-
 		return theS;
 	}
 
@@ -245,6 +259,41 @@ public class CookieChecker
 		{
 			return null;	// Not going to happen
 		}
+	}
+
+	/*******************************************************************************
+		(AGR) 21 April 2007
+	*******************************************************************************/
+	public void requestLogout( final HttpServletRequest inReq, final HttpServletResponse ioResponse,
+				   HttpSession ioSession, final String inLogoutURL) throws IOException
+	{
+		Cookie	ourCookie = _findOurCookie(inReq);
+
+		s_Logger.info("requestLogout() -> theCookie: " + ourCookie);
+
+		if ( ourCookie != null)
+		{
+			s_Logger.info("GMA: " + ourCookie.getMaxAge());
+
+			ourCookie.setMaxAge(0);
+			// ourCookie.setPath("/");
+			ioResponse.addCookie(ourCookie);
+		}
+
+		////////////////////////////////////////////////////////////////
+
+		ioSession.removeAttribute("b4l_user_recno");
+		ioSession.removeAttribute("b4l_user_name");
+		ioSession.removeAttribute("b4l_prev_login_date");
+
+		ioSession.removeAttribute("want_mails");		// (AGR) 4 April 2005
+		ioSession.removeAttribute("mail_summary");	//  "
+		ioSession.removeAttribute("mail_hr");		//  "
+		ioSession.removeAttribute("mail_min");		//  "
+		ioSession.removeAttribute("b4l_mail_ud_str");	//  "
+		ioSession.removeAttribute("mail_html");		// (AGR) 17 April 2005
+
+		ioResponse.sendRedirect(inLogoutURL);
 	}
 
 	/*******************************************************************************
