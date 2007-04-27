@@ -203,11 +203,15 @@ public class CookieChecker
 		if ( x && theRS.next())
 		{
 			Timestamp	thePrevLoginDate = theRS.getTimestamp("last_login");
+			Long		userRecnoObj = Long.valueOf(inUserId);
 
-			s_Logger.info("Populating Session...");
+			// s_Logger.info("Populating Session...");
 
-			ioSession.setAttribute( "b4l_user_recno", Long.valueOf(inUserId));
-			ioSession.setAttribute( "b4l_user_name", theRS.getString("username"));
+			m_LoggedInUserRecno = userRecnoObj.longValue();
+			m_LoggedInUsername = theRS.getString("username");
+
+			ioSession.setAttribute( "b4l_user_recno", userRecnoObj);
+			ioSession.setAttribute( "b4l_user_name", m_LoggedInUsername);
 			ioSession.setAttribute( "b4l_prev_login_date", thePrevLoginDate);
 
 			theRS.close();
@@ -222,7 +226,10 @@ public class CookieChecker
 		}
 		else
 		{
-			s_Logger.info("Clearing Session...");
+			// s_Logger.info("Clearing Session...");
+
+			m_LoggedInUserRecno = -1L;
+			m_LoggedInUsername = null;
 
 			ioSession.removeAttribute( "b4l_user_recno");
 			ioSession.removeAttribute( "b4l_user_name");
