@@ -106,12 +106,23 @@ public class InstallationManager
 			XPathExpression		theDSNExpr = theXPathObj.compile("dataSourceName[1]/text()");	// (AGR) 14 Feb 2007
 			XPathExpression		theURLExpr = theXPathObj.compile("jdbc_url[1]/text()");
 			XPathExpression		theHMgrExpr = theXPathObj.compile("headlinesMgr[1]");
+			XPathExpression		theFBGroupIDExpr = theXPathObj.compile("facebook[1]/group_id[1]");
 			NodeList		theInstallsNodes = (NodeList) theInstallsExpr.evaluate( theDocument, XPathConstants.NODESET);
 			InitialContext		initContext = new InitialContext();	// (AGR) 14 Feb 2007
+			Context			appContext;
 
 			// s_Installations_Logger.info("initContext: " + initContext);
 
-			Context			appContext = (Context) initContext.lookup("java:comp/env");
+			try
+			{
+				appContext = (Context) initContext.lookup("java:comp/env");
+			}
+			catch (javax.naming.NoInitialContextException e)
+			{
+				// (AGR) 13 March 2007. Only happens when runnng locally, not at B4L
+
+				appContext = null;	// (AGR) 13 March 2007. Take the NPE later.
+			}
 
 			// s_Installations_Logger.info("appContext: " + appContext);
 
@@ -167,13 +178,28 @@ public class InstallationManager
 
 				/////////////////////////////////////////////////////////////////////////////
 
-				Element		theHeadMgrElem = (Element) theHMgrExpr.evaluate( theElement, XPathConstants.NODE);
-
 				Installation	theInstall = new Installation( theName,
 										( theBundleNameNode != null) ? theBundleNameNode.getTextContent() : theName,
 										theSource,
 										theElement.getAttributes().getNamedItem("mbean_name").getTextContent(),
 										theNewPoller);
+
+				/////////////////////////////////////////////////////////////////////////////  (AGR) 13 March 2007. Facebook...
+
+				Element		theFBGroupIDElem = (Element) theFBGroupIDExpr.evaluate( theElement, XPathConstants.NODE);
+
+				try
+				{
+					theInstall.setFacebookGroupID( Long.valueOf( theFBGroupIDElem.getTextContent() ) );
+				}
+				catch (Exception e)
+				{
+					;
+				}
+
+				/////////////////////////////////////////////////////////////////////////////
+
+				Element		theHeadMgrElem = (Element) theHMgrExpr.evaluate( theElement, XPathConstants.NODE);
 
 				theInstall.setHeadlinesMgr( new HeadlinesMgr( theHeadMgrElem, theInstall) );
 				theInstall.complete();
