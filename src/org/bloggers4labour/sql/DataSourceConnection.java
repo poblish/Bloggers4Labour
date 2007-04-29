@@ -89,7 +89,7 @@ public class DataSourceConnection
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public long GetIdentity() throws SQLException
+	@Deprecated public long GetIdentity() throws SQLException
 	{
 		long	theAnswer = -999;
 
@@ -201,6 +201,51 @@ public class DataSourceConnection
 		else
 		{
 			return false;
+		}
+	}
+
+	/*******************************************************************************
+		28 April 2007
+	*******************************************************************************/
+	public void setAutoCommit( boolean x) throws SQLException
+	{
+		if (isConnected())
+		{
+			m_DbConnection.setAutoCommit(x);
+		}
+		else
+		{
+			throw new SQLException("Cannot setAutoCommit() - we're not connected!");
+		}
+	}
+
+	/*******************************************************************************
+		28 April 2007
+	*******************************************************************************/
+	public void commit() throws SQLException
+	{
+		if (isConnected())
+		{
+			m_DbConnection.commit();
+		}
+		else
+		{
+			throw new SQLException("Cannot commit() - we're not connected!");
+		}
+	}
+
+	/*******************************************************************************
+		28 April 2007
+	*******************************************************************************/
+	public void rollback() throws SQLException
+	{
+		if (isConnected())
+		{
+			m_DbConnection.rollback();
+		}
+		else
+		{
+			throw new SQLException("Cannot commit() - we're not connected!");
 		}
 	}
 }
