@@ -83,7 +83,7 @@ public abstract class Poller
 			int[]			hCountArray = new int[ theHMgr.getHeadlinesCount() ];		// (AGR) 22 May 2005
 //			ActivityTable		theActivityTable = m_Installation.getActivityTable();		// (AGR) 8 March 2006
 			LastPostTable		theLastPostTable = m_Installation.getLastPostDateTable();	// (AGR) 9 Sep 2006
-			String			theChannelSiteURL = inChannel.getSite().toString();		// (AGR) 8 March 2006
+//			String			theChannelSiteURL = inChannel.getSite().toString();		// (AGR) 8 March 2006. Commented-out on 29 Jan 2007!
 			CategoriesTable		theCatsTable = m_Installation.getCategories();
 			long			mostRecentPostAgeMsecs = Long.MIN_VALUE;			// (AGR) 26 Feb 2006
 			int			recentPosts = 0;						// (AGR) 26 Feb 2006
@@ -97,11 +97,14 @@ public abstract class Poller
 
 				//////////////////////////////////////////////////////////////////  (AGR) 26 Feb 2006, 9 Sep 2006
 
-				long	adjustedPostMSecs = inCurrentTimeMSecs - theAgeResult.getAgeMSecs();
-
-				if ( adjustedPostMSecs > mostRecentPostAgeMsecs)
+				if ( itemDate != null)	// (AGR) 25 Feb 2007. Don't bother trying to work out most recent, if we never found a valid post date!
 				{
-					mostRecentPostAgeMsecs = adjustedPostMSecs;
+					long	adjustedPostMSecs = inCurrentTimeMSecs - theAgeResult.getAgeMSecs();
+
+					if ( adjustedPostMSecs > mostRecentPostAgeMsecs)
+					{
+						mostRecentPostAgeMsecs = adjustedPostMSecs;
+					}
 				}
 
 				//////////////////////////////////////////////////////////////////
