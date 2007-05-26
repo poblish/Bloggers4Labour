@@ -36,7 +36,7 @@ public abstract class Poller
 //	static de.nava.informa.utils.poller.Poller		s_InformaPoller;
 
 	protected Installation					m_Installation;
-	private PollerObserverIF				m_Observer;
+//	private PollerObserverIF				m_Observer;
 
 	private static Logger					s_Poll_Logger = Logger.getLogger( Poller.class );
 
@@ -59,7 +59,7 @@ public abstract class Poller
 	*******************************************************************************/
 	public synchronized void cancelPolling()
 	{
-		if ( m_Observer != null)
+/*		if ( m_Observer != null)
 		{
 			s_Poll_Logger.info( m_Installation.getLogPrefix() + "Poller: removing Observer: " + m_Observer + " and stopping");
 
@@ -67,7 +67,7 @@ public abstract class Poller
 
 			m_Observer = null;
 		}
-	}
+*/	}
 
 	/*******************************************************************************
 	*******************************************************************************/
