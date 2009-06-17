@@ -10,9 +10,8 @@
 
 package org.bloggers4labour.headlines;
 
-import de.nava.informa.core.ItemIF;
-import org.bloggers4labour.Headlines;
-import org.bloggers4labour.Installation;
+import org.bloggers4labour.InstallationIF;
+import org.bloggers4labour.bridge.channel.item.ItemIF;
 
 /**
  *
@@ -20,5 +19,5 @@ import org.bloggers4labour.Installation;
  */
 public interface RemoveHandler extends Handler
 {
-	public void onRemove( final Installation inInstall, HeadlinesIF inHeads, final ItemIF inItem);
+	public void onRemove( final InstallationIF inInstall, HeadlinesIF inHeads, final ItemIF inItem);
 }

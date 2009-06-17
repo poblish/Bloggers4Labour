@@ -6,16 +6,16 @@
 
 package org.bloggers4labour;
 
-import com.hiatus.UHTML;
-import com.hiatus.UText;
+import com.hiatus.text.UText;
+import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.regex.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.bloggers4labour.html.Encoding;
 import org.bloggers4labour.tag.*;
 
@@ -48,9 +48,9 @@ public class TextCleaner
 	private final static String	LINK_PATTERN_STR = "<a [^>]*href *= *";
 	public final static String	IMAGE_PATTERN_STR = "<img [^>]*src *= *";	// (AGR) 15 May 2005
 
-	private static Pattern		s_AmpPattern = Pattern.compile("&");
-	private static Pattern		s_LtPattern = Pattern.compile("<");
-	private static Pattern		s_GtPattern = Pattern.compile(">");
+//	private static Pattern		s_AmpPattern = Pattern.compile("&");
+//	private static Pattern		s_LtPattern = Pattern.compile("<");
+//	private static Pattern		s_GtPattern = Pattern.compile(">");
 
 	private static Pattern		s_LinkFinderPattern  = Pattern.compile("(" + LINK_PATTERN_STR + ")", Pattern.CASE_INSENSITIVE);
 	private static Pattern		s_TagFinderPattern   = Pattern.compile("(" + LINK_PATTERN_STR + ")|(<abbr [^>]*title *= *)|(<u[^>]*>)|(<sup[^>]*>)|(" + IMAGE_PATTERN_STR + ")|(<br>)|(" + STRIKE_OPEN_LCASE + ")|(" + I_OPEN_LCASE + ")|(" + BQ_OPEN_LCASE + ")", Pattern.CASE_INSENSITIVE);
@@ -66,7 +66,7 @@ public class TextCleaner
 	{
 //		String		theQuery = org.bloggers4labour.sql.QueryBuilder.getDigestEmailQuery( 2, 15);
 
-		TextCleaner s = new TextCleaner();
+		// TextCleaner s = new TextCleaner();
 		// s.fookTest();
 		// s.oldDo();
 
@@ -89,7 +89,8 @@ public class TextCleaner
 //		String	ss = "<a href=\"XXX\"><img src=\"YYY.gif\" /></a>"; // "I co-chair the neighbourhood management forum for Heathside and <?xml:namespace prefix=st1 ns= \"urn:schemas-microsoft-com:office:smarttags\" />Lethbridge with Tracey Skingly"; // "<p><a href=\"http://www.amazon.co.uk/exec/obidos/ASIN/B000024V1U/madmusinofme-21\"><img src=\"http://www.madmusingsof.me.uk/archives/suburbs.jpeg\" border=\"1\" title=\"Sound of the Suburbs\"alt=\"Sound of the Suburbs\" hspace=\"3\" vspace=\"3\"></a>&nbsp;A compilation of songs taken from the Golden Age of Pop"; // "<img alt=\"New Labour MPs\" src=\"http://www.andrewregan.com/images/mp/welcome.jpg\"/> Or, \"Yet another newspaper (and blogger) jumps on the bandwagon\"...<br/>\n<a href=\"http://www.mirror.co.uk/news/tm_objectid=15512533%26method=full%26siteid=94762%26headline=the-great-su-doku-challenge-name_page.html\">Have a go yourself</a> then send in your completed entry - plus a note of how long it took you - to see if you've beaten that legendary brainbox, <span style=\"font-weight:bold;\">Carol Vorderman</span> (an <a href=\"http://en.wikipedia.org/wiki/Alan_Turing\">Alan Turing</a> for a simpler age).<br/>\n<br/>I won't reveal the solution (unless you donate to the site!), but I will say that it took me <span style=\"font-weight:bold;\">15 minutes and 50 seconds.</span>\n\n<br/>\n<br/>Actually I must admit that I've been doing a hell of a lot of these recently. <a href=\"http://www.griffiths-jones.co.uk/sudoku/\">This site</a> offers a new one every day, plus there's an archive of easy, medium, hard, and very hard ones going back a month or two. You can also <a href=\"http://www.griffiths-jones.co.uk/sudoku/downloads.html\">download</a> a grid (as a PDF), which is just the right size for printing.<br/>\n<br/>If you still don't know what SuDoku is, look it up at the <a href=\"http://en.wikipedia.org/wiki/Sudoku\">Wikipedia</a>."; // "<div xmlns=\"http://www.w3.org/1999/xhtml\">Here's Celia, with other new Labour MPs at Westminster today:<br/><br/><img alt=\"New Labour MPs\" src=\"http://www.andrewregan.com/images/mp/welcome.jpg\"/>Andrew</div>"; // "<a name=\"c111529093173103484\" />Hilary Wade"; // "A reminder: Vote early and vote often.<sup class=\"foo\" >*</sup><SUP   >*</sup>Where often is defined as more than zero times and not more than one time.";	// "I've only just caught up with this <u class=\"foo\" title=\"bar\" >splendid</u> piece by Michael Lynch in the Chronicle of Higher Education."; // "<a href=\"apple.com\">Apple</a> same way as ...<b><abbr class=\"col\" title=\"Tosser Ex-Manager\">WTEM</ABBR>-Hello <a href=\"ms.com\">MS</a>  bye"; // "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p><style type=\"text/css\">.flickr-photo { border: solid 2px #000000; }.flickr-yourcomment { }.flickr-frame { text-align: left; padding: 3px; }.flickr-caption { font-size: 0.8em; margin-top: 0px; }</style><div class=\"flickr-frame\">	<a href=\"http://www.flickr.com/photos/yukihisa/12894905/\" title=\"photo sharing\"><img src=\"http://photos10.flickr.com/12894905_de034941bc.jpg\" class=\"flickr-photo\" alt=\"\" /></a><br />	<span class=\"flickr-caption\"><a href=\"http://www.flickr.com/photos/yukihisa/12894905/\">_DSC5760</a>, originally uploaded by <a href=\"http://www.flickr.com/people/yukihisa/\">yukihisa</a>.</span></div>				<p class=\"flickr-yourcomment\">	One of the things that always gives me hope is the behaviour of children - curious, energetic, demanding and generous. What we do to them as they grow is another matter - but the potential is always there.</p></p></div>";
 	//	String	ss = "<object width=\"425\" height=\"350\"><param name=\"movie\" value=\"http://www.youtube.com/v/79T96_WFKRM\"></param><embed src=\"http://www.youtube.com/v/79T96_WFKRM\" type=\"application/x-shockwave-flash\" width=\"425\" height=\"350\"></embed></object><br /><br /><br /><br />Leonard Cohen's song from \"Dear Heather\" album, PV by his daughter, Lorca, featuring Anjani Thomas.";
 //		String	ss = "<p>Lets see if this works&#8230;</p>\n<p><object width=\"425\" height=\"350\"><br />\n<param name=\"movie\" value=\"http://www.youtube.com/v/z5e4L3LtYw4\"></param><embed src=\"http://www.youtube.com/v/z5e4L3LtYw4\" type=\"application/x-shockwave-flash\" width=\"425\" height=\"350\"></embed></object></p>\n<p>Hmmm&#8230; Seems to work OK, but what a lot of hoops to jump through!  I had to deactivate the WYSIWYG editing plugin AND create the post in Internet Explorer - for some reason it would not work properly in Firefox. I think I shall push my luck and try to embed the video for the single too.</p>\n<p><object width=\"425\" height=\"350\"><br />\n<param name=\"movie\" value=\"http://www.youtube.com/v/7p7XiPymhYw\"></param><embed src=\"http://www.youtube.com/v/7p7XiPymhYw\" type=\"application/x-shockwave-flash\" width=\"425\" height=\"350\"></embed></object></p>";
-		String	ss = "&lt;a href=\"http://eustonmanifesto.org/joomla/content/view/72/46/\">Nice paper&lt;/a> at euston, largely agree with it. Only reccomended for those with a serious case of time on hands!";
+//		String	ss = "&lt;a href=\"http://eustonmanifesto.org/joomla/content/view/72/46/\">Nice paper&lt;/a> at euston, largely agree with it. Only reccomended for those with a serious case of time on hands!";
+		String	ss = "<L><br />Tory economic <i>naif</i> <a href=\"http://iaindale.blogspot.com/2007/03/gordon-brown-doubles-your-tax-bill.html\">Iain Dale</a> alleges that Gordon Brown has doubled my tax bill. Not true. I respond :<br /><br />God you lots are muppets. For a start:<br /><br />MORE PEOPLE ARE IN WORK hence more income tax. <br />Businesses are doing extremely well and hence CORPORATION TAX receipts are way up. <br />SALES TAX receipts are way up as we have more disposible income for \"LUXURIES\" like sanitary protection. <br />The land and housing markets are BOOMING and more are making great CAPITAL GAINS and buying expensive properties with STAMP DUTY on. <br />This aggregated figure with no analysis - not even allowing for Prague Tory's earnings point - which halves the so-called discrepancy - is <br />TORY MUPPETRY.<div class=\"blogger-post-footer\"><a href=\"http://chrispaul-labouroflove.blogspot.com/atom.xml\">LoL site feed</a></div>";
 
 		String	s2 = FeedUtils.newAdjustDescription( ss, 999 );
 //		String	s2 = FeedUtils.newAdjustDescription( ss, 250, EnumSet.of( FormatOption.ALLOW_IMAGES, FormatOption.ALLOW_BREAKS));
@@ -103,7 +104,6 @@ public class TextCleaner
 	********************************************************************/
 	public TextCleaner()
 	{
-		;
 	}
 
 	/********************************************************************
@@ -416,7 +416,7 @@ public class TextCleaner
 
 						if ( theInnerTag instanceof Image)
 						{
-							;
+							// NOOP
 						}
 						else
 						{
@@ -620,7 +620,7 @@ public class TextCleaner
 			{
 				sb.append( _handleEntities( ss, inMakeHTML) );
 
-				spaceLeft -= blockLen;
+				// spaceLeft -= blockLen;
 			}
 			else if ( blockLen >= 3)
 			{
@@ -746,8 +746,10 @@ public class TextCleaner
 	/********************************************************************
 		(AGR) 13 April 2005
 	********************************************************************/
-	public class LinkNameSorter implements Comparator<Tag>
+	public static class LinkNameSorter implements Comparator<Tag>, /* (AGR) 29 Jan 2007. FindBugs recommended this */ Serializable
 	{
+		private static final long serialVersionUID = 1L;
+
 		/********************************************************************
 		********************************************************************/
 		public int compare( Tag thisOne, Tag theOther)
@@ -766,8 +768,10 @@ public class TextCleaner
 	/********************************************************************
 		(AGR) 13 April 2005
 	********************************************************************/
-	public class LinkURLSorter implements Comparator<Tag>
+	public static class LinkURLSorter implements Comparator<Tag>, /* (AGR) 29 Jan 2007. FindBugs recommended this */ Serializable
 	{
+		private static final long serialVersionUID = 1L;
+
 		/********************************************************************
 		********************************************************************/
 		public int compare( Tag thisOne, Tag theOther)

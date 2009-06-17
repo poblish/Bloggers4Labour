@@ -11,7 +11,6 @@
 package org.bloggers4labour.options;
 
 import java.beans.PropertyVetoException;
-import org.bloggers4labour.feed.FeedList;
 import static org.bloggers4labour.Constants.*;
 
 /**
@@ -20,6 +19,8 @@ import static org.bloggers4labour.Constants.*;
  */
 public class HeadlinesCleanerTaskOptions extends AbstractTaskOptionsBean
 {
+	private static final long serialVersionUID = 1L;
+
 	/*******************************************************************************
 	*******************************************************************************/
 	public HeadlinesCleanerTaskOptions()

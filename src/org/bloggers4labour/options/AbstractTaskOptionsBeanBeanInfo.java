@@ -6,7 +6,13 @@
 
 package org.bloggers4labour.options;
 
-import java.beans.*;
+import java.beans.BeanDescriptor;
+import java.beans.EventSetDescriptor;
+import java.beans.IntrospectionException;
+import java.beans.MethodDescriptor;
+import java.beans.PropertyDescriptor;
+import java.beans.SimpleBeanInfo;
+
 
 /**
  * @author regana
@@ -100,7 +106,7 @@ public class AbstractTaskOptionsBeanBeanInfo extends SimpleBeanInfo
 	 * properties of this bean.  May return null if the
 	 * information should be obtained by automatic analysis.
 	 */
-	public BeanDescriptor getBeanDescriptor()
+	@Override public BeanDescriptor getBeanDescriptor()
 	{
 		return getBdescriptor();
 	}
@@ -117,7 +123,7 @@ public class AbstractTaskOptionsBeanBeanInfo extends SimpleBeanInfo
 	 * A client of getPropertyDescriptors can use "instanceof" to check
 	 * if a given PropertyDescriptor is an IndexedPropertyDescriptor.
 	 */
-	public PropertyDescriptor[] getPropertyDescriptors()
+	@Override public PropertyDescriptor[] getPropertyDescriptors()
 	{
 		return getPdescriptor();
 	}
@@ -129,7 +135,7 @@ public class AbstractTaskOptionsBeanBeanInfo extends SimpleBeanInfo
 	 * events fired by this bean.  May return null if the information
 	 * should be obtained by automatic analysis.
 	 */
-	public EventSetDescriptor[] getEventSetDescriptors()
+	@Override public EventSetDescriptor[] getEventSetDescriptors()
 	{
 		return getEdescriptor();
 	}
@@ -141,7 +147,7 @@ public class AbstractTaskOptionsBeanBeanInfo extends SimpleBeanInfo
 	 * implemented by this bean.  May return null if the information
 	 * should be obtained by automatic analysis.
 	 */
-	public MethodDescriptor[] getMethodDescriptors()
+	@Override public MethodDescriptor[] getMethodDescriptors()
 	{
 		return getMdescriptor();
 	}
@@ -154,7 +160,7 @@ public class AbstractTaskOptionsBeanBeanInfo extends SimpleBeanInfo
 	 * 		returned by getPropertyDescriptors.
 	 * <P>	Returns -1 if there is no default property.
 	 */
-	public int getDefaultPropertyIndex()
+	@Override public int getDefaultPropertyIndex()
 	{
 		return defaultPropertyIndex;
 	}
@@ -166,7 +172,7 @@ public class AbstractTaskOptionsBeanBeanInfo extends SimpleBeanInfo
 	 *		returned by getEventSetDescriptors.
 	 * <P>	Returns -1 if there is no default event.
 	 */
-	public int getDefaultEventIndex()
+	@Override public int getDefaultEventIndex()
 	{
 		return defaultEventIndex;
 	}

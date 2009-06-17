@@ -10,10 +10,9 @@
 
 package org.bloggers4labour.headlines;
 
-import de.nava.informa.core.ItemIF;
-import org.bloggers4labour.Headlines;
-import org.bloggers4labour.Installation;
+import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.ItemContext;
+import org.bloggers4labour.bridge.channel.item.ItemIF;
 
 /**
  *
@@ -21,5 +20,5 @@ import org.bloggers4labour.ItemContext;
  */
 public interface AddHandler extends Handler
 {
-	public void onAdd( final Installation inInstall, HeadlinesIF inHeads, final ItemIF inItem, final ItemContext inCtxt);
+	public void onAdd( final InstallationIF inInstall, HeadlinesIF inHeads, final ItemIF inItem, final ItemContext inCtxt);
 }

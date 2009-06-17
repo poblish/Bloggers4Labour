@@ -9,17 +9,26 @@
 
 package org.bloggers4labour.polling;
 
-import de.nava.informa.core.ChannelIF;
-import de.nava.informa.core.ItemIF;
-import de.nava.informa.utils.poller.*;
+import de.nava.informa.utils.poller.PollerObserverIF;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.Date;
 import org.apache.log4j.Logger;
-import org.bloggers4labour.*;
-import org.bloggers4labour.activity.LastPostTable;
-import org.bloggers4labour.cats.CategoriesTable;
-import org.bloggers4labour.feed.FeedList;
-import org.bloggers4labour.headlines.*;
+import org.bloggers4labour.AddResult;
+import org.bloggers4labour.AgeResult;
+import org.bloggers4labour.FeedUtils;
+import org.bloggers4labour.Headlines;
+import org.bloggers4labour.HeadlinesMgr;
+import org.bloggers4labour.Installation;
+import org.bloggers4labour.ItemContext;
+import org.bloggers4labour.bridge.channel.ChannelIF;
+import org.bloggers4labour.bridge.channel.DefaultChannelBridgeFactory;
+import org.bloggers4labour.bridge.channel.item.DefaultItemBridgeFactory;
+import org.bloggers4labour.bridge.channel.item.ItemIF;
+import org.bloggers4labour.cats.CategoriesTableIF;
+import org.bloggers4labour.feed.FeedListIF;
+import org.bloggers4labour.headlines.HeadlineFilter;
+import org.bloggers4labour.site.SiteIF;
 
 /**
  *
@@ -33,8 +42,8 @@ public class MyObserver implements PollerObserverIF
 	private String		m_LogPrefix;
 	private HeadlinesMgr	m_HMgr;
 
-	private static Logger	s_Poll_Logger = Logger.getLogger( MyObserver.class );
-	private static byte[]	s_itemFound_locker = new byte[0];	// (AGR) 21 October 2006
+	private static Logger		s_Poll_Logger = Logger.getLogger( MyObserver.class );
+	private final static byte[]	s_itemFound_locker = new byte[0];	// (AGR) 21 October 2006
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -47,40 +56,46 @@ public class MyObserver implements PollerObserverIF
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public void pollStarted( ChannelIF inChannel)
+	public void pollStarted( de.nava.informa.core.ChannelIF inChannel)
 	{
 		// s_Poll_Logger.info( m_LogPrefix + "... Polling started for " + inChannel);
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public void pollFinished( ChannelIF inChannel)
+	public void pollFinished( de.nava.informa.core.ChannelIF inChannel)
 	{
 		// s_Poll_Logger.warn( m_LogPrefix + "... Polling FINISHED for " + inChannel);	// (AGR) 28 October 2006
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public void channelChanged( ChannelIF inChannel)
+	public void channelChanged( de.nava.informa.core.ChannelIF inChannel)
 	{
 		// s_Poll_Logger.info("... " + inChannel + " CHANGED!");
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public void channelErrored( ChannelIF inChannel, Exception inE)
+	public void channelErrored( de.nava.informa.core.ChannelIF inChannel, Exception inE)
 	{
-		s_Poll_Logger.warn( m_LogPrefix + "... ERROR for " + inChannel + "! ", inE);
+		if ( inE instanceof SocketTimeoutException)	// (AGR) 13 August 2008
+		{
+			s_Poll_Logger.warn( m_LogPrefix + "... POLLER READ TIMEOUT for " + inChannel + "! ");	// , inE);
+			return;
+		}
+
+		s_Poll_Logger.warn( m_LogPrefix + "... POLLER ERROR for " + inChannel + "! ", inE);
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public void itemFound( ItemIF inItem, ChannelIF ioChannel)
+	public void itemFound( final de.nava.informa.core.ItemIF inItem, final de.nava.informa.core.ChannelIF inChannel)
 	{
 		////////////////////////////////////////////////////////  (AGR) 21 October 2006. Categories *seemed* to show sync problems. Perhaps not, but I think the sync here is justified.
 
-		CategoriesTable		theCatsTable;
-		FeedList		theFL;
+		CategoriesTableIF	theCatsTable;
+		FeedListIF		theFL;
 
 		synchronized (s_itemFound_locker)
 		{
@@ -90,14 +105,17 @@ public class MyObserver implements PollerObserverIF
 
 		//////////////////////////////////////////////////////////////////
 
+		ChannelIF	theBridgedChannel = new DefaultChannelBridgeFactory().getInstance().bridge(inChannel);
+		ItemIF		theBridgedItem = new DefaultItemBridgeFactory().getInstance().bridge(inItem);
+
 		long		currTimeMSecs = System.currentTimeMillis();
-		URL		theChannelLoc = ioChannel.getLocation();
-		Date		itemDate = FeedUtils.getItemDate(inItem);
-		AgeResult	theAgeResult = Util.getItemAgeMsecs( inItem, itemDate, currTimeMSecs);
+		URL		theChannelLoc = inChannel.getLocation();
+		Date		itemDate = FeedUtils.getItemDate(theBridgedItem);
+		AgeResult	theAgeResult = Util.getItemAgeMsecs( theBridgedItem, itemDate, currTimeMSecs);
 
 		//////////////////////////////////////////////////////////////////  (AGR) 10 Sep 2006
 
-		Site		thisChannelsSite = theFL.lookupChannel(ioChannel);	// Moved up...
+		SiteIF		thisChannelsSite = theFL.lookupChannel(theBridgedChannel);	// Moved up...
 		boolean		itemIsAPost;
 
 		if ( thisChannelsSite != null)
@@ -133,7 +151,7 @@ public class MyObserver implements PollerObserverIF
 
 		// s_Poll_Logger.info("... found \"" + FeedUtils.adjustTitle(inItem) + "\" for \"" + FeedUtils.channelToString(ioChannel) + "\" - add it");
 
-		ioChannel.addItem(inItem);
+		inChannel.addItem(inItem);
 
 		//////////////////////////////////////////////////////////////////  (AGR) 19 May 2005
 
@@ -142,9 +160,9 @@ public class MyObserver implements PollerObserverIF
 					// This test ensures - see above - (a) item is not a comment, and (b) it's a post from a feed
 					// in the current Install!
 		{
-			if (( theCatsTable != null) && ( itemDate != null) && theAgeResult.getAgeMSecs() < CategoriesTable.getMaxPermissibleItemAge())
+			if (( theCatsTable != null) && ( itemDate != null) && theAgeResult.getAgeMSecs() < CategoriesTableIF.MAX_CATEGORY_AGE_MSECS)
 			{
-				theCatsTable.addCategories(inItem);
+				theCatsTable.addCategories(theBridgedItem);
 			}
 		}
 
@@ -152,7 +170,7 @@ public class MyObserver implements PollerObserverIF
 
 		if ( thisChannelsSite == null)
 		{
-			// (AGR) 21 Feb 2006. Disabled the error messgae. Why? Well, if we get a new post for a
+			// (AGR) 21 Feb 2006. Disabled the error message. Why? Well, if we get a new post for a
 			// site that is in one Installation and not another, this method will be called for
 			// both Poller objects, and one or the other won't contain that site, so inevitably this'll
 			// provide a NULL Channel. Perhaps there's a better way, though, as the original error
@@ -173,11 +191,11 @@ public class MyObserver implements PollerObserverIF
 		//
 		// ... would incorrectly fail to match the two. Should compare URLs instead!
 
-//			boolean	itemIsAPost = thisChannelsSite.getChannel().getLocation().equals( theChannelLoc );
+//		boolean	itemIsAPost = thisChannelsSite.getChannel().getLocation().equals( theChannelLoc );
 
 		//////////////////////////////////////////////////////////////////
 
-		HeadlineFilter	theFilter = new HeadlineFilter( m_Installation, ioChannel);
+		HeadlineFilter	theFilter = new HeadlineFilter( m_Installation, theBridgedChannel);
 
 		for ( Headlines	h : m_HMgr.getHeadlinesList())
 		{
@@ -189,7 +207,7 @@ public class MyObserver implements PollerObserverIF
 
 			//////////////////////////////////////////////////////////////////  (AGR) 21 March 2006
 
-			if (!theFilter.filterMessage( h, inItem))
+			if (!theFilter.filterMessage( h, theBridgedItem))
 			{
 				// s_Poll_Logger.info( m_LogPrefix + ":: Filtering out.b... \"" + inItem + "\"");
 				continue;
@@ -203,7 +221,10 @@ public class MyObserver implements PollerObserverIF
 			{
 				itemResult = AddResult.FAILED_NO_DATE;
 			}
-			else	itemResult = Util.processItem( h, inItem, theAgeResult.getAgeMSecs(), ItemContext.UPDATE);
+			else
+			{
+				itemResult = Util.processItem( h, theBridgedItem, thisChannelsSite, theAgeResult.getAgeMSecs(), ItemContext.UPDATE);
+			}
 
 			//////////////////////////////////////////////////////////////////
 
@@ -213,7 +234,7 @@ public class MyObserver implements PollerObserverIF
 			}
 			else if ( itemResult == AddResult.FAILED_NO_DATE)
 			{
-				s_Poll_Logger.warn( m_LogPrefix + "... found \"" + FeedUtils.adjustTitle(inItem) + "\" for \"" + FeedUtils.channelToString(ioChannel) + "\" - FAILED - Date is NULL, for " + h);
+				s_Poll_Logger.warn( m_LogPrefix + "... found \"" + FeedUtils.adjustTitle(theBridgedItem) + "\" for \"" + FeedUtils.channelToString(theBridgedChannel) + "\" - FAILED - Date is NULL, for " + h);
 			}
 			else if ( itemResult == AddResult.FAILED_BAD_DATE)
 			{
@@ -221,12 +242,12 @@ public class MyObserver implements PollerObserverIF
 			}
 			else if ( itemResult == AddResult.FAILED_GENERAL)
 			{
-				s_Poll_Logger.warn( m_LogPrefix + "... found \"" + FeedUtils.adjustTitle(inItem) + "\" for \"" + FeedUtils.channelToString(ioChannel) + "\" - FAILED, somehow, for " + h);
+				s_Poll_Logger.warn( m_LogPrefix + "... found \"" + FeedUtils.adjustTitle(theBridgedItem) + "\" for \"" + FeedUtils.channelToString(theBridgedChannel) + "\" - FAILED, somehow, for " + h);
 			}
-			else if ( itemResult == AddResult.FAILED_DUPLICATE)	// (AGR) 3 March 2006
+		/*	else if ( itemResult == AddResult.FAILED_DUPLICATE)	// (AGR) 3 March 2006
 			{
 				// No need for an error - already done by Headlines!
-			}
+			} */
 		}
 	}
 }

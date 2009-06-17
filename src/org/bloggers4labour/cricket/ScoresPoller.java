@@ -9,10 +9,12 @@
 
 package org.bloggers4labour.cricket;
 
-import com.hiatus.UDates;
-import de.nava.informa.utils.poller.*;
+import com.hiatus.dates.UDates;
+import de.nava.informa.utils.poller.PollerObserverIF;
 import org.apache.log4j.Logger;
 import org.bloggers4labour.Installation;
+import org.bloggers4labour.bridge.channel.ChannelIF;
+import org.bloggers4labour.bridge.channel.DefaultChannelBridgeFactory;
 import org.bloggers4labour.polling.MyObserver;
 
 /**
@@ -26,14 +28,15 @@ public class ScoresPoller extends org.bloggers4labour.polling.Poller
 	private PollerObserverIF			m_Observer;
 	private de.nava.informa.utils.poller.Poller	m_InformaPoller;
 
-	private static long				s_TempVal;
 	private static Logger				s_Logger = Logger.getLogger( ScoresPoller.class );
 
 	/*******************************************************************************
 		(AGR) 28 October 2006
 	*******************************************************************************/
-	public ScoresPoller( long inPollerFrequencyMS)
+	public ScoresPoller( String inName, long inPollerFrequencyMS)
 	{
+		super(inName);
+
 		m_InformaPoller = new de.nava.informa.utils.poller.Poller();
 		m_InformaPoller.setPeriod( inPollerFrequencyMS );
 
@@ -49,13 +52,6 @@ public class ScoresPoller extends org.bloggers4labour.polling.Poller
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public de.nava.informa.utils.poller.Poller getInformaPoller()
-	{
-		return m_InformaPoller;
-	}
-
-	/*******************************************************************************
-	*******************************************************************************/
 	public synchronized void startPolling()
 	{
 		if ( m_Observer == null)
@@ -66,5 +62,23 @@ public class ScoresPoller extends org.bloggers4labour.polling.Poller
 
 			// s_Logger.info("Poller: add Observer: " + m_Observer);
 		}
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public boolean registerChannelWithInforma( final ChannelIF inChannel)
+	{
+		s_Logger.debug( getLogPrefix() + "Registering: " + inChannel);
+
+		m_InformaPoller.registerChannel( new DefaultChannelBridgeFactory().getInstance().bridge(inChannel) );
+
+		return true;
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public void unregisterChannelWithInforma( final ChannelIF inChannel)
+	{
+		m_InformaPoller.unregisterChannel( new DefaultChannelBridgeFactory().getInstance().bridge(inChannel) );
 	}
 }

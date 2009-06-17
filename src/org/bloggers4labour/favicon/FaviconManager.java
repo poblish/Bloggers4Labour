@@ -9,15 +9,13 @@
 
 package org.bloggers4labour.favicon;
 
-import com.hiatus.UText;
+import com.hiatus.text.UText;
 import java.io.IOException;
-import java.net.*;
-import java.util.HashMap;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.bloggers4labour.Site;
-import org.apache.log4j.Logger;
 
 /**
  *
@@ -25,10 +23,7 @@ import org.apache.log4j.Logger;
  */
 public class FaviconManager
 {
-//	private Map<String,String>	m_Map = new HashMap<String,String>();
 	private List<FeedsRec>		m_List = new CopyOnWriteArrayList<FeedsRec>();
-
-	private static Logger		s_OurLogger = Logger.getLogger("Main");
 
 	private final static String	DUMMY_FAVICON_URL = "#";
 
@@ -44,7 +39,7 @@ public class FaviconManager
 	{
 		String	result = _lookUpURL( inSiteObj.getSiteURL() );
 
-		return ( result != DUMMY_FAVICON_URL) ? result : null;
+		return result.equals(DUMMY_FAVICON_URL) ? null : result;	// (AGR) 29 Jan 2007. FindBugs recommended this!
 	}
 
 	/*******************************************************************************
@@ -97,10 +92,7 @@ public class FaviconManager
 
 			while ( _lookUpURL(theSiteURL) == null)
 			{
-				if (!_searchForFavicon(theSiteURL))
-				{
-					// s_OurLogger.info("@@@ Cannot find Favicon for site \"" + theSiteURL + "\".");
-				}
+				_searchForFavicon(theSiteURL);
 
 				return;
 			}
@@ -179,7 +171,7 @@ public class FaviconManager
 
 			// return m_GotFavicon;
 		}
-		catch (Exception e)
+		catch (IOException e)
 		{
 			// s_Site_Logger.error("Err: " + e);
 		}
@@ -193,11 +185,11 @@ public class FaviconManager
 	{
 		while ( _lookUpURL(inSiteURL) == null)
 		{
-			if ( inFaviconURL != DUMMY_FAVICON_URL)
+/*			if ( inFaviconURL != DUMMY_FAVICON_URL)
 			{
 				// s_OurLogger.info("@@@ Storing Favicon \"" + inFaviconURL + "\" for site \"" + inSiteURL + "\". size = " + m_List.size());
 			}
-
+*/
 			m_List.add( new FeedsRec( inSiteURL, inFaviconURL) );
 			return true;
 		}
@@ -238,7 +230,7 @@ public class FaviconManager
 
 	/*******************************************************************************
 	*******************************************************************************/
-	class FeedsRec // implements Comparable<FeedsRec>
+	static class FeedsRec
 	{
 		String	siteURL;
 		String	faviconURL;
@@ -259,17 +251,27 @@ public class FaviconManager
 		}
 
 		/*******************************************************************************
-		*******************************************************************************
-		public int compareTo( FeedsRec inOther)
+		*******************************************************************************/
+		@Override public boolean equals( Object inOther)
 		{
-			return siteURL.compareTo( inOther.siteURL );
-		}/
+			if ( inOther == null || !( inOther instanceof FeedsRec))	// (AGR) 29 Jan 2007. FindBugs made me add this test!
+			{
+				return false;
+			}
+
+			return siteURL.equals( ((FeedsRec) inOther).siteURL );
+		}
 
 		/*******************************************************************************
+			(AGR) 29 Jan 2007
+
+			FindBugs told me to fix this. It's entirely based around equals()
+			above, which declares that the siteURL is all-important. I guess that's
+			right!
 		*******************************************************************************/
-		public boolean equals( Object inOther)
+		@Override public int hashCode()
 		{
-			return siteURL.equals( ((FeedsRec) inOther).siteURL );
+			return siteURL.hashCode();
 		}
 	}
 }

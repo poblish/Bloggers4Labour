@@ -10,26 +10,36 @@
 
 package org.bloggers4labour.cats;
 
-import com.hiatus.UDates;
-import de.nava.informa.impl.basic.Item;
-import de.nava.informa.core.*;
-import java.util.*;
+import de.nava.informa.core.CategoryIF;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TreeSet;
 import org.apache.log4j.Logger;
-import org.bloggers4labour.feed.FeedList;
-import org.bloggers4labour.FeedUtils;
 import org.bloggers4labour.Installation;
 import org.bloggers4labour.ItemCleanerTask;
+import org.bloggers4labour.bridge.channel.ChannelIF;
+import org.bloggers4labour.bridge.channel.item.ItemIF;
 import org.bloggers4labour.options.Options;
 import org.bloggers4labour.options.TaskOptionsBeanIF;
-import static org.bloggers4labour.Constants.*;
 
 /**
  *
  * @author andrewre
  */
-public class CategoriesTable
+public class CategoriesTable implements CategoriesTableIF
 {
-	private Map<String,List<ItemIF> >	m_Map;
+	private Map<String,Collection<ItemIF> >	m_Map;
+	private final byte[]			_m_Map_Locker = new byte[0];
+
 	private int				m_EntriesCount;
 	private int				m_MinEntryCount;
 	private int				m_MaxEntryCount;
@@ -39,30 +49,19 @@ public class CategoriesTable
 
 	private String				m_LogPrefix;
 
-	private static Logger			s_Headlines_Logger = Logger.getLogger("Main");
-
-	private final static long		MAX_CATEGORY_AGE_MSECS = ONE_DAY_MSECS * 5;    // (AGR) 4 March 2006. Was a week. (AGR) 19 May 2005
+	private static Logger			s_Logger = Logger.getLogger( CategoriesTable.class );
 
 	/*******************************************************************************
 	*******************************************************************************/
 	public CategoriesTable( final Installation inInstall)
 	{
-//		m_Map = new TreeMap<String,List<ItemIF> >( new CategoryNameSorter() );
-		m_Map = new HashMap<String,List<ItemIF> >();
+		m_Map = new HashMap<String,Collection<ItemIF> >();
 
 		m_LogPrefix = inInstall.getLogPrefix();
 
 		inInstall.getFeedList().addObserver( new CountEvent(this) );    // (AGR) 22 June 2005
 
 		reconnect();
-	}
-
-	/*******************************************************************************
-		(AGR) 4 March 2006
-	*******************************************************************************/
-	public static long getMaxPermissibleItemAge()
-	{
-		return MAX_CATEGORY_AGE_MSECS;
 	}
 
 	/*******************************************************************************
@@ -96,11 +95,11 @@ public class CategoriesTable
 	}
 
 	/*******************************************************************************
-		(AGR) 5 June 2005 - made synchronized.
 	*******************************************************************************/
-	public synchronized void addCategories( ItemIF inItem, Collection inCats)
+	public void addCategories( ItemIF inItem, Collection inCats)
 	{
-		ChannelIF	ch = inItem.getChannel();
+		ChannelIF			ch = inItem.getOurChannel();
+//		de.nava.informa.core.ChannelIF	theDEChannel = new DefaultChannelBridgeFactory().getInstance().bridge(ch);
 
 		for ( Object obj : inCats)
 		{
@@ -124,58 +123,105 @@ public class CategoriesTable
 
 			////////////////////////////////////////////////////////
 
-			List<ItemIF>	theList = getCategoryEntries(theKey);
+			// (AGR) 25 May 2005. We need to supply a Channel, because otherwise the Site
+			// object lookups will fail, and this'll cause us to see "???" in the posts on
+			// the Tags page, not the actual site name or icon.
+
+			ItemIF	theClonedItem = inItem.clone();	// FeedUtils.cloneItem( theDEChannel, inItem, true);
+
+			synchronized (_m_Map_Locker)
+			{
+				Collection<ItemIF>	theList = getCategoryEntries(theKey);
 
 			if ( theList == null)
 			{
 				// s_Headlines_Logger.info( m_LogPrefix + "...Adding new Category \"" + theKey + "\"");
 
 				theList = new ArrayList<ItemIF>();
-				m_Map.put( theKey, theList);
 
-				// s_Headlines_Logger.info( m_LogPrefix + "  => Add category \"" + theKey + "\" from \"" + ch.getTitle() + "\""); // to #" + Integer.toHexString( hashCode() ).toUpperCase() );
+				m_Map.put( theKey, theList);
+				}
+				else	// (AGR) 6 June 2009. To prevent a build-up of posts with the same Title and Link, but *different* Description
+				{
+					Collection<ItemIF>	theRemovals = null;
+
+					for ( ItemIF eachExistingItemForThisKey : theList)
+					{
+						if (theClonedItem.matchesTitleAndLink(eachExistingItemForThisKey))
+						{
+							if ( theRemovals == null)
+							{
+								theRemovals = new ArrayList<ItemIF>();
+							}
+
+							theRemovals.add(eachExistingItemForThisKey);
+						}
+					}
+
+					// To Prevent ConcurrentModificationExceptions...
+
+					if ( theRemovals != null)
+					{
+						for ( ItemIF itemToRemove : theRemovals)
+						{
+							// s_Logger.info(">>> TRY TO REMOVE OLD VERSION FOR '" + theKey + "' : " + itemToRemove + ", now (=" + theList.size() + ") list = " + theList);
+
+							if (theList.remove(itemToRemove))
+							{
+								// s_Logger.info(">>> REMOVING OLD VERSION FOR '" + theKey + "' : " + itemToRemove + ", now (=" + theList.size() + ") list = " + theList);
+
+								m_EntriesCount--;
+							}
+						}
+					}
 			}
 
-			// (AGR) 25 May 2005. We need to supply a Channel, because otherwise the Site
-			// object lookups will fail, and this'll cause us to see "???" in the posts on
-			// the Tags page, not the actual site name or icon.
+				////////////////////////////////////////////////////////////////////////////////////////////////////
 
-			theList.add( FeedUtils.cloneItem( ch, inItem, true) );
+				// s_Logger.info(">>> ADDING to '" + theKey + "' : " + theClonedItem + " to list = " + theList);
 
+				if (theList.add(theClonedItem))
+				{
 			m_EntriesCount++;
+				}
 		}
 	}
-
-	/*******************************************************************************
-	*******************************************************************************/
-	public List getEntriesForCategory( String inName)
-	{
-		return m_Map.get(inName);
 	}
 
 	/*******************************************************************************
+		(AGR) 3 Feb 2007. FindBugs made me make this synchronized, but surely
+		we can be more fine-grained (and faster) than this?! FIXME
 	*******************************************************************************/
 	public int entriesCount()
 	{
+		synchronized (_m_Map_Locker)
+		{
 		return m_EntriesCount;
+		}
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
 	public boolean hasEntries()
 	{
+		synchronized (_m_Map_Locker)
+		{
 		return !m_Map.isEmpty();
+	}
 	}
 	
 	/*******************************************************************************
 	*******************************************************************************/
-	public synchronized Set<RankingObject> getRankedCategories()
+	public Collection<RankingObject> getRankedCategories()
 	{
 		Set<RankingObject>	theRankedSet = new TreeSet<RankingObject>();
 
+		synchronized (_m_Map_Locker)
+		{
 		for ( String theCatName : m_Map.keySet())
 		{
 			theRankedSet.add( new RankingObject( theCatName, m_Map.get(theCatName).size() ) );
+		}
 		}
 
 		return theRankedSet;
@@ -183,11 +229,23 @@ public class CategoriesTable
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public synchronized Set<String> getCategories()
+	private String[] getCategoryKeys()
+	{
+		synchronized (_m_Map_Locker)
+		{
+			Collection<String>	theSet = m_Map.keySet();
+
+			return theSet.toArray( new String[ theSet.size() ] );
+		}
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public Collection<String> getCategories()
 	{
 		Set<String>	theSortedSet = new TreeSet<String>( /* For case-insensitivity */ new CategoryNameSorter() );
 
-		for ( String theCatName : m_Map.keySet())
+		for ( String theCatName : getCategoryKeys())
 		{
 			theSortedSet.add(theCatName);
 		}
@@ -197,19 +255,22 @@ public class CategoriesTable
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public List<ItemIF> getCategoryEntries( String inCategoryName)
+	public Collection<ItemIF> getCategoryEntries( String inCategoryName)
+	{
+		synchronized (_m_Map_Locker)
 	{
 		return m_Map.get(inCategoryName);
+	}
 	}
 
 	/*******************************************************************************
 		(AGR) 5 June 2005 - made synchronized.
 	*******************************************************************************/
-	public synchronized void clearTable()
+	public void clearTable()
 	{
 		if ( m_ExpiryTimer != null)
 		{
-			s_Headlines_Logger.info( m_LogPrefix + "CategoriesTable: cancelling Timer: " + m_ExpiryTimer);
+			s_Logger.info( m_LogPrefix + "CategoriesTable: cancelling Timer: " + m_ExpiryTimer);
 
 			m_ExpiryTimer.cancel();
 			m_ExpiryTimer = null;
@@ -219,6 +280,8 @@ public class CategoriesTable
 
 		/////////////////////////////////////
 
+		synchronized (_m_Map_Locker)
+		{
 		if ( m_Map != null)
 		{
 			m_Map.clear();
@@ -226,11 +289,14 @@ public class CategoriesTable
 
 		m_EntriesCount = 0;
 	}
+	}
 
 	/*******************************************************************************
 		(AGR) 5 June 2005 - made synchronized.
 	*******************************************************************************/
-	private synchronized void calculateCounts()
+	private void calculateCounts()
+	{
+		synchronized (_m_Map_Locker)
 	{
 		if (m_Map.isEmpty())
 		{
@@ -243,7 +309,7 @@ public class CategoriesTable
 		m_MinEntryCount = Integer.MAX_VALUE;
 		m_MaxEntryCount = 0;
 
-		for ( List l : m_Map.values())
+			for ( Collection<ItemIF> l : m_Map.values())
 		{
 			if ( l.size() > m_MaxEntryCount)
 			{
@@ -255,11 +321,14 @@ public class CategoriesTable
 			}
 		}
 	}
+	}
 
 	/*******************************************************************************
 	*******************************************************************************/
 	public int getFontSize( int inCount, int inMinFontSize, int inDefaultSize, int inMaxFontSize)
 	{
+		synchronized (_m_Map_Locker)
+		{
 		if ( m_MinEntryCount >= m_MaxEntryCount)	// well, could have just said ==
 		{
 			return inDefaultSize;
@@ -279,19 +348,22 @@ public class CategoriesTable
 
 		return (int) Math.round( d + (double) inMinFontSize);
 	}
+	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public String toString()
+	@Override public String toString()
 	{
 		StringBuilder	sb = new StringBuilder(2000);
 
+		synchronized (_m_Map_Locker)
+		{
 		sb.append("Entries: " + m_EntriesCount + "\n");
 
 		for ( String theKey : m_Map.keySet())
 		{
-			List<ItemIF>	theEntries = m_Map.get(theKey);
-			boolean		gotOne = false;
+				Collection<ItemIF>	theEntries = m_Map.get(theKey);
+				boolean			gotOne = false;
 
 			for ( ItemIF theItem : theEntries)
 			{
@@ -303,6 +375,7 @@ public class CategoriesTable
 				else
 				{
 					sb.append("                 " + theItem + "\n");
+					}
 				}
 			}
 		}
@@ -312,8 +385,10 @@ public class CategoriesTable
 
 	/********************************************************************
 	********************************************************************/
-	public class CategoryNameSorter implements Comparator<String>
+	public static class CategoryNameSorter implements Comparator<String>, /* (AGR) 29 Jan 2007. FindBugs recommended this */ Serializable
 	{
+		private static final long serialVersionUID = 1L;
+
 		/********************************************************************
 		********************************************************************/
 		public int compare( String a, String b)
@@ -346,9 +421,11 @@ public class CategoriesTable
 			List<ItemIF>	tempRemovalList = new ArrayList<ItemIF>(10);
 			long		currMS = System.currentTimeMillis();
 
-			for ( String theKey : m_Map.keySet())
+			synchronized (_m_Map_Locker)
 			{
-				List<ItemIF>	theEntries = m_Map.get(theKey);
+				for ( Map.Entry<String,Collection<ItemIF>> eachItem : m_Map.entrySet())
+				{
+					Collection<ItemIF>	theEntries = eachItem.getValue();
 
 				tempRemovalList.clear();
 
@@ -364,16 +441,18 @@ public class CategoriesTable
 
 				if ( tempRemovalList.size() > 0)
 				{
-					info( m_LogPrefix + "  Expired items " + tempRemovalList + " for category \"" + theKey + "\"");
+						info( m_LogPrefix + "  Expired items " + tempRemovalList + " for category \"" + eachItem.getKey() + "\"");
 					// info("WAS: " + theEntries);
 
 					theEntries.removeAll(tempRemovalList);
 					if ( theEntries.size() < 1)
 					{
 						if ( theEmptyCats == null)
+							{
 							theEmptyCats = new ArrayList<String>();
+							}
 
-						theEmptyCats.add(theKey);
+							theEmptyCats.add( eachItem.getKey() );
 					}
 
 					// info("NOW: " + theEntries);
@@ -398,6 +477,7 @@ public class CategoriesTable
 			}
 		}
 	}
+	}
 
 	/*******************************************************************************
 		(AGR) 19 May 2005. Calculate count in FeedList
@@ -419,28 +499,6 @@ public class CategoriesTable
 		public void update( Observable o, Object arg)
 		{
 			m_Table.calculateCounts();
-
-			////////////////////////////////////////////////////////
-
-/*			List<RankingObject>	theRankingList = new ArrayList<RankingObject>();
-
-			for ( String theCatName : m_Table.getCategories())
-			{
-				theRankingList.add( new RankingObject( theCatName, m_Table.m_Map.get(theCatName).size() ) );
-			}
-
-			java.util.Collections.sort(theRankingList);
-
-			////////////////////////////////////////////////////////
-
-			Map<String,List<ItemIF> >	theRankedMap = new LinkedHashMap<String,List<ItemIF> >();
-
-			for ( RankingObject each : theRankingList)
-			{
-				theRankedMap.put( each.m_Key + " - " + m_Table.m_Map.get( each.m_Key ).size(), m_Table.m_Map.get( each.m_Key ));
-			}
-
-			s_Headlines_Logger.info("Ranked Map: " + theRankedMap);
-*/		}
+		}
 	}
 }

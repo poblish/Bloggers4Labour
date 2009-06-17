@@ -12,7 +12,7 @@ package org.bloggers4labour.jsp;
 
 import java.net.URL;
 import org.bloggers4labour.ItemType;
-import org.bloggers4labour.Site;
+import org.bloggers4labour.site.SiteIF;
 
 /**
  *
@@ -20,7 +20,7 @@ import org.bloggers4labour.Site;
  */
 public interface Displayable
 {
-	public Site getSite();
+	public SiteIF getSite();
 
 	public String getDescription();
 	public String getDateString();

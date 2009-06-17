@@ -6,22 +6,24 @@
 
 package org.bloggers4labour;
 
-import com.hiatus.CharEncoding;
-import com.hiatus.UDates;
-import com.hiatus.UHTML;
-import com.hiatus.ULocale2;
-import com.hiatus.USQL_Utils;
-import com.hiatus.UText;
-import com.hiatus.htl.*;
-import de.nava.informa.core.*;
-import de.nava.informa.impl.basic.Item;
+import com.hiatus.dates.UDates;
+import com.hiatus.encoding.CharEncoding;
+import com.hiatus.htl.HTL;
+import com.hiatus.htl.HTLTemplate;
+import com.hiatus.html.UHTML;
+import com.hiatus.locales.ULocale2;
+import com.hiatus.sql.USQL_Utils;
+import com.hiatus.text.UText;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URLEncoder;
+import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.text.*;
+import java.text.DateFormat;
+import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -29,23 +31,35 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.regex.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import org.apache.log4j.*;
-import org.apache.lucene.analysis.*;
-import org.apache.lucene.analysis.standard.*;
-import org.apache.lucene.queryParser.*;
+import java.util.regex.Pattern;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.queryParser.MultiFieldQueryParser;
+import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.Query;
-import org.bloggers4labour.cats.CategoriesTable;
+import org.bloggers4labour.ajax.OutputBuilderIF;
+import org.bloggers4labour.ajax.OutputElementIF;
+import org.bloggers4labour.ajax.impl.JSONOutputBuilder;
+import org.bloggers4labour.ajax.impl.XMLOutputBuilder;
+import org.bloggers4labour.bridge.channel.item.ItemIF;
 import org.bloggers4labour.conf.Configuration;
-import org.bloggers4labour.feed.FeedList;
+import org.bloggers4labour.headlines.HeadlinesIF;
 import org.bloggers4labour.htl.B4LHTLContext;
 import org.bloggers4labour.index.IndexMgr;
 import org.bloggers4labour.index.SearchMatch;
-import org.bloggers4labour.jsp.*;
+import org.bloggers4labour.jsp.DisplayItem;
+import org.bloggers4labour.jsp.Displayable;
 import org.bloggers4labour.recommend.RecommendationHandler;
 import org.bloggers4labour.recommend.RecommendationResult;
+import org.bloggers4labour.site.SiteIF;
 import org.bloggers4labour.sql.DataSourceConnection;
 
 /**
@@ -54,25 +68,32 @@ import org.bloggers4labour.sql.DataSourceConnection;
  */
 public class MainServlet extends HttpServlet
 {
-	private Launcher	m_Launcher;
+	private transient Launcher	m_Launcher;
 
-	private static Logger	s_Servlet_Logger = Logger.getLogger("Main");
+	private static Logger		s_Servlet_Logger;
+	private static String[]		s_LuceneSearchArray = {"desc","title"};
 
-	/*******************************************************************************
-	*******************************************************************************/
-	public MainServlet()
-	{
-	}
+	private static final long	serialVersionUID = 1L;
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public void init( ServletConfig inConfig)
+	@Override public void init( ServletConfig inConfig)
 	{
 		try
 		{
 			super.init(inConfig);
 
+			String	theParam = inConfig.getInitParameter("properties_file");	// (AGR) 16 August 2008
+			if (UText.isValidString(theParam))
+			{
+				PropertyConfigurator.configure(theParam);
+			}
+			else
+			{
 			PropertyConfigurator.configure("/home/htdocs/WEB-INF/bio.properties");
+			}
+
+			s_Servlet_Logger = Logger.getLogger( MainServlet.class );
 
 			////////////////////////////////////////
 
@@ -81,7 +102,7 @@ public class MainServlet extends HttpServlet
 
 			////////////////////////////////////////  (AGR) 22 June 2005
 
-			String	theParam = inConfig.getInitParameter("lucene_index_dir");
+			theParam = inConfig.getInitParameter("lucene_index_dir");
 			if (UText.isValidString(theParam))
 			{
 				IndexMgr.setDirectory(theParam);
@@ -100,7 +121,7 @@ public class MainServlet extends HttpServlet
 			m_Launcher = new Launcher(s_Servlet_Logger);
 			m_Launcher.start();
 		}
-		catch (Exception ex)
+		catch (ServletException ex)
 		{
 			s_Servlet_Logger.error( "init error", ex);
 		}
@@ -108,7 +129,7 @@ public class MainServlet extends HttpServlet
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public void doGet( HttpServletRequest inRequest, HttpServletResponse inResponse)
+	@Override public void doGet( HttpServletRequest inRequest, HttpServletResponse inResponse)
 	{
 		CharSequence	theOutputBuffer = null;
 		boolean		keepAlive = true;
@@ -122,8 +143,7 @@ public class MainServlet extends HttpServlet
 
 				////////////////////////////////////////
 
-				FeedList	theFL = InstallationManager.getDefaultInstallation().getFeedList();
-				String		s = theFL.getOPMLOutputStr();
+				String	s = InstallationManager.getDefaultInstallation().getFeedList().getOPMLOutputStr();
 
 				theOutputBuffer = ( s != null) ? new StringBuffer(s) : null;
 			}
@@ -134,11 +154,11 @@ public class MainServlet extends HttpServlet
 
 				////////////////////////////////////////////////
 
-				InstallationIF	theInstall = InstallationManager.getDefaultInstallation();
+				InstallationIF	theInstall = getInstallFromParameter(inRequest);	// (AGR) 2 October 2008
 				String		theOneWeWant = inRequest.getParameter("rss");
 				String		theIncludedSitesParam = inRequest.getParameter("includedsites");  // (AGR) 6 June 2006
 				String		theExcludedSitesParam = inRequest.getParameter("excludedsites");  // (AGR) 6 June 2006
-				Headlines	theRightHeads;
+				HeadlinesIF	theRightHeads;
 				String		theStringToUse = null;
 
 				if ( UText.isNullOrBlank(theOneWeWant) || theOneWeWant.equals("true"))	// (AGR) 25 March 2006
@@ -166,8 +186,6 @@ public class MainServlet extends HttpServlet
 					if ( theRightHeads != null)
 					{
 						theRightHeads.publishSnapshot();
-
-					//	theRightHeads.getRightHeadlines
 
 						if (UText.isValidString(theIncludedSitesParam))
 						{
@@ -260,8 +278,6 @@ public class MainServlet extends HttpServlet
 			{
 				try
 				{
-					// s_Servlet_Logger.info("in");
-
 					int	theNumPosts = 3;
 
 					try
@@ -277,17 +293,34 @@ public class MainServlet extends HttpServlet
 					ensureNotCached(inResponse);
 
 					inResponse.setLocale(theLocale);
-					inResponse.setContentType("text/xml; charset=\"UTF-8\"");
 
 					//////////////////////////////////////////////////////////////////////////////////////
 
-					InstallationIF		defInstall = InstallationManager.getDefaultInstallation();
-					HeadlinesMgr		theHMgr = defInstall.getHeadlinesMgr();
-					Headlines		theHs = theHMgr.getRecentPostsInstance();
-					StringBuilder		sb = new StringBuilder("<?xml version=\"1.0\" ?><response>");
-					long			currentTimeMSecs = System.currentTimeMillis();
+					String			theOutputFormat = inRequest.getParameter("format");
+					OutputBuilderIF		theOutputBuilder;
 
-					_addXMLCDataElement( sb, "currentTime", ULocale2.getClientDateTimeFormat( theLocale, DateFormat.LONG).format( new java.util.Date() ));
+					if ( theOutputFormat != null && theOutputFormat.equalsIgnoreCase("JSON"))
+					{
+						theOutputBuilder = new JSONOutputBuilder( "response", inRequest.getParameter("jsonCallback"));
+					}
+					else
+					{
+						theOutputBuilder = new XMLOutputBuilder("response");
+					}
+
+					theOutputBuilder.setContentType(inResponse);
+
+					//////////////////////////////////////////////////////////////////////////////////////  (AGR) 29 September 2008
+
+					InstallationIF	theInstallation = getInstallFromParameter(inRequest);
+
+					//////////////////////////////////////////////////////////////////////////////////////
+
+					HeadlinesMgr	theHMgr = theInstallation.getHeadlinesMgr();
+					HeadlinesIF	theHs = theHMgr.getRecentPostsInstance();
+					long		currentTimeMSecs = System.currentTimeMillis();
+
+					theOutputBuilder.addCDataElement( "currentTime", ULocale2.getClientDateTimeFormat( theLocale, DateFormat.LONG).format( new java.util.Date() ));
 
 					if ( theHs != null)
 					{
@@ -301,7 +334,7 @@ public class MainServlet extends HttpServlet
 
 							try
 							{
-								theConnectionObject = new DataSourceConnection( defInstall.getDataSource() );
+								theConnectionObject = new DataSourceConnection( theInstallation.getDataSource() );
 								if (theConnectionObject.Connect())
 								{
 									Statement	theS = null;
@@ -311,7 +344,7 @@ public class MainServlet extends HttpServlet
 										theS = theConnectionObject.createStatement();
 										theRecommendationCountMap = Headlines.getRecommendationCountsMap( theS.executeQuery( Headlines.getRecommendationCountsQuery( headlineItemsArray, actualNumPosts) ) );
 									}
-									catch (Exception e)
+									catch (SQLException e)
 									{
 										s_Servlet_Logger.error("creating statement", e);
 									}
@@ -325,7 +358,7 @@ public class MainServlet extends HttpServlet
 									s_Servlet_Logger.warn("Cannot connect!");
 								}
 							}
-							catch (Exception err)
+							catch (RuntimeException err)
 							{
 								s_Servlet_Logger.error("???", err);
 							}
@@ -334,7 +367,6 @@ public class MainServlet extends HttpServlet
 								if ( theConnectionObject != null)
 								{
 									theConnectionObject.CloseDown();
-									theConnectionObject = null;
 								}
 							}
 						}
@@ -342,12 +374,14 @@ public class MainServlet extends HttpServlet
 						///////////////////////////////////////////////////////////////////
 
 						DisplayItem	di;
-						Site		theSiteObj;
+						SiteIF		theSiteObj;
 						int		theRecommendationsCount;
+
+						OutputElementIF	theHeadlinesWrapperElem = theOutputBuilder.newWrapperElement("headlines");
 
 						for ( int z = 0; z < actualNumPosts; z++)
 						{
-							di = new DisplayItem( defInstall, (Item) headlineItemsArray[z], currentTimeMSecs);
+							di = new DisplayItem( theInstallation, headlineItemsArray[z], currentTimeMSecs);
 							theSiteObj = di.getSite();
 
 							///////////////////////////////////////////////////////////////////  (AGR) 1 October 2006
@@ -372,18 +406,22 @@ public class MainServlet extends HttpServlet
 
 							///////////////////////////////////////////////////////////////////
 
-							sb.append("<headline index=\"").append(z).append("\">");
+							Map<String,Object>	theAttrs = new HashMap<String,Object>();
+							theAttrs.put( "index", z);
 
-							addDisplayable( sb, di, theSiteObj, theRecommendationsCount);
+							OutputElementIF	theHeadlineElem = theOutputBuilder.newElement( "headline", theAttrs);
 
-							_addXMLElement( sb, "descStyle", di.getDescriptionStyle(theRecommendationsCount));
-							_addXMLCDataElement( sb, "creator", di.getReducedCreatorsStr());
+							theHeadlineElem.addDisplayable( di, theSiteObj, theRecommendationsCount);
+							theHeadlineElem.addElement( "descStyle", di.getDescriptionStyle(theRecommendationsCount));
+							theHeadlineElem.addCDataElement( "creator", di.getReducedCreatorsStr());
 
-							sb.append("</headline>");
+							theHeadlinesWrapperElem.add(theHeadlineElem);
 						}
+
+						theOutputBuilder.add(theHeadlinesWrapperElem);
 					}
 
-					theOutputBuffer = sb.append("</response>").toString();
+					theOutputBuffer = theOutputBuilder.complete().toString();
 				}
 				catch (Exception e)
 				{
@@ -419,7 +457,7 @@ public class MainServlet extends HttpServlet
 
 						InstallationIF		defInstall = InstallationManager.getInstallation("cricket");
 						HeadlinesMgr		theHMgr = defInstall.getHeadlinesMgr();
-						Headlines		theHs = theHMgr.getRecentPostsInstance();
+						HeadlinesIF		theHs = theHMgr.getRecentPostsInstance();
 						StringBuilder		sb = new StringBuilder("<?xml version=\"1.0\" ?><response>");
 						long			currentTimeMSecs = System.currentTimeMillis();
 
@@ -439,16 +477,14 @@ public class MainServlet extends HttpServlet
 	//						for ( int z = 0; z < actualNumPosts; z++)
 							for ( int z = 0; z < headlineItemsArray.length; z++)
 							{
-								di = new DisplayItem( defInstall, (Item) headlineItemsArray[z], currentTimeMSecs);
+								di = new DisplayItem( defInstall, headlineItemsArray[z], currentTimeMSecs);
 
 								theTitleStr = di.getDescription();	// getDispTitle();
 								theScore = org.bloggers4labour.cricket.Score.parse( theTitleStr );
 
 								sb.append("<score index=\"").append(z).append("\">");
 
-								// addDisplayable( sb, di, theSiteObj, 0);
-
-								this._addXMLCDataElement( sb, "link", di.getLink());
+								_addXMLCDataElement( sb, "link", di.getLink());
 								_addXMLElement( sb, "batting", theScore.getBattingTeam());
 								_addXMLElement( sb, "score", theScore.getCurrentScore());
 								_addXMLElement( sb, "fielding", theScore.getFieldingTeam());
@@ -489,6 +525,22 @@ public class MainServlet extends HttpServlet
 
 	/*******************************************************************************
 	*******************************************************************************/
+	private InstallationIF getInstallFromParameter( final HttpServletRequest inRequest)
+	{
+		String	theInstallationName = inRequest.getParameter("install");
+
+		if (UText.isNullOrBlank(theInstallationName))
+		{
+			return InstallationManager.getDefaultInstallation();
+		}
+		else
+		{
+			return InstallationManager.getInstance().get(theInstallationName);
+		}
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
 	private void goHome( HttpServletRequest inRequest, HttpServletResponse inResponse) throws IOException
 	{
 		setResponseLocaleAndUse_HTML( inRequest, inResponse);
@@ -510,7 +562,7 @@ public class MainServlet extends HttpServlet
 	/*******************************************************************************
 		(AGR) 13 July 2005
 	*******************************************************************************/
-	public void doPost( HttpServletRequest inRequest, HttpServletResponse inResponse)
+	@Override public void doPost( HttpServletRequest inRequest, HttpServletResponse inResponse)
 	{
 		StringBuffer	theOutputBuffer = null;
 		boolean		keepAlive = true;
@@ -522,7 +574,7 @@ public class MainServlet extends HttpServlet
 				handleSearch( inRequest, inResponse);
 			}
 		}
-		catch (Exception e)
+		catch (IOException e)
 		{
 			s_Servlet_Logger.error("doPost", e);
 		}
@@ -547,7 +599,9 @@ public class MainServlet extends HttpServlet
 
 		boolean		gotQuery = UText.isValidString(theQueryStr);
 		String		theWhereStr = inRequest.getParameter("where");
-		boolean		gotTextVal, gotTitlesVal, gotBothVal;
+//		boolean		gotTextVal;
+//		boolean		gotTitlesVal;
+		boolean		gotBothVal;
 		Analyzer	theAnalyzer = new StandardAnalyzer();
 		Query		theQuery = null;
 		boolean		isNewSession = theSsn.isNew();
@@ -556,13 +610,15 @@ public class MainServlet extends HttpServlet
 		{
 			if ( isNewSession || UText.isNullOrBlank(theWhereStr))
 			{
-				gotTextVal = gotTitlesVal = false;
+//				gotTextVal = false;
+//				gotTitlesVal = false;
 				gotBothVal = true;
 			}
 			else if (theWhereStr.equals("text"))
 			{
-				gotTextVal = true;
-				gotTitlesVal = gotBothVal = false;
+//				gotTextVal = true;
+//				gotTitlesVal = false;
+				gotBothVal = false;
 
 				if (gotQuery)
 				{
@@ -571,8 +627,9 @@ public class MainServlet extends HttpServlet
 			}
 			else if (theWhereStr.equals("titles"))
 			{
-				gotTitlesVal = true;
-				gotTextVal = gotBothVal = false;
+//				gotTitlesVal = true;
+//				gotTextVal = false;
+				gotBothVal = false;
 
 				if (gotQuery)
 				{
@@ -581,7 +638,8 @@ public class MainServlet extends HttpServlet
 			}
 			else
 			{
-				gotTextVal = gotTitlesVal = false;
+//				gotTextVal = false;
+//				gotTitlesVal = false;
 				gotBothVal = true;
 			}
 		}
@@ -594,15 +652,11 @@ public class MainServlet extends HttpServlet
 
 		if ( gotBothVal && gotQuery)
 		{
-			String[]	theArray = {"desc","title"};
-
 			try
 			{
-//				QueryParser	theParser = new MultiFieldQueryParser( "desc", theAnalyzer);	// (AGR) Lucene 1.4.3
-				QueryParser	theParser = new MultiFieldQueryParser( theArray, theAnalyzer);	// (AGR) Lucene 1.9
+				QueryParser	theParser = new MultiFieldQueryParser( s_LuceneSearchArray, theAnalyzer);	// (AGR) Lucene 1.9
 
-//				theQuery = theParser.parse( theQueryStr, theArray, theAnalyzer);		// (AGR) Lucene 1.4.3
-				theQuery = theParser.parse(theQueryStr);					// (AGR) Lucene 1.9
+				theQuery = theParser.parse(theQueryStr);							// (AGR) Lucene 1.9
 			}
 			catch (org.apache.lucene.queryParser.ParseException e)
 			{
@@ -674,7 +728,6 @@ public class MainServlet extends HttpServlet
 					if ( theConnectionObject != null)
 					{
 						theConnectionObject.CloseDown();
-						theConnectionObject = null;
 					}
 				}
 			}
@@ -687,7 +740,7 @@ public class MainServlet extends HttpServlet
 			////////////////////////////////////////////////////////
 
 			Locale		theLocale = GetClientLocale(inRequest);
-			Site		theSiteObj;
+			SiteIF		theSiteObj;
 			String		theLinkStr;
 			int		theRecommendationsCount;
 			int		z = 0;
@@ -697,9 +750,10 @@ public class MainServlet extends HttpServlet
 			inResponse.setLocale(theLocale);
 			inResponse.setContentType("text/xml; charset=\"UTF-8\"");
 
+			if ( theSearchResults != null)
+			{
 			for ( SearchMatch eachMatch : theSearchResults)
 			{
-//				di = new DisplayItem( defInstall, (Item) headlineItemsArray[z], currentTimeMSecs);
 				theSiteObj = eachMatch.getSite();
 
 				///////////////////////////////////////////////////////////////////  (AGR) 11 October 2006
@@ -732,6 +786,7 @@ public class MainServlet extends HttpServlet
 				sb.append("</match>");
 
 				z++;
+				}
 			}
 
 			return sb.append("</response>").toString();
@@ -841,7 +896,6 @@ public class MainServlet extends HttpServlet
 			if ( theConnectionObject != null)
 			{
 				theConnectionObject.CloseDown();
-				theConnectionObject = null;
 			}
 		}
 
@@ -997,7 +1051,7 @@ public class MainServlet extends HttpServlet
 				////////////////////////////////////////////////
 
 				int	theDeathDay = theDDCal.get( Calendar.DAY_OF_MONTH );
-				int	theDeathMonth = theDDCal.get( Calendar.MONTH );
+//				int	theDeathMonth = theDDCal.get( Calendar.MONTH );
 				int	theDeathYear = theDDCal.get( Calendar.YEAR );
 				String	theFullNameStr;
 
@@ -1135,8 +1189,11 @@ public class MainServlet extends HttpServlet
 	/*******************************************************************************
 		(AGR) 31 August 2006
 	*******************************************************************************/
-	public CharSequence handleRecommendations( HttpServletRequest inRequest, HttpServletResponse inResponse)
+	public static CharSequence handleRecommendations( HttpServletRequest inRequest, HttpServletResponse inResponse)
 	{
+		String			theRecommendationsParam = inRequest.getParameter("recommendations");
+		boolean			inGoogleVersion = ( theRecommendationsParam == null || theRecommendationsParam.equals("google"));
+
 		DataSourceConnection	theConnectionObject = null;
 		StringBuilder		cs = new StringBuilder();
 		Locale			theLocale = GetClientLocale(inRequest);
@@ -1144,21 +1201,57 @@ public class MainServlet extends HttpServlet
 		String			theFormatStr = inRequest.getParameter("format");
 		int			theCount;
 
+/*		if (inGoogleVersion)
+		{
+			cs.append("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n")
+			  .append("<Module>\n")
+			  .append("<ModulePrefs title=\"Bloggers4Labour\">\n")
+				.append("<Require feature=\"analytics\"/>")
+			  .append("</ModulePrefs>\n")
+			  .append("<Content type=\"html\">\n")
+			  .append("<![CDATA[\n")
+				.append("<script>\n")
+					.append("_IG_Analytics(\"UA-159388-1\", \"/widget_recommendations\");\n")
+				.append("</script>\n");
+
+			theCount = 10;
+		}
+		else
+*/		{
 		try
 		{
 			theCount = Integer.parseInt( inRequest.getParameter("count") );
 		}
 		catch (Exception e)
 		{
-			theCount = 5;
+				theCount = 10;
+			}
 		}
 
 		////////////////////////////////////////////////////////////////
 
 		inResponse.setLocale(theLocale);
-		inResponse.setContentType("text/javascript");
 
-		if (UText.isValidString(theFormatStr))
+		if (inGoogleVersion)
+		{
+			inResponse.setContentType("text/xml; charset=\"UTF-8\"");
+		}
+		else
+		{
+		inResponse.setContentType("text/javascript");
+		}
+
+		////////////////////////////////////////////////////////////////
+
+		if (inGoogleVersion)
+		{
+/*
+			cs.append("<style type=\"text/css\">")
+				.append("@import url(\"http://www.bloggers4labour.org/css/RecommendationsGoogle.css\");")
+			  .append("</style>\n");
+*/
+		}
+		else if (UText.isValidString(theFormatStr))
 		{
 			if (theFormatStr.equals("b4l"))
 			{
@@ -1171,6 +1264,8 @@ public class MainServlet extends HttpServlet
 
 		////////////////////////////////////////////////////////////////
 
+		if (!inGoogleVersion)
+		{
 		cs.append("document.writeln('");
 		cs.append("<div id=\"b4l-recommendations\">")
 			.append("<p class=\"recommend-head\">")
@@ -1179,6 +1274,7 @@ public class MainServlet extends HttpServlet
 					.append("&nbsp;")
 				.append("</span>")
 			.append("</p>");
+		}
 
 		try
 		{
@@ -1193,11 +1289,22 @@ public class MainServlet extends HttpServlet
 
 				try
 				{
+					if (inGoogleVersion)
+					{
+						theS = theConnectionObject.prepareCall("getRecentRecommendations(?)");
+						((CallableStatement) theS).setInt( 1, theCount);
+
+						_handleRecommendationsXML( theInstall, theCount, (CallableStatement) theS, cs);
+					}
+					else
+					{
 					theS = theConnectionObject.createStatement();
+
 					_handleRecommendations( theInstall,
 								theType,
 								theFormatStr,
 								theCount, theS, cs);
+					}
 				}
 				catch (Exception e)
 				{
@@ -1228,6 +1335,12 @@ public class MainServlet extends HttpServlet
 
 		////////////////////////////////////////////////////////////////
 
+		if (inGoogleVersion)
+		{
+			return cs;	//.append("</div>\n]]>\n</Content>\n</Module>");
+		}
+		else
+		{
 		cs.append("<hr />")
 		  .append("<p class=\"recommend-link\">")
 				.append("<a class=\"recommend\" href=\"" + "http://www.bloggers4labour.org/recommended.jsp" + "\" target=\"recommendedWind\">")
@@ -1236,12 +1349,13 @@ public class MainServlet extends HttpServlet
 			.append("</p>");
 
 		return cs.append("</div>');");
+		}
 	}
 
 	/*******************************************************************************
 		(AGR) 31 August 2006
 	*******************************************************************************/
-	private void _handleRecommendations( final InstallationIF inInstall, String inTypeStr, String inFormatStr, int inNumber,
+	private static void _handleRecommendations( final InstallationIF inInstall, String inTypeStr, String inFormatStr, int inNumber,
 						Statement inS, StringBuilder ioBuf) throws SQLException
 	{
 
@@ -1260,14 +1374,14 @@ public class MainServlet extends HttpServlet
 			int			postCount = 0;
 			boolean			usesLevels = ( inNumber % 5 == 0);
 			boolean			gotOne = false;
-			boolean			showComma = false;
+//			boolean			showComma = false;
 
 			do
 			{
 				String		theURL = theRS.getString("url");
-				long		theSiteRecno = theRS.getLong("site_recno");
+/*				long		theSiteRecno = theRS.getLong("site_recno");
 
-/*				theSiteObj = theSitesMap.get(theSiteRecno);
+				theSiteObj = theSitesMap.get(theSiteRecno);
 				if ( theSiteObj == null)
 				{
 					theSiteObj = theFL.lookup(theSiteRecno);
@@ -1312,6 +1426,49 @@ public class MainServlet extends HttpServlet
 		}
 
 		ioBuf.append("</p>");
+	}
+
+	/*******************************************************************************
+		(AGR) 12 March 2007
+	*******************************************************************************/
+	private static void _handleRecommendationsXML( final InstallationIF inInstall, int inNumber,
+							CallableStatement inS, StringBuilder ioBuf) throws SQLException
+	{
+		inS.execute();
+
+		ResultSet	theRS = inS.getResultSet();
+		int		numPostsPerLevel = inNumber / 5;
+		int		postCount = 0;
+		boolean		usesLevels = ( inNumber % 5 == 0);
+
+		ioBuf.append("<?xml version=\"1.0\" ?><entries>");
+
+		while (theRS.next())
+		{
+			ioBuf.append("<entry>");
+
+//			_addXMLCDataElement( ioBuf, "url", theRS.getString("url"));
+			_addXMLElement( ioBuf, "url", theRS.getString("url"));
+
+			////////////////////////////////////////////////
+
+			if (usesLevels)
+			{
+				int	currentLevel = postCount / numPostsPerLevel + 1;
+
+				_addXMLElement( ioBuf, "level", Integer.valueOf(currentLevel));
+			}
+
+			_addXMLCDataElement( ioBuf, "site", UHTML.StringToHtml( theRS.getString("name") ) );
+
+			ioBuf.append("</entry>");
+
+			postCount++;
+		}
+
+		ioBuf.append("</entries>");
+
+		USQL_Utils.closeResultSetCatch(theRS);
 	}
 
 	/*******************************************************************************
@@ -1415,7 +1572,7 @@ public class MainServlet extends HttpServlet
 
 	/*******************************************************************************
 	*******************************************************************************/
-	private void Finish( HttpServletResponse inResponse)
+	public static void Finish( HttpServletResponse inResponse)
 	{
 		try
 		{
@@ -1484,25 +1641,33 @@ public class MainServlet extends HttpServlet
 
 	/*******************************************************************************
 	*******************************************************************************/
-	private static StringBuilder _addXMLElement( StringBuilder ioS, final String inElementName, final Object inContent)
+	public static StringBuilder _addXMLElement( StringBuilder ioS, final String inElementName, final Object inContent)
 	{
 		return ioS.append("<" + inElementName + ">").append(inContent).append("</" + inElementName + ">");
 	}
 
 	/*******************************************************************************
+		(AGR) 29 April 2007
 	*******************************************************************************/
-	private static StringBuilder _addXMLCDataElement( StringBuilder ioS, final String inElementName, final Object inContent)
+	public static StringBuilder _addXMLElement( StringBuilder ioS, final String inElementName, final String inAttrs, final Object inContent)
+	{
+		return ioS.append("<" + inElementName + " " + inAttrs + ">").append(inContent).append("</" + inElementName + ">");
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public static StringBuilder _addXMLCDataElement( StringBuilder ioS, final String inElementName, final Object inContent)
 	{
 		return ioS.append("<" + inElementName + "><![CDATA[").append(inContent).append("]]></" + inElementName + ">");
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	private static StringBuilder addDisplayable( StringBuilder ioS, final Displayable inObj, final Site inSite, int inReccCount)
+	@Deprecated private static StringBuilder addDisplayable( StringBuilder ioS, final Displayable inObj, final SiteIF inSite, int inReccCount)
 	{
 		_addXMLCDataElement( ioS, "blogName", inObj.getBlogName());
 		_addXMLElement( ioS, "siteID", ( inSite != null) ? inSite.getRecno() : -1L);
-		_addXMLElement( ioS, "siteURL", inObj.getSiteURL());
+		_addXMLCDataElement( ioS, "siteURL", inObj.getSiteURL());	// (AGR) 15 June 2009. Some MpURL URLs have bad ampersands, so change to CDATA
 
 		///////////////////////////////////////////////////////
 
@@ -1516,7 +1681,6 @@ public class MainServlet extends HttpServlet
 
 		String	dateStr = inObj.getDateString();
 
-//		if ( UText.isValidString(dateStr) && dateStr.charAt(0) == '<')
 		if ( UText.isValidString(dateStr) && dateStr.contains("<"))	// (AGR) 21 Feb 2007. Bug-fix. Previous was causing "(< 1 min)" to go through unencoded, breaking validation.
 		{
 			_addXMLCDataElement( ioS, "date", dateStr);
@@ -1527,15 +1691,9 @@ public class MainServlet extends HttpServlet
 
 		_addXMLCDataElement( ioS, "displayTitle", UText.isValidString( inObj.getDispTitle() ) ? inObj.getDispTitle() : "<i>Untitled</i>");
 		_addXMLCDataElement( ioS, "desc", inObj.getDescription());
-//		_addXMLElement( ioS, "descStyle", di.getDescriptionStyle(theRecommendationsCount));
 		_addXMLElement( ioS, "iconURL", UText.isValidString( inObj.getIconURL() ) ? inObj.getIconURL() : "");
 
-//		_addXMLCDataElement( ioS, "creator", di.getReducedCreatorsStr());
-
-//		if ( inReccCount != 0)    // (AGR) 11 October 2006
-		{
 			_addXMLElement( ioS, "votes", Integer.toString(inReccCount));    // (AGR) 1 October 2006
-		}
 
 		return ioS;
 	}
@@ -1624,7 +1782,7 @@ public class MainServlet extends HttpServlet
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public void destroy()
+	@Override public void destroy()
 	{
 		if ( m_Launcher != null)
 		{

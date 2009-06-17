@@ -9,27 +9,32 @@
 
 package org.bloggers4labour.api;
 
-import com.hiatus.USQL_Utils;
-import com.hiatus.UText;
 import com.hiatus.sql.ResultSetList;
+import com.hiatus.sql.USQL_Utils;
+import com.hiatus.text.UText;
+import java.net.SocketTimeoutException;
 import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Iterator;
+import java.sql.Types;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
-import javax.naming.NamingException;
 import javax.servlet.http.*;
 import javax.sql.DataSource;
 import org.apache.log4j.Logger;
-import org.bloggers4labour.InstallationManager;
 import org.bloggers4labour.MainServlet;
+import org.bloggers4labour.feed.Feed;
+import org.bloggers4labour.feed.FeedType;
+import org.bloggers4labour.geocode.GeocodingResultCode;
+import org.bloggers4labour.geocode.LRUPostCodeGeocoderCache;
 import org.bloggers4labour.geocode.Location;
 import org.bloggers4labour.geocode.PostCodeGeocoder;
+import org.bloggers4labour.req.HttpRequestWrapper;
+import org.bloggers4labour.req.ParametersIF;
 import org.bloggers4labour.sql.DataSourceConnection;
+import org.bloggers4labour.test.HTMLParserTest;
 import org.bloggers4labour.validation.PostCodeResult;
 import org.bloggers4labour.validation.PostCodeValidator;
 
@@ -44,6 +49,11 @@ public class SubmitBlogHandlerServlet extends APIHandlerServlet
 	private final static Pattern	noLinksAllowedPattern = Pattern.compile( "(http|https)://", Pattern.CASE_INSENSITIVE);		// (AGR) 5 July 2006
 	private final static String	EVIL_APPEAL_STATEMENT = "If you disagree with this decision, please contact us.";	// (AGR) 8 December 2006
 
+	private final static String	FLD_GEOCODING_RESULT = "geocoding_result";
+	private final static String	FLD_NEARBY_BLOGS = "nearby_blogs";
+
+	private static final long	serialVersionUID = 1L;
+
 	/*******************************************************************************
 	*******************************************************************************
 	public SubmitBlogHandlerServlet()
@@ -53,7 +63,7 @@ public class SubmitBlogHandlerServlet extends APIHandlerServlet
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public void doGet( HttpServletRequest inRequest, HttpServletResponse inResponse)
+	@Override public void doGet( HttpServletRequest inRequest, HttpServletResponse inResponse)
 	{
 		CharSequence	theOutputBuffer = null;
 		boolean		keepAlive = true;
@@ -67,9 +77,9 @@ public class SubmitBlogHandlerServlet extends APIHandlerServlet
 			////////////////////////////////////////////////////////
 
 			String			outputFormatStr = inRequest.getParameter("outputFormat");
-			SubmissionResult	theResult = _handleSubmission( m_DataSource, inRequest, inResponse);
+			SubmissionResult	theResult = handleSubmission( m_DataSource, m_Logger, new HttpRequestWrapper(inRequest));
 
-			// s_Servlet_Logger.info("returned: " + theResult);
+			// m_Logger.info("returned: " + theResult);
 
 			StringBuilder		ourBuilder = new StringBuilder(1000);
 
@@ -80,10 +90,11 @@ public class SubmitBlogHandlerServlet extends APIHandlerServlet
 				ourBuilder.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
 				ourBuilder.append("<B4L>");
 
-				MainServlet._addXMLElement( ourBuilder, "code", theResult.m_Code);
+				MainServlet._addXMLElement( ourBuilder, "code", theResult.getCode());
 				MainServlet._addXMLCDataElement( ourBuilder, "message", theResult.m_Message);
+				MainServlet._addXMLElement( ourBuilder, "elapsedTimeMS", theResult.m_ElapsedTimeMSecs);
 				MainServlet._addXMLElement( ourBuilder, "new_blog_id", theResult.m_SiteRecno);
-				MainServlet._addXMLElement( ourBuilder, "geocoded_OK", theResult.m_GeocodingSucceeded);
+				MainServlet._addXMLElement( ourBuilder, FLD_GEOCODING_RESULT, theResult.m_GeocodingResult);
 
 				////////////////////////////////////////////////
 
@@ -115,7 +126,7 @@ public class SubmitBlogHandlerServlet extends APIHandlerServlet
 					}
 				}
 
-				MainServlet._addXMLElement( ourBuilder, "nearby_blogs", bloggersBuf);	// can be empty
+				MainServlet._addXMLElement( ourBuilder, FLD_NEARBY_BLOGS, bloggersBuf);	// can be empty
 
 				ourBuilder.append("</B4L>");
 			}
@@ -124,11 +135,12 @@ public class SubmitBlogHandlerServlet extends APIHandlerServlet
 				inResponse.setContentType("text/javascript");
 
 				ourBuilder.append("{ ");
-				ourBuilder.append("code: \"").append( theResult.m_Code ).append("\",");
+				ourBuilder.append("code: \"").append( theResult.getCode() ).append("\",");
 				ourBuilder.append("message: \"").append( theResult.m_Message ).append("\",");
+				ourBuilder.append("elapsedTimeMS: \"").append( theResult.m_ElapsedTimeMSecs ).append("\",");
 				ourBuilder.append("new_blog_id: \"").append( theResult.m_SiteRecno ).append("\",");
-				ourBuilder.append("geocoded_OK: \"").append( theResult.m_GeocodingSucceeded ).append("\",");
-				ourBuilder.append("nearby_blogs: [");	// nearby_bloggers STARTS
+				ourBuilder.append(FLD_GEOCODING_RESULT).append(": \"").append( theResult.m_GeocodingResult ).append("\",");
+				ourBuilder.append(FLD_NEARBY_BLOGS).append(": [");	// nearby_bloggers STARTS
 
 				ResultSetList	rsl = theResult.m_Results;
 
@@ -159,11 +171,11 @@ public class SubmitBlogHandlerServlet extends APIHandlerServlet
 
 			theOutputBuffer = ourBuilder.toString();
 
-			// s_Servlet_Logger.info("theOutputBuffer = " + theOutputBuffer);
+			// m_Logger.info("theOutputBuffer = " + theOutputBuffer);
 		}
 		catch (Exception e)
 		{
-			s_Servlet_Logger.error("SubmitBlogHandlerServlet.doGet", e);
+			m_Logger.error("SubmitBlogHandlerServlet.doGet", e);
 		}
 		finally
 		{
@@ -174,65 +186,23 @@ public class SubmitBlogHandlerServlet extends APIHandlerServlet
 
 	/*******************************************************************************
 	*******************************************************************************/
-	private SubmissionResult _handleSubmission( final DataSource inDS, final HttpServletRequest request, final HttpServletResponse response)
+	public static SubmissionResult handleSubmission( final DataSource inDS, final Logger inLogger, final ParametersIF inRequest)
 	{
-		PostCodeValidator	postCodeValidator = new PostCodeValidator();
-		PostCodeGeocoder	postCodeGeocoder = new PostCodeGeocoder();
-
-		String			theResultMessage;
-
-		///////////////////////////////////////////////////
-
-		String		HTTP_STR = "http://";
-		String		lastFNames = request.getParameter("fnames");
-		String		lastSurname = request.getParameter("sname");
-		String		lastBlogURL = request.getParameter("blog_url");
-		String		lastFeedURL = request.getParameter("feed_url");
-		String		lastBlogName = request.getParameter("blog_name");
-		String		lastDescr = request.getParameter("blog_descr");
-		String		lastEmail = request.getParameter("email");
-		String		lastPostCode = request.getParameter("postCode");
-		int		r_isBlogVal = Integer.parseInt( request.getParameter("is_blog") );
-		int		r_siteCatVal = Integer.parseInt( request.getParameter("site_category") );
-		int		r_siteLocVal = Integer.parseInt( request.getParameter("location") );
-		int		r_statusVal = Integer.parseInt( request.getParameter("status") );
-
-		if ( lastDescr != null)
-		{
-			lastDescr = lastDescr.trim();
-		}
-
-		if ( lastFeedURL != null && lastFeedURL.startsWith(HTTP_STR))
-		{
-			lastFeedURL = lastFeedURL.trim();
-		}
-
-		if (UText.isValidString(lastFNames))
-		{
-			lastFNames = lastFNames.trim();
-		}
-
-		if (UText.isValidString(lastSurname))
-		{
-			lastSurname = lastSurname.trim();
-		}
-
-		if ( UText.isValidString(lastBlogURL) && lastBlogURL.startsWith(HTTP_STR))
-		{
-			lastBlogURL = lastBlogURL.trim();
-		}
-
-		if (UText.isValidString(lastEmail))
-		{
-			lastEmail = lastEmail.trim();
-		}
-
-		//////////////////////////////////////////////////////////////////
-
-		if (evilNamesPattern.matcher(lastBlogName).find())	// (AGR) 18 June 2006
-		{
-			return new SubmissionResult( "Your Blog's name is unacceptable. Please try again. " + EVIL_APPEAL_STATEMENT, SubmitBlogResultCode.UNACCEPTABLE_BLOG_NAME);
-		}
+		String			HTTP_STR = "http://";
+		EnumSet<FeedType>	theFindFeedType = _findFeedTypes( inRequest.getTrimmedRequestString("findFeed"));	
+		int			theErrorIfFindFeedFails = inRequest.parseRequestInt( "errorIfFindFeedFails", 0);
+		String			lastFNames = inRequest.getTrimmedRequestString( "fnames", "???");
+		String			lastSurname = inRequest.getTrimmedRequestString( "sname", "???");
+		String			lastFeedURL = inRequest.getTrimmedRequestString( "feed_url");
+		String			lastDescr = inRequest.getTrimmedRequestString( "blog_descr");
+		String			lastEmail = inRequest.getTrimmedRequestString( "email", "???");
+		String			lastBlogURL = inRequest.getParameter("blog_url");
+		String			lastBlogName = inRequest.getParameter("blog_name");
+		String			lastPostCode = inRequest.getParameter("postCode");
+		int			r_isBlogVal = inRequest.parseRequestInt( "is_blog", 1);
+		int			r_siteCatVal = inRequest.parseRequestInt( "site_category", 0);
+		int			r_siteLocVal = inRequest.parseRequestInt( "location", 0);
+		int			r_statusVal = inRequest.parseRequestInt( "status", 0);
 
 		if (UText.isNullOrBlank(lastBlogName))
 		{
@@ -241,13 +211,9 @@ public class SubmitBlogHandlerServlet extends APIHandlerServlet
 
 		lastBlogName = lastBlogName.trim();
 
-		//////////////////////////////////////////////////////////////////
-
-		PostCodeResult	thePostCodeResult = postCodeValidator.validate(lastPostCode);
-
-		if ( thePostCodeResult == PostCodeResult.INVALID)
+		if (evilNamesPattern.matcher(lastBlogName).find())	// (AGR) 18 June 2006
 		{
-			return new SubmissionResult( "Your Post Code doesn't seem to be valid. Please try again. " + EVIL_APPEAL_STATEMENT, SubmitBlogResultCode.UNACCEPTABLE_POSTCODE);
+			return new SubmissionResult( "Your Blog's name is unacceptable. Please try again. " + EVIL_APPEAL_STATEMENT, SubmitBlogResultCode.UNACCEPTABLE_BLOG_NAME);
 		}
 
 		//////////////////////////////////////////////////////////////////  (AGR) 5 July 2006
@@ -291,7 +257,7 @@ public class SubmitBlogHandlerServlet extends APIHandlerServlet
 
 		//////////////////////////////////////////////////////////////////
 
-		if ( UText.isValidString(lastFeedURL) && !lastFeedURL.startsWith(HTTP_STR))
+		if ( theFindFeedType.isEmpty() && UText.isValidString(lastFeedURL) && !lastFeedURL.startsWith(HTTP_STR))
 		{
 			return new SubmissionResult( "The Feed URL must start with: \"http://\"", SubmitBlogResultCode.UNACCEPTABLE_FEED_URL_PREFIX);
 		}
@@ -304,12 +270,49 @@ public class SubmitBlogHandlerServlet extends APIHandlerServlet
 		}
 
 		//////////////////////////////////////////////////////////////////
+
+		PostCodeResult	thePostCodeResult = new PostCodeValidator().validate(lastPostCode);
+
+		if ( thePostCodeResult == PostCodeResult.INVALID)
+		{
+			return new SubmissionResult( "Your Post Code doesn't seem to be valid. Please try again. " + EVIL_APPEAL_STATEMENT, SubmitBlogResultCode.UNACCEPTABLE_POSTCODE);
+		}
+
+		//////////////////////////////////////////////////////////////////  (AGR) 9 September 08
+
+		String	theFeedURLToUse = lastFeedURL;
+
+		if (theFindFeedType.isEmpty())
+		{
+			theFeedURLToUse = lastFeedURL;
+		}
+		else
+		{
+			List<Feed>	theFeeds = HTMLParserTest.discoverFeeds( lastBlogURL, theFindFeedType);
+
+			if ( theFeeds == null || theFeeds.isEmpty())
+			{
+				if ( theErrorIfFindFeedFails == 1)
+				{
+					return new SubmissionResult( "Sorry, could not find a " + theFindFeedType + " feed", SubmitBlogResultCode.FEED_URL_NOT_FOUND);
+				}
+			}
+			else
+			{
+				System.out.println("... " + theFeeds);
+
+				theFeedURLToUse = theFeeds.get(0).getURL();
+			}
+		}
+
+		//////////////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////
 
 		DataSourceConnection	theConnectionObject = null;
-		CallableStatement	theNearbyBloggersS = null;
-		Statement		theStatement = null;
+		CallableStatement	theStatement = null;
 		SubmissionResult	theResult = new SubmissionResult();
+		long			theStartTimeMS = System.currentTimeMillis();
+		boolean			mayRequestNearbyBloggers = false;
 
 		try
 		{
@@ -318,144 +321,55 @@ public class SubmitBlogHandlerServlet extends APIHandlerServlet
 			{
 				theConnectionObject.setAutoCommit(false);	// (AGR) 28 April 2007
 
-/*				s_Servlet_Logger.info("Commit?: " + theConnectionObject.getConnection().getAutoCommit());
-				s_Servlet_Logger.info("Curr TL: " + theConnectionObject.getConnection().getTransactionIsolation());
-				theConnectionObject.getConnection().setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE );
-				s_Servlet_Logger.info("New TL:  " + theConnectionObject.getConnection().getTransactionIsolation());
-*/
-				theStatement = theConnectionObject.createStatement();
-
-				//////////////////////////////////////////////////////////////////
-
-				String	theURLToLookup;
-
-				if (lastBlogURL.startsWith("http://www."))
-				{
-					theURLToLookup = lastBlogURL.substring(11);
-				}
-				else if (lastBlogURL.startsWith(HTTP_STR))
-				{
-					theURLToLookup = lastBlogURL.substring(7);
-				}
-				else	theURLToLookup = lastBlogURL;
-
-				if (theURLToLookup.endsWith("/"))
-				{
-					theURLToLookup = theURLToLookup.substring( 0, theURLToLookup.length() - 1);
-				}
-
-				//////////////////////////////////////////////////////////////////
-
-				String		theURLBit = "IF( LOCATE(\"http://www\",url)=1, SUBSTRING(url, LOCATE(\"http://www\",url)+11, LENGTH(url)-11), IF( LOCATE(\"http://\",url)=1, SUBSTRING(url, LOCATE(\"http://\",url)+7, LENGTH(url)-7), url))";
-				String		theCheckQuery = "SELECT " + theURLBit + " AS 'got_url',name FROM site WHERE " + theURLBit + "=" + USQL_Utils.getQuoted(theURLToLookup) + " OR name=" + USQL_Utils.getQuoted(lastBlogName);
-				ResultSet	theIDCheckRS = null;
-
-				// System.out.println("theCheckQuery = " + theCheckQuery);
-
-				try
-				{
-					theIDCheckRS = theStatement.executeQuery(theCheckQuery);
-					if (theIDCheckRS.next())
-					{
-						boolean	x = ( UText.isValidString(lastBlogURL) && theIDCheckRS.getString("got_url").equals(theURLToLookup));
-
-						if (x)
-						{
-							theResult.setMessageAndCode( "Blog URL \"" + lastBlogURL + "\" already in use!", SubmitBlogResultCode.DUPLICATE_BLOG_URL);
-						}
-						else
-						{
-							theResult.setMessageAndCode( "There is already a blog named \"" + lastBlogName + "\"!", SubmitBlogResultCode.DUPLICATE_BLOG_NAME);
-						}
-
-						return theResult;
-					}
-				}
-				catch (SQLException e)
-				{
-					s_Servlet_Logger.error("Look in site table", e);
-
-					theResult.setMessageAndCode( "Database error", SubmitBlogResultCode.DB_ERROR_3);
-
-					return theResult;
-				}
-				finally
-				{
-					USQL_Utils.closeResultSetCatch(theIDCheckRS);
-				}
-
 				//////////////////////////////////////////////////////////////////  (AGR) 11 Feb 2007
 
-				long		theGLocRecno = 1;	// default "n/a" record
 				String		adjustedPostCodeStr;
-				Location	theDiscoveredLocation = null;
+				double		theLatValToUse = -1;
+				double		theLongValToUse = -1;
 
 				if ( thePostCodeResult == PostCodeResult.VALID)
 				{
-					StringBuilder	theGLocQueryBuf = null;
-
-					adjustedPostCodeStr = lastPostCode.trim().toUpperCase();
+					adjustedPostCodeStr = lastPostCode.trim().toUpperCase( Locale.UK );
 
 					//////////////////////////////////////////////////////////////////  (AGR) 16 Feb 2007
 
-					boolean	gotGoodResult = false;
-
 					try
 					{
-						theDiscoveredLocation = postCodeGeocoder.lookupLocation(adjustedPostCodeStr);
+						PostCodeGeocoder	theGeocoder = new PostCodeGeocoder( LRUPostCodeGeocoderCache.getInstance() );
+						Location		theDiscoveredLocation = theGeocoder.lookupLocation(adjustedPostCodeStr);
 
-						s_Servlet_Logger.info("Location: " + theDiscoveredLocation);
+						inLogger.debug("Location: " + theDiscoveredLocation);
 
-						if (!theDiscoveredLocation.isBlank())
+						if (theDiscoveredLocation.isBlank())
 						{
-							gotGoodResult = true;
-
-							theGLocQueryBuf = new StringBuilder("INSERT INTO geoLocation (gloc_exact,gloc_latitude,gloc_longitude,gloc_description) VALUES (1,");
-							theGLocQueryBuf.append( theDiscoveredLocation.getLatitude() ).append(",")
-									.append( theDiscoveredLocation.getLongitude() ).append(",")
-									.append( USQL_Utils.getQuoted(adjustedPostCodeStr) ).append(")");
-
-							theResult.setGeocodingResult( Boolean.TRUE );	// (AGR) 18 Feb 2007
+							theResult.setGeocodingResult( GeocodingResultCode.GEOCODING_NOT_FOUND );
 						}
+						else
+						{
+							theLatValToUse = theDiscoveredLocation.getLatitude();
+							theLongValToUse = theDiscoveredLocation.getLongitude();
+
+							theResult.setGeocodingResult( GeocodingResultCode.GEOCODING_FOUND );	// (AGR) 18 Feb 2007
+
+							/////////////////////////////////////////////////////////////////////////////////////////
+
+							String	showNearbyBloggersVal = inRequest.getParameter("showNearbyBloggers");
+
+							mayRequestNearbyBloggers = ( showNearbyBloggersVal != null && showNearbyBloggersVal.equals("1") || Boolean.parseBoolean(showNearbyBloggersVal));
+						}
+					}
+					catch (SocketTimeoutException e)
+					{
+						inLogger.error("Geocoding timed-out: " + e.getMessage());
+
+						theResult.setGeocodingResult( GeocodingResultCode.LOOKUP_ERROR );
 					}
 					catch (Exception e)
 					{
-						s_Servlet_Logger.error("Create/PC", e);
+						inLogger.error("Create/PC", e);
 
-						theResult.setGeocodingResult( Boolean.FALSE );		// (AGR) 18 Feb 2007
+						theResult.setGeocodingResult( GeocodingResultCode.LOOKUP_ERROR );		// (AGR) 18 Feb 2007
 					}
-
-					if (!gotGoodResult)
-					{
-						theGLocQueryBuf = new StringBuilder("INSERT INTO geoLocation (gloc_exact,gloc_description) VALUES (1,");
-						theGLocQueryBuf.append( USQL_Utils.getQuoted(adjustedPostCodeStr) ).append(")");
-					}
-
-					//////////////////////////////////////////////////////////////////
-
-					int	glInsertCount = theStatement.executeUpdate( theGLocQueryBuf.toString(), Statement.RETURN_GENERATED_KEYS);
-
-					if ( glInsertCount != 1)
-					{
-						throw new SQLException("glInsertCount is " + glInsertCount);
-					}
-
-					//////////////////////////////////////////////////////////////////
-
-					ResultSet	theGLocRS = theStatement.getGeneratedKeys();
-
-					if (theGLocRS.next())
-					{
-						theGLocRecno = theGLocRS.getLong(1);
-						s_Servlet_Logger.debug("UNIQUE_ID for geoLocation = " + theGLocRecno);
-					}
-					else
-					{
-						throw new SQLException("Can't get ID of created geoLocation");
-					}
-
-					theGLocRS.close();
-					theGLocRS = null;
 				}
 				else
 				{
@@ -463,161 +377,130 @@ public class SubmitBlogHandlerServlet extends APIHandlerServlet
 				}
 
 				//////////////////////////////////////////////////////////////////
-				//////////////////////////////////////////////////////////////////
 
-				StringBuilder	theCreatorQueryBuf = new StringBuilder("INSERT INTO creator VALUES (NULL,");
+				int	i= 1;
 
-				theCreatorQueryBuf.append( USQL_Utils.getQuoted(lastFNames) ).append(',')
-						  .append( USQL_Utils.getQuoted(lastSurname) ).append(',')
-						  .append( USQL_Utils.getQuoted(lastEmail) ).append(',')
-						  .append( String.valueOf(r_statusVal) + ',')
-						  .append( "0" )
-						  .append(")");
+				theStatement = theConnectionObject.prepareCall("submitSite(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+				theStatement.setString( i++, lastBlogName);
+				theStatement.setString( i++, lastBlogURL);
+				theStatement.setString( i++, theFeedURLToUse);
+				theStatement.setString( i++, lastDescr);
+				theStatement.setInt( i++, r_isBlogVal);
+				theStatement.setInt( i++, r_siteCatVal);
+				theStatement.setInt( i++, r_siteLocVal);
+				theStatement.setDouble( i++, theLatValToUse);
+				theStatement.setDouble( i++, theLongValToUse);
+				theStatement.setString( i++, adjustedPostCodeStr);
+				theStatement.setString( i++, lastFNames);
+				theStatement.setString( i++, lastSurname);
+				theStatement.setString( i++, lastEmail);
+				theStatement.setInt( i++, r_statusVal);
 
-				int	crInsertCount = theStatement.executeUpdate( theCreatorQueryBuf.toString(), Statement.RETURN_GENERATED_KEYS);
+				int	theFirstOutParamIndex = i;
 
-				if ( crInsertCount != 1)
-				{
-					throw new SQLException("crInsertCount is " + crInsertCount);
-				}
+				theStatement.registerOutParameter( i++, Types.BIGINT);
+				theStatement.registerOutParameter( i, Types.INTEGER);
 
-				//////////////////////////////////////////////////////////////////
+				theStatement.execute();
 
-				ResultSet	theLastRS = theStatement.getGeneratedKeys();
-				long		theCreatorID;
-
-				if (theLastRS.next())
-				{
-					theCreatorID = theLastRS.getLong(1);
-					s_Servlet_Logger.debug("UNIQUE_ID for creator = " + theCreatorID);
-				}
-				else
-				{
-					throw new SQLException("Can't get ID of created Creator");
-				}
-
-				theLastRS.close();	// (AGR) 15 Feb 2007
-
-				//////////////////////////////////////////////////////////////////
-				//////////////////////////////////////////////////////////////////
-
-				StringBuilder	theQueryBuf = new StringBuilder("INSERT INTO site VALUES (NULL,");
-				int		r_isApproved = 0;
-				int		r_isDead = 0;
-				int		r_showFeedOnPage = 1;
-
-				theQueryBuf.append( USQL_Utils.getQuoted(lastBlogURL) ).append(',')
-					   .append( USQL_Utils.getQuoted(lastFeedURL) ).append(",NULL,NULL,")
-					   .append( USQL_Utils.getQuoted(lastBlogName) ).append(',')
-					   .append( USQL_Utils.getQuoted(lastDescr) ).append(",NOW(),")
-					   .append( String.valueOf(r_isBlogVal) + ',')
-					   .append( String.valueOf(r_showFeedOnPage) + ',')
-					   .append( String.valueOf(r_isApproved) + ',')
-					   .append( String.valueOf(r_isDead) + ',')
-					   .append( String.valueOf(r_siteCatVal) + ',')
-					   .append( String.valueOf(r_siteLocVal) + ',')
-					   .append( String.valueOf(theGLocRecno) )	// (AGR) 11 Feb 2007
-					   .append(")");
-
-				theStatement.executeUpdate( theQueryBuf.toString(), Statement.RETURN_GENERATED_KEYS);
-
-				//////////////////////////////////////////////////////////////////  (AGR) 28 April 2007
-
-				long	theNewSiteID;
-
-				theLastRS = theStatement.getGeneratedKeys();
-				if (theLastRS.next())
-				{
-					theNewSiteID = theLastRS.getLong(1);
-
-					theResult.setNewSiteRecno(theNewSiteID);	// (AGR) 29 April 2007
-
-					s_Servlet_Logger.debug("UNIQUE_ID for site = " + theNewSiteID);
-				}
-				else
-				{
-					throw new SQLException("Can't get ID of created Site");
-				}
-
-				theLastRS.close();
-				theLastRS = null;
+			//	SQLWarning	theSW = theStatement.getWarnings();
 
 				//////////////////////////////////////////////////////////////////
 
-				int	scCount = theStatement.executeUpdate("INSERT INTO siteCreators VALUES (NULL," + theNewSiteID + "," + theCreatorID + ")");
+				long	theSiteRecno = theStatement.getLong(theFirstOutParamIndex);
+				int	theStatusCode = theStatement.getInt( theFirstOutParamIndex + 1);
 
-				if ( scCount != 1)
+				switch (theStatusCode)
 				{
-					throw new SQLException("scCount is " + scCount);
-				}
+					case 0:
+						theConnectionObject.commit();
 
 				//////////////////////////////////////////////////////////////////
 
-				USQL_Utils.closeStatementCatch(theStatement);
-				theStatement = null;
+						if (mayRequestNearbyBloggers)
+						{
+							CallableStatement	theNearbyBloggersS = null;
 
-				//////////////////////////////////////////////////////////////////  (AGR) 16 Feb 2007
-
-				if ( theDiscoveredLocation != null && !theDiscoveredLocation.isBlank())
-				{
 					try
 					{
 						theNearbyBloggersS = theConnectionObject.prepareCall("findNearestBloggers( ?, ?, ?, ? )");
-						theNearbyBloggersS.setLong( 1, theNewSiteID);
-						theNearbyBloggersS.setDouble( 2, theDiscoveredLocation.getLatitude());
-						theNearbyBloggersS.setDouble( 3, theDiscoveredLocation.getLongitude());
+								theNearbyBloggersS.setLong( 1, theSiteRecno);
+								theNearbyBloggersS.setDouble( 2, theLatValToUse);
+								theNearbyBloggersS.setDouble( 3, theLongValToUse);
 						theNearbyBloggersS.setInt( 4, 10);
 						theNearbyBloggersS.execute();
 
 						ResultSetList	theRSL = new ResultSetList( theNearbyBloggersS.getResultSet() );
 
-						s_Servlet_Logger.info("theRSL = " + theRSL);
+								inLogger.info("Nearby bloggers = " + theRSL);
 
 						theResult.setNearbyBloggers(theRSL);
 					}
-					catch (SQLException e)
-					{
-						throw e;	// Ensure rollback
-					}
-					catch (Exception e2)
-					{
-						s_Servlet_Logger.error("", e2);    // Presumably not serious enough to demand rollback
+							catch (Exception e)
+							{
+								inLogger.error("", e);
+							}
+							finally
+							{
+								if ( theNearbyBloggersS != null)
+								{
+									try {
+										theNearbyBloggersS.close();
+									} catch (Exception e) {}
+								}
 					}
 				}
 
-				//////////////////////////////////  (AGR) 28 April 2007. Success!
+						//////////////////////////////////////////////////////////////////
 
-				// s_Servlet_Logger.info("COMMIT!!");
-
-				theConnectionObject.commit();
-
+						theResult.setNewSiteRecno(theSiteRecno);
 				theResult.setMessageAndCode( "Entry submitted successfully. It will be reviewed and, if suitable, will appear in the list soon.",
 								SubmitBlogResultCode.OK);
+						break;
+					case -1:
+						theResult.setMessageAndCode( "Blog URL \"" + lastBlogURL + "\" already in use!", SubmitBlogResultCode.DUPLICATE_BLOG_URL);
+						break;
+					case -2:
+						theResult.setMessageAndCode( "There is already a blog named \"" + lastBlogName + "\"!", SubmitBlogResultCode.DUPLICATE_BLOG_NAME);
+						break;
+					case -7:
+						theResult.setMessageAndCode( "Invalid Location code (" + r_siteLocVal + ") !", SubmitBlogResultCode.INVALID_LOCATION);
+						break;
+					case -8:
+						theResult.setMessageAndCode( "Invalid Creator status code (" + r_statusVal + ") !", SubmitBlogResultCode.INVALID_CREATOR_STATUS);
+						break;
+					case -9:
+						theResult.setMessageAndCode( "Invalid Site Category code (" + r_siteCatVal + ") !", SubmitBlogResultCode.INVALID_SITE_CATEGORY);
+						break;
+					default:
+						theResult.setMessageAndCode( "An error occurred!", SubmitBlogResultCode.DB_ERROR_1);
+						break;
+				}
 			}
 			else
 			{
-				s_Servlet_Logger.warn("Cannot connect!");
+				inLogger.warn("Cannot connect to Database!");
 
 				theResult.setMessageAndCode( "Cannot connect to database", SubmitBlogResultCode.DB_CONN_ERROR);
 			}
 		}
 		catch (Exception err)
 		{
-			s_Servlet_Logger.error("Database error", err);
+			inLogger.error("Database error", err);
 
 			theResult.setMessageAndCode( "Database error", SubmitBlogResultCode.DB_ERROR_1);
 
 			////////////////////////////////////////////////////////
 
 			try {
-				// s_Servlet_Logger.info("ROLLBACK!");
+				// m_Logger.info("ROLLBACK!");
 
 				// (AGR) 28 April 2007. Sadly rollback() has no effect - not in MyISAM tables anyway, but I'm not switching
 				// to "innoDB" across the board just for this!
 
 				theConnectionObject.rollback();
 			} catch (SQLException ee) {
-				s_Servlet_Logger.error("Rollback error", ee);
+				inLogger.error("Rollback error", ee);
 			}
 		}
 		finally
@@ -626,82 +509,47 @@ public class SubmitBlogHandlerServlet extends APIHandlerServlet
 
 			////////////////////////////////////////////////////////
 
-			if ( theNearbyBloggersS != null)
-			{
-				try {
-					// s_Servlet_Logger.info("... closing " + theNearbyBloggersS);
-
-					theNearbyBloggersS.close();
-					theNearbyBloggersS = null;
-				} catch (Exception e) {}
-			}
-
-			////////////////////////////////////////////////////////
-
 			if ( theConnectionObject != null)
 			{
 				theConnectionObject.CloseDown();
-				theConnectionObject = null;
 			}
 		}
 
 		//////////////////////////////////////////////////////////////////
+
+		theResult.setElapsedTime( System.currentTimeMillis() - theStartTimeMS);
 
 		return theResult;
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	class SubmissionResult
+	protected static EnumSet<FeedType> _findFeedTypes( final String inStr)
 	{
-		protected String		m_Message;
-		protected SubmitBlogResultCode	m_Code;
-		protected Boolean		m_GeocodingSucceeded;
-		protected ResultSetList		m_Results;
-		protected Long			m_SiteRecno;
-
-		/*******************************************************************************
-		*******************************************************************************/
-		SubmissionResult()
+		if ( inStr.length() >= 1)
 		{
-			m_Code = SubmitBlogResultCode.UNKNOWN;
+			if ( inStr.startsWith("ALL_POSTS"))
+			{
+				return EnumSet.of( FeedType.RSS, FeedType.ATOM, FeedType.RSD);
+			}
+			else if ( inStr.startsWith("RSS"))
+			{
+				return EnumSet.of(FeedType.RSS);
+			}
+			else if (inStr.startsWith("ATOM"))
+			{
+				return EnumSet.of(FeedType.ATOM);
+			}
+			else if (inStr.startsWith("RSD"))
+			{
+				return EnumSet.of(FeedType.RSD);
+			}
+			else if (inStr.startsWith("FOAF"))
+			{
+				return EnumSet.of(FeedType.FOAF);
+			}
 		}
 
-		/*******************************************************************************
-		*******************************************************************************/
-		SubmissionResult( final String inS, final SubmitBlogResultCode inCode)
-		{
-			m_Message = inS;
-			m_Code = inCode;
-		}
-
-		/*******************************************************************************
-		*******************************************************************************/
-		public void setMessageAndCode( final String inS, final SubmitBlogResultCode inCode)
-		{
-			m_Message = inS;
-			m_Code = inCode;
-		}
-
-		/*******************************************************************************
-		*******************************************************************************/
-		public void setGeocodingResult( final Boolean x)
-		{
-			m_GeocodingSucceeded = x;
-		}
-
-		/*******************************************************************************
-		*******************************************************************************/
-		public void setNearbyBloggers( final ResultSetList x)
-		{
-			m_Results = x;
-		}
-
-		/*******************************************************************************
-		*******************************************************************************/
-		public void setNewSiteRecno( final Long x)
-		{
-			m_SiteRecno = x;
-		}
+		return EnumSet.noneOf(FeedType.class);
 	}
 }

@@ -9,19 +9,14 @@
 
 package org.bloggers4labour.admin;
 
-import com.hiatus.USQL_Utils;
-import com.hiatus.sql.ResultSetList;
+import com.hiatus.sql.USQL_Utils;
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.log4j.Logger;
-import org.bloggers4labour.*;
 import org.bloggers4labour.conf.Configuration;
-import org.bloggers4labour.sql.*;
+import org.bloggers4labour.sql.DataSourceConnection;
 
 /**
  *
@@ -29,9 +24,7 @@ import org.bloggers4labour.sql.*;
  */
 public class CreatorAdministration
 {
-	private static Logger		s_Logger = Logger.getLogger("Main");
-
-	private final static String	LINE_PREFIX = ">>> CreatorAdmin";
+	private static Logger	s_Logger = Logger.getLogger( CreatorAdministration.class );
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -41,7 +34,7 @@ public class CreatorAdministration
 
 		DataSourceConnection	theConnectionObject = null;
 		StringBuffer		theBuf;
-		long			currTimeMSecs = System.currentTimeMillis();
+//		long			currTimeMSecs = System.currentTimeMillis();
 		boolean			isGood = false;
 
 		try
@@ -69,7 +62,7 @@ public class CreatorAdministration
 
 					ca.creatorAdoptSite( theS, 199, 180, commitChanges);
 				}
-				catch (Exception e)
+				catch (SQLException e)
 				{
 					s_Logger.error("creating statement", e);
 				}
@@ -83,10 +76,6 @@ public class CreatorAdministration
 				s_Logger.warn("Cannot connect!");
 			}
 		}
-		catch (Exception err)
-		{
-			s_Logger.error("???", err);
-		}
 		finally
 		{
 			// s_FL_Logger.info("m_FeedChannels = " + m_FeedChannels);
@@ -94,7 +83,6 @@ public class CreatorAdministration
 			if ( theConnectionObject != null)
 			{
 				theConnectionObject.CloseDown();
-				theConnectionObject = null;
 			}
 		}
 	}
@@ -124,7 +112,7 @@ public class CreatorAdministration
 
 			if (noChange)
 			{
-				s_Logger.info( LINE_PREFIX + ".creatorAdoptSite() site #" + inSiteRecno + " already created by #" + inCreatorRecno);
+				s_Logger.info( "creatorAdoptSite() site #" + inSiteRecno + " already created by #" + inCreatorRecno);
 				theRS.close();
 				return;
 			}
@@ -134,7 +122,7 @@ public class CreatorAdministration
 		}
 		else
 		{
-			s_Logger.warn( LINE_PREFIX + ".creatorAdoptSite() site #" + inSiteRecno + " not found.");
+			s_Logger.warn( "creatorAdoptSite() site #" + inSiteRecno + " not found.");
 			theRS.close();
 			return;
 		}
@@ -147,14 +135,14 @@ public class CreatorAdministration
 
 			if ( updCount == 1)
 			{
-				s_Logger.info( LINE_PREFIX + ".creatorAdoptSite() setting site #" + inSiteRecno + "'s creator to #" + inCreatorRecno + " (previously #" + prevCreatorRecno + ").");
+				s_Logger.info( "creatorAdoptSite() setting site #" + inSiteRecno + "'s creator to #" + inCreatorRecno + " (previously #" + prevCreatorRecno + ").");
 
 				theRS = inStatement.executeQuery("SELECT * FROM siteCreators WHERE creator_recno=" + prevCreatorRecno);
 				if (theRS.next())
 				{
 					// There's still a reference to that Creator (they must have run more than one site), so do nothing
 
-					// s_Logger.info( LINE_PREFIX + ".creatorAdoptSite() found prev creator.");
+					// s_Logger.info( "creatorAdoptSite() found prev creator.");
 				}
 				else
 				{
@@ -162,22 +150,18 @@ public class CreatorAdministration
 
 					if ( delCount == 1)
 					{
-						s_Logger.info( LINE_PREFIX + ".creatorAdoptSite() deleted leftover creator #" + prevCreatorRecno);
+						s_Logger.info( "creatorAdoptSite() deleted leftover creator #" + prevCreatorRecno);
 					}
 					else
 					{
-						s_Logger.warn( LINE_PREFIX + ".creatorAdoptSite() FAILED to delete leftover creator #" + prevCreatorRecno);
+						s_Logger.warn( "creatorAdoptSite() FAILED to delete leftover creator #" + prevCreatorRecno);
 					}
 				}
 			}
 			else
 			{
-				s_Logger.warn( LINE_PREFIX + ".creatorAdoptSite() updCount == " + updCount);
+				s_Logger.warn( "creatorAdoptSite() updCount == " + updCount);
 			}
-		}
-		else
-		{
-			;
 		}
 	}
 }

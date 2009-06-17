@@ -9,39 +9,65 @@
 
 package org.bloggers4labour;
 
-import com.hiatus.UText;
+import com.hiatus.envt.IncludeFileLocator;
+import com.hiatus.envt.impl.DefaultFileLocator;
+import com.hiatus.htl.HTL;
+import com.hiatus.text.UText;
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
-import java.lang.reflect.*;
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import javax.naming.Context;
 import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.sql.DataSource;
-import javax.xml.parsers.*;
-import javax.xml.transform.TransformerException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathException;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
 import org.apache.log4j.Logger;
+import javax.xml.xpath.XPathException;
+import javax.xml.xpath.XPathExpressionException;
 import org.bloggers4labour.conf.Configuration;
+import org.bloggers4labour.feed.auth.AuthenticationManager;
+import org.bloggers4labour.installation.InstallationNotFoundException;
+import org.bloggers4labour.installation.tasks.InstallationTaskIF;
 import org.bloggers4labour.polling.Poller;
 import org.bloggers4labour.polling.PollerConfig;
-import org.w3c.dom.*;
+import org.bloggers4labour.polling.PollerIF;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 import static org.bloggers4labour.Constants.*;
 
 /**
  *
  * @author andrewre
  */
-public class InstallationManager
+public class InstallationManager implements InstallationManagerIF
 {
 	private Map<String,InstallationIF>	m_Map = new LinkedHashMap<String,InstallationIF>();
+	private Collection<IncludeFileLocator>	m_FileLocators = new HashSet<IncludeFileLocator>();
+	private Context				m_AppContext;	// (AGR) 28 April 2007
 
-	private static Logger			s_Installations_Logger = Logger.getLogger("Main");
+	private InstallationStatus		m_Status = InstallationStatus.UNCONFIGURED;
+
+	private static Logger			s_Installations_Logger = Logger.getLogger( InstallationManager.class );
 
 	public final static String		DEFAULT_INSTALL = "b4l";
 
@@ -62,6 +88,55 @@ public class InstallationManager
 			Document		theDocument = docBuilder.parse( theConf.findFile("installations.xml") );
 			Element			theElement;
 
+			///////////////////////////////////////////////////////////////////////////////////////  (AGR) 16 August 2008
+
+			XPathExpression			theFileLocatorsExpr = theXPathObj.compile("installations/fileLocators/fileLocator");
+			NodeList			theFileLocatorNodes = (NodeList) theFileLocatorsExpr.evaluate( theDocument, XPathConstants.NODESET);
+
+			for ( int k = 0; k < theFileLocatorNodes.getLength(); k++)
+			{
+				theElement = (Element) theFileLocatorNodes.item(k);
+
+				NamedNodeMap	theAttrs = theElement.getAttributes();
+
+				///////////////////////////////////////////////////////////////////////////////
+
+				DefaultFileLocator	theLocator = new DefaultFileLocator( theAttrs.getNamedItem("id").getTextContent() );
+
+				theLocator.setRootDirectoryPath( theAttrs.getNamedItem("rootDirectoryPath").getTextContent() );
+				theLocator.setDirectoryPrefix( theAttrs.getNamedItem("directoryPrefix").getTextContent() );
+				theLocator.setDefaultDirectoryName( theAttrs.getNamedItem("defaultDirectoryName").getTextContent() );
+
+				m_FileLocators.add(theLocator);
+			}
+
+			///////////////////////////////////////////////////////////////////////////////////////  (AGR) 16 August 2008
+
+			XPathExpression		theHTLPropsExpr = theXPathObj.compile("installations/HTL[1]");
+			Node			theHTLPropsNode = (Node) theHTLPropsExpr.evaluate( theDocument, XPathConstants.NODE);
+
+			if ( theHTLPropsNode != null)
+			{
+				NamedNodeMap	theAttrs = theHTLPropsNode.getAttributes();
+				Node		theDesiredLocatorAttr = theAttrs.getNamedItem("fileLocator");
+
+				if ( theDesiredLocatorAttr != null)
+				{
+					String	theName = theDesiredLocatorAttr.getTextContent();
+
+					for ( IncludeFileLocator eachLocator : m_FileLocators)
+					{
+						if (eachLocator.getId().equals(theName))
+						{
+							HTL.registerIncludeFileLocator(eachLocator);
+							break;
+						}
+					}
+				}
+			}
+
+			///////////////////////////////////////////////////////////////////////////////////////
+
 			XPathExpression			thePollersExpr = theXPathObj.compile("installations/pollers/poller");
 			XPathExpression			thePollerClassExpr = theXPathObj.compile("class[1]/text()");
 			XPathExpression			thePollerFreqExpr = theXPathObj.compile("frequency_ms[1]/text()");
@@ -81,9 +156,13 @@ public class InstallationManager
 				{
 					thePollerFreqMS = Long.parseLong( (String) thePollerFreqExpr.evaluate( theElement, XPathConstants.STRING) );
 				}
-				catch (Exception e)
+				catch (XPathException e)
 				{
-					;
+					// NOOP
+				}
+				catch (NumberFormatException e)
+				{
+					// NOOP
 				}
 
 				/////////////////////////////////////////////////////////////////////////////
@@ -92,9 +171,9 @@ public class InstallationManager
 				{
 					Constructor	ctor = Class.forName(theClassStr).getConstructors()[0];
 
-					thePollerIdsMap.put( theId, new PollerConfig( ctor, thePollerFreqMS));
+					thePollerIdsMap.put( theId, new PollerConfig( ctor, theId, thePollerFreqMS));
 				}
-				catch (Exception e)
+				catch (ClassNotFoundException e)
 				{
 					s_Installations_Logger.error("Failure when accessing \"" + theClassStr + "\". Will not be able to poll for this Installation.");
 				}
@@ -106,22 +185,25 @@ public class InstallationManager
 			XPathExpression		theDSNExpr = theXPathObj.compile("dataSourceName[1]/text()");	// (AGR) 14 Feb 2007
 			XPathExpression		theURLExpr = theXPathObj.compile("jdbc_url[1]/text()");
 			XPathExpression		theHMgrExpr = theXPathObj.compile("headlinesMgr[1]");
-			XPathExpression		theFBGroupIDExpr = theXPathObj.compile("facebook[1]/group_id[1]");
+			XPathExpression		theTasksExpr = theXPathObj.compile("task");
+//			XPathExpression		theFBGroupIDExpr = theXPathObj.compile("facebook[1]/group_id[1]");
 			NodeList		theInstallsNodes = (NodeList) theInstallsExpr.evaluate( theDocument, XPathConstants.NODESET);
 			InitialContext		initContext = new InitialContext();	// (AGR) 14 Feb 2007
-			Context			appContext;
+//			Context			appContext;
 
 			// s_Installations_Logger.info("initContext: " + initContext);
 
 			try
 			{
-				appContext = (Context) initContext.lookup("java:comp/env");
+//				appContext = (Context) initContext.lookup("java:comp/env");
+				m_AppContext = (Context) initContext.lookup("java:comp/env");	// (AGR) 28 April 2007
 			}
 			catch (javax.naming.NoInitialContextException e)
 			{
 				// (AGR) 13 March 2007. Only happens when runnng locally, not at B4L
 
-				appContext = null;	// (AGR) 13 March 2007. Take the NPE later.
+//				appContext = null;	// (AGR) 13 March 2007. Take the NPE later.
+				m_AppContext = null;	// (AGR) 28 April 2007
 			}
 
 			// s_Installations_Logger.info("appContext: " + appContext);
@@ -140,7 +222,8 @@ public class InstallationManager
 
 					s_Installations_Logger.info("[IMgr] Looking up: " + theDSNStr);
 
-					theSource = (DataSource) appContext.lookup(theDSNStr);
+//					theSource = (DataSource) appContext.lookup(theDSNStr);
+					theSource = (DataSource) m_AppContext.lookup(theDSNStr);	// (AGR) 28 April 2007
 
 					s_Installations_Logger.info("[IMgr] Obtained: " + theSource);
 
@@ -149,9 +232,9 @@ public class InstallationManager
 				}
 				catch (Exception e)
 				{
-					s_Installations_Logger.info("Resorting to use JDBC URL: " + e);
-
 					String		theURLNodeStr = (String) theURLExpr.evaluate( theElement, XPathConstants.STRING);
+
+					s_Installations_Logger.info("[IMgr] Resorting to use JDBC URL: " + theURLNodeStr);
 
 					theSource = new MysqlDataSource();
 
@@ -163,17 +246,32 @@ public class InstallationManager
 
 				/////////////////////////////////////////////////////////////////////////////  (AGR) 28 October 2006
 
-				String		thePollerId = theElement.getAttributes().getNamedItem("poller").getTextContent();
+				String			thePollerIdStr = theElement.getAttributes().getNamedItem("poller").getTextContent();
+				String[]		thePollerIds = thePollerIdStr.split(",");
+				Collection<PollerIF>	thePollers = new ArrayList<PollerIF>();
+
+				for ( String eachPollerId : thePollerIds)
+				{
+					String	thePollerId = eachPollerId.trim();
+
+					s_Installations_Logger.debug("thePollerId = " + thePollerId);
+
 				PollerConfig	thePollerConfigToUse = thePollerIdsMap.get(thePollerId);
-				Poller		theNewPoller;
+
+					s_Installations_Logger.debug("thePollerConfigToUse = " + thePollerConfigToUse);
 
 				try
 				{
-					theNewPoller = thePollerConfigToUse.newInstance();
+						Poller	theNewPoller = thePollerConfigToUse.newInstance();
+
+						s_Installations_Logger.debug("Adding theNewPoller = " + theNewPoller);
+
+						thePollers.add(theNewPoller);
 				}
 				catch (Exception e)
 				{
-					theNewPoller = null;
+						s_Installations_Logger.error("Poller creation failed", e);
+					}
 				}
 
 				/////////////////////////////////////////////////////////////////////////////
@@ -182,11 +280,59 @@ public class InstallationManager
 										( theBundleNameNode != null) ? theBundleNameNode.getTextContent() : theName,
 										theSource,
 										theElement.getAttributes().getNamedItem("mbean_name").getTextContent(),
-										theNewPoller);
+										thePollers);
+
+
+				/////////////////////////////////////////////////////////////////////////////  (AGR) 27 October 2008. InstallationTasks...
+
+				NodeList				theTaskNodes = (NodeList) theTasksExpr.evaluate( theElement, XPathConstants.NODESET);
+				Collection<InstallationTaskIF>		theTasksColl = new LinkedList<InstallationTaskIF>();
+
+				for ( int eachTaskIdx = 0; eachTaskIdx < theTaskNodes.getLength(); eachTaskIdx++)
+				{
+					Node	eachTaskNode = theTaskNodes.item(eachTaskIdx);
+					String	theClassName = eachTaskNode.getAttributes().getNamedItem("className").getTextContent();
+					String	theDelayStr = eachTaskNode.getAttributes().getNamedItem("delayMS").getTextContent();
+					String	theFreqStr = eachTaskNode.getAttributes().getNamedItem("frequencyMS").getTextContent();
+
+					try
+					{
+						@SuppressWarnings("unchecked")
+						Constructor<InstallationTaskIF>	theCtor = (Constructor<InstallationTaskIF>) Class.forName(theClassName).getConstructor( InstallationIF.class, Number.class, Number.class);
+
+						theTasksColl.add( theCtor.newInstance( theInstall, Long.valueOf(theDelayStr), Long.valueOf(theFreqStr)) );
+					}
+					catch (InvocationTargetException e)
+					{
+						s_Installations_Logger.error("Creating InstallationTasks", e);
+					}
+					catch (InstantiationException e)
+					{
+						s_Installations_Logger.error("Creating InstallationTasks", e);
+					}
+					catch (IllegalAccessException e)
+					{
+						s_Installations_Logger.error("Creating InstallationTasks", e);
+					}
+					catch (ClassNotFoundException e)
+					{
+						s_Installations_Logger.error("Creating InstallationTasks", e);
+					}
+					catch (NoSuchMethodException e)
+					{
+						s_Installations_Logger.error("Creating InstallationTasks", e);
+					}
+					catch (IllegalArgumentException e)
+					{
+						s_Installations_Logger.error("Creating InstallationTasks", e);
+					}
+				}
+
+				theInstall.setTasks(theTasksColl);
 
 				/////////////////////////////////////////////////////////////////////////////  (AGR) 13 March 2007. Facebook...
 
-				Element		theFBGroupIDElem = (Element) theFBGroupIDExpr.evaluate( theElement, XPathConstants.NODE);
+/*				Element		theFBGroupIDElem = (Element) theFBGroupIDExpr.evaluate( theElement, XPathConstants.NODE);
 
 				try
 				{
@@ -196,7 +342,7 @@ public class InstallationManager
 				{
 					;
 				}
-
+*/
 				/////////////////////////////////////////////////////////////////////////////
 
 				Element		theHeadMgrElem = (Element) theHMgrExpr.evaluate( theElement, XPathConstants.NODE);
@@ -206,10 +352,32 @@ public class InstallationManager
 
 				/////////////////////////////////////////////////////////////////////////////
 
+				AuthenticationManager.getInstance();	// Yuk! Move me!!!
+
+				/////////////////////////////////////////////////////////////////////////////
+
 				register(theInstall);
 			}
+
+			m_Status = InstallationStatus.STARTED;
 		}
-		catch (Exception e) // (XPathException e)
+		catch (XPathExpressionException e)
+		{
+			s_Installations_Logger.error("InstallationManager()", e);
+		}
+		catch (NamingException e)		// for InitialContext stuff
+		{
+			s_Installations_Logger.error("InstallationManager()", e);
+		}
+		catch (ParserConfigurationException e)	// for DocumentBuilderFactory
+		{
+			s_Installations_Logger.error("InstallationManager()", e);
+		}
+		catch (SAXException e)			// for DocumentBuilder.parse
+		{
+			s_Installations_Logger.error("InstallationManager()", e);
+		}
+		catch (IOException e)			// for DocumentBuilder.parse
 		{
 			s_Installations_Logger.error("InstallationManager()", e);
 		}
@@ -217,7 +385,7 @@ public class InstallationManager
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public static InstallationManager getInstance()
+	public static InstallationManagerIF getInstance()
 	{
 		return LazyHolder.s_Mgr;
 	}
@@ -231,7 +399,7 @@ public class InstallationManager
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public synchronized void register( Installation inInstall)
+	public synchronized void register( InstallationIF inInstall)
 	{
 		m_Map.put( inInstall.getName(), inInstall);
 	}
@@ -240,7 +408,7 @@ public class InstallationManager
 	*******************************************************************************/
 	public static InstallationIF getDefaultInstallation()
 	{
-		return getInstance().getInstallation( DEFAULT_INSTALL );
+		return getInstallation( DEFAULT_INSTALL );
 	}
 
 	/*******************************************************************************
@@ -254,7 +422,14 @@ public class InstallationManager
 	*******************************************************************************/
 	public synchronized InstallationIF get( String inName)
 	{
-		return m_Map.get(inName);
+		InstallationIF	theInstall = m_Map.get(inName);
+
+		if ( theInstall != null)
+		{
+			return theInstall;
+		}
+
+		throw new InstallationNotFoundException(inName);
 	}
 
 	/*******************************************************************************
@@ -264,6 +439,18 @@ public class InstallationManager
 		for ( InstallationIF eachInstall : m_Map.values())
 		{
 			eachInstall.restart();
+		}
+
+		m_Status = InstallationStatus.STARTED;
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public void startIfStopped()
+	{
+		if ( m_Status == InstallationStatus.STOPPED)
+		{
+			restart();
 		}
 	}
 
@@ -275,6 +462,36 @@ public class InstallationManager
 		{
 			eachInstall.stop();
 		}
+
+		m_Status = InstallationStatus.STOPPED;
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public InstallationStatus getStatus()
+	{
+		return m_Status;
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public Iterable<IncludeFileLocator> getFileLocators()
+	{
+		return new Iterable<IncludeFileLocator>()
+		{
+			public Iterator<IncludeFileLocator> iterator()
+			{
+				return m_FileLocators.iterator();
+			}
+		};
+	}
+
+	/*******************************************************************************
+		(AGR) 28 April 2007
+	*******************************************************************************/
+	public DataSource lookupDataSource( String inName) throws NamingException
+	{
+		return ( m_AppContext != null) ? (DataSource) m_AppContext.lookup(inName) : null;
 	}
 
 	/*******************************************************************************

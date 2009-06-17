@@ -9,7 +9,6 @@
 
 package org.bloggers4labour.validation;
 
-import com.hiatus.UText;
 import java.util.regex.Pattern;
 import static org.bloggers4labour.validation.PostCodeResult.*;
 

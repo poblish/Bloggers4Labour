@@ -9,11 +9,10 @@
 
 package org.bloggers4labour.sql;
 
-import com.hiatus.UText;
+import com.hiatus.text.UText;
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import javax.servlet.jsp.*;
 import javax.servlet.jsp.tagext.*;
-import javax.sql.DataSource;
 import org.apache.log4j.Logger;
 import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.InstallationManager;
@@ -26,13 +25,15 @@ public class DataSourceConnTag extends TagSupport implements TryCatchFinally
 {
 	private String			m_InstallationStr;
 	private String			m_InstallName;		// (AGR) 19 Feb 2007
-	private Logger			m_Logger;
+//	private Logger			m_Logger;
 
 	private DataSourceConnection	m_Connection;
 	private boolean			m_ConnectedOK;
 	private Exception		m_Exception;
 
-	private static Logger		s_Logger = Logger.getLogger("Main");
+	private static Logger		s_Logger = Logger.getLogger( DataSourceConnTag.class );
+
+	private static final long	serialVersionUID = 1L;
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -99,7 +100,7 @@ public class DataSourceConnTag extends TagSupport implements TryCatchFinally
 
 	/*******************************************************************************
  	*******************************************************************************/
-	public int doStartTag() throws JspException
+	@Override public int doStartTag() throws JspException
 	{
 		// System.out.println("in doStartTag(), m_InstallationStr = " + m_InstallationStr);
 
@@ -152,7 +153,7 @@ public class DataSourceConnTag extends TagSupport implements TryCatchFinally
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public int doEndTag() throws JspException
+	@Override public int doEndTag() throws JspException
 	{
 		s_Logger.debug("in doEndTag(), conn = " + m_Connection);
 

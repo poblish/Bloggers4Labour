@@ -6,16 +6,20 @@
 
 package org.bloggers4labour.gui;
 
-import com.hiatus.UDates;
-import de.nava.informa.core.ItemIF;
-import de.nava.informa.impl.basic.Item;
-import org.bloggers4labour.feed.FeedList;
-import org.bloggers4labour.jsp.DisplayItem;
+import com.hiatus.dates.UDates;
+import java.util.Collection;
 import java.util.List;
-import org.bloggers4labour.*;
-import org.bloggers4labour.index.IndexMgr;
+import org.bloggers4labour.jsp.DisplayItem;
+import org.bloggers4labour.HeadlinesMgr;
+import org.bloggers4labour.InstallationIF;
+import org.bloggers4labour.InstallationManager;
+import org.bloggers4labour.Launcher;
+import org.bloggers4labour.bridge.channel.item.ItemIF;
+import org.bloggers4labour.feed.FeedListIF;
+import org.bloggers4labour.headlines.HeadlinesIF;
+import org.bloggers4labour.index.SearchMatch;
 import org.bloggers4labour.jmx.Stats;
-import org.bloggers4labour.opml.OPMLGenerator;
+import org.bloggers4labour.site.SiteIF;
 import org.bloggers4labour.tag.Link;
 
 /**
@@ -25,6 +29,8 @@ import org.bloggers4labour.tag.Link;
 public class MaintenanceForm extends javax.swing.JFrame
 {
 	private transient Launcher	m_Launcher;	// (AGR) 3 Feb 2007. FindBugs made me make this transient
+
+	private static final long	serialVersionUID = 1L;
 
 	/** Creates new form MaintenanceForm */
 	public MaintenanceForm()
@@ -247,7 +253,7 @@ public class MaintenanceForm extends javax.swing.JFrame
 	{//GEN-HEADEREND:event_m_GenerateActionPerformed
 		InstallationIF	theInstall = InstallationManager.getInstallation((String) m_Install.getSelectedItem() );
 		HeadlinesMgr	hMgr = theInstall.getHeadlinesMgr();
-		Headlines	theHeads;
+		HeadlinesIF	theHeads;
 		int		theSelection = m_HeadlinesType.getSelectedIndex();
 
 		// System.out.println(theSelection);
@@ -263,8 +269,15 @@ public class MaintenanceForm extends javax.swing.JFrame
 				break;
 			case 2:
 				theHeads = hMgr.findHeadlines((String) m_HeadlinesType.getSelectedItem() );
-				// System.out.println("theHeads = " + theHeads);
 				break;
+		}
+
+		////////////////////////////////////////////////////////////////
+
+		if ( theHeads == null)
+		{
+			System.out.println("Headlines object not found!");
+			return;
 		}
 
 		////////////////////////////////////////////////////////////////
@@ -275,18 +288,23 @@ public class MaintenanceForm extends javax.swing.JFrame
 
 		for ( int z = 0; z < headlineItemsArray.length; z++)
 		{
-			di = new DisplayItem( theInstall, (Item) headlineItemsArray[z], currentTimeMSecs);
+			di = new DisplayItem( theInstall, headlineItemsArray[z], currentTimeMSecs);
 
-			System.out.println("[" + z + "]: \"" + di.getDispTitle() + "\" from: " + di.getSiteURL());
+			System.out.println("[" + z + "]: \"" + di.getDispTitle() + "\" from: " + di.getSiteURL() + " @ " + di.getDateString());
 		}
 
-		FeedList	flst = theInstall.getFeedList();
-		Site		theSite = flst.lookup(144);
-		de.nava.informa.core.ChannelIF	channel = theSite.getChannel();
+		////////////////////////////////////////////////////////////////
 
-		System.out.println("==> " + channel.getItems());
+		SiteIF	theSite = theInstall.getFeedList().lookup(144);
 
-		headlineItemsArray = null;
+		if ( theSite != null && theSite.getChannel() != null)
+		{
+			System.out.println("==> " + theSite.getChannel().getItems());
+		}
+		else
+		{
+			System.out.println("Site not found!");
+		}
 	}//GEN-LAST:event_m_GenerateActionPerformed
 
 	private void m_RunQueryActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_m_RunQueryActionPerformed
@@ -295,9 +313,21 @@ public class MaintenanceForm extends javax.swing.JFrame
 			    {
 				public void run()
 				{
-					InstallationIF	theInstall = InstallationManager.getDefaultInstallation();
+					InstallationIF		theInstall = InstallationManager.getDefaultInstallation();
+					List<SearchMatch>	theResults = theInstall.getIndexMgr().runQuery( m_QueryText.getText() );
 
-					theInstall.getIndexMgr().runQuery( m_QueryText.getText() );
+					if (theResults.isEmpty())
+					{
+						System.out.println("Sorry, no matches.");
+						return;
+					}
+
+					int	i = 0;
+
+					for ( SearchMatch each : theResults)
+					{
+						System.out.println("Match [" + (i++) + "]: '" + each.getDescription() + "' by '" + each.getBlogName() + "', date: " + each.getDateString());
+					}
 				}
 			    }
 			).start();
@@ -315,7 +345,7 @@ public class MaintenanceForm extends javax.swing.JFrame
 			int		theCount = Integer.parseInt( m_FeedExecutionCount.getText() );
 			InstallationIF	theInstall = InstallationManager.getDefaultInstallation();
 			Stats		theStats = theInstall.getManagement().getStats();
-			Headlines	theH = theInstall.getHeadlinesMgr().getMainRSSFeedInstance();
+			HeadlinesIF	theH = theInstall.getHeadlinesMgr().getMainRSSFeedInstance();
 
 			System.out.println("Generating the News Feed " + theCount + " times...");
 			theStartMS = System.currentTimeMillis();
@@ -331,7 +361,7 @@ public class MaintenanceForm extends javax.swing.JFrame
 		else if ( theTabIndex == 1)
 		{
 			int		theCount = Integer.parseInt( m_FeedExecutionCount.getText() );
-			FeedList	theFL = InstallationManager.getDefaultInstallation().getFeedList();
+			FeedListIF	theFL = InstallationManager.getDefaultInstallation().getFeedList();
 
 			System.out.println("Generating the OPML Feed " + theCount + " times, using " + theFL + "...");
 			theStartMS = System.currentTimeMillis();
@@ -371,9 +401,9 @@ public class MaintenanceForm extends javax.swing.JFrame
 
 	private void linksByNameButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_linksByNameButtonActionPerformed
 	{//GEN-HEADEREND:event_linksByNameButtonActionPerformed
-		InstallationIF	theInstall = InstallationManager.getDefaultInstallation();
-		Headlines	h = theInstall.getHeadlinesMgr().getRecentPostsInstance();
-		List<Link>	ll = h.getLinksByName();
+		InstallationIF		theInstall = InstallationManager.getDefaultInstallation();
+		HeadlinesIF		h = theInstall.getHeadlinesMgr().getRecentPostsInstance();
+		Collection<Link>	ll = h.getLinksByName();
 
 		System.out.println("Links by Name...");
 
@@ -385,9 +415,9 @@ public class MaintenanceForm extends javax.swing.JFrame
 
 	private void linksByURLButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_linksByURLButtonActionPerformed
 	{//GEN-HEADEREND:event_linksByURLButtonActionPerformed
-		InstallationIF	theInstall = InstallationManager.getDefaultInstallation();
-		Headlines	h = theInstall.getHeadlinesMgr().getRecentPostsInstance();
-		List<Link>	ll = h.getLinksByURL();
+		InstallationIF		theInstall = InstallationManager.getDefaultInstallation();
+		HeadlinesIF		h = theInstall.getHeadlinesMgr().getRecentPostsInstance();
+		Collection<Link>	ll = h.getLinksByURL();
 
 		System.out.println("Links by URL...");
 
@@ -395,6 +425,9 @@ public class MaintenanceForm extends javax.swing.JFrame
 		{
 			System.out.println("Link " + l + " from " + l.getSource());
 		}
+
+		// System.out.println("-----------");
+		// System.out.println( theInstall.getCategories() );
 	}//GEN-LAST:event_linksByURLButtonActionPerformed
 
 	private void formWindowActivated(java.awt.event.WindowEvent evt)//GEN-FIRST:event_formWindowActivated

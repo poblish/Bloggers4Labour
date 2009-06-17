@@ -9,12 +9,12 @@
 
 package org.bloggers4labour.headlines;
 
-import de.nava.informa.core.ChannelIF;
-import de.nava.informa.core.ItemIF;
 import java.util.List;
 import org.bloggers4labour.Headlines;
 import org.bloggers4labour.Installation;
-import org.bloggers4labour.Site;
+import org.bloggers4labour.bridge.channel.ChannelIF;
+import org.bloggers4labour.bridge.channel.item.ItemIF;
+import org.bloggers4labour.site.SiteIF;
 
 /**
  *
@@ -25,7 +25,7 @@ public class HeadlineFilter
 	private Installation	m_Install;
 	private ChannelIF	m_Channel;
 
-	private Site		m_Site;		// (AGR) 29 Jan 2007. Removed pointless 'transient'
+	private SiteIF		m_Site;		// (AGR) 29 Jan 2007. Removed pointless 'transient'
 
 	/*******************************************************************************
 	*******************************************************************************/

@@ -9,10 +9,9 @@
 
 package org.bloggers4labour.activity;
 
-import com.hiatus.UText;
-import com.hiatus.htl.*;
-import de.nava.informa.core.ChannelIF;
-import de.nava.informa.impl.basic.Channel;
+import com.hiatus.htl.HTL;
+import com.hiatus.htl.HTLTemplate;
+import com.hiatus.text.UText;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.text.NumberFormat;
@@ -21,31 +20,28 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import org.apache.log4j.Logger;
 import org.bloggers4labour.feed.FeedList;
 import org.bloggers4labour.htl.B4LHTLContext;
-import org.bloggers4labour.Site;
+import org.bloggers4labour.site.SiteIF;
 import static org.bloggers4labour.Constants.*;
 
 /**
  *
  * @author andrewre
  */
-public class LastPostTable
+public class LastPostTable implements LastPostTableIF
 {
 	private Map<String,Long>		m_ChannelData = new TreeMap<String,Long>();
 	private Map<Long,Date>			m_SiteData = new TreeMap<Long,Date>();
 	private FeedList			m_FL;
-//	private boolean				m_AddDefault;
 
-//	private int				m_Unknown;
 	private int[]				m_Stats = new int[11];
 	private int				m_Total;
 
-	private byte[]				m_CompletionLocker = new byte[0];	// (AGR) 29 Jan 2007. Removed pointless 'transient'
+	private final byte[]			m_CompletionLocker = new byte[0];	// (AGR) 29 Jan 2007. Removed pointless 'transient'
 
 	private static Map<Long,Date>		s_LegacySiteData = new TreeMap<Long,Date>();
 	private static Logger			s_Logger = Logger.getLogger( LastPostTable.class );
@@ -172,7 +168,7 @@ public class LastPostTable
 
 				for ( String eachChannel : m_ChannelData.keySet())
 				{
-					Site	eachSite = m_FL.lookupFeedLocationURL(eachChannel);
+					SiteIF	eachSite = m_FL.lookupFeedLocationURL(eachChannel);
 
 					if ( eachSite != null)
 					{
@@ -348,7 +344,7 @@ public class LastPostTable
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public String toString()
+	@Override public String toString()
 	{
 		StringBuilder	sb = new StringBuilder("Stats: ");
 

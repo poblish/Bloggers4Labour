@@ -5,22 +5,22 @@
  */
 package org.bloggers4labour.jmx;
 
-import com.hiatus.USQL_Utils;
-import com.hiatus.ULocale2;
+import com.hiatus.locales.ULocale2;
+import com.hiatus.sql.USQL_Utils;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
-import javax.management.*;
 import org.apache.log4j.Logger;
 import org.bloggers4labour.*;
-import org.bloggers4labour.feed.FeedList;
+import org.bloggers4labour.headlines.HeadlinesIF;
+import org.bloggers4labour.site.SiteIF;
 import org.bloggers4labour.sql.DataSourceConnection;
 import org.bloggers4labour.sql.QueryBuilder;
-import org.bloggers4labour.tag.Link;
 
 /**
  * Class Stats
@@ -76,7 +76,7 @@ public class Stats implements StatsMBean
 
 					getBlogsCount(theS);
 				}
-				catch (Exception e)
+				catch (SQLException e)
 				{
 					s_Stats_Logger.error("creating statement", e);
 				}
@@ -90,7 +90,7 @@ public class Stats implements StatsMBean
 				s_Stats_Logger.warn("Cannot connect!");
 			}
 		}
-		catch (Exception err)
+		catch (RuntimeException err)
 		{
 			s_Stats_Logger.error("???", err);
 		}
@@ -99,7 +99,6 @@ public class Stats implements StatsMBean
 			if ( theConnectionObject != null)
 			{
 				theConnectionObject.CloseDown();
-				theConnectionObject = null;
 			}
 		}
 	}
@@ -150,7 +149,7 @@ public class Stats implements StatsMBean
 		(AGR) 3 Feb 2007. FindBugs said I should sync in accordance with the
 		corresponding set...() method. Eeek!
 	*******************************************************************************/
-	public int getSuccessfulFeedCount()
+	public synchronized int getSuccessfulFeedCount()
 	{
 		return m_SuccessfulFeedCount;
 	}
@@ -223,7 +222,7 @@ public class Stats implements StatsMBean
 		(AGR) 3 Feb 2007. FindBugs said I should sync in accordance with the
 		corresponding set...() method. Eeek!
 	*******************************************************************************/
-	public int getSuccessfulCommentFeedCount()
+	public synchronized int getSuccessfulCommentFeedCount()
 	{
 		return m_SuccessfulCommentFeedCount;
 	}
@@ -240,11 +239,9 @@ public class Stats implements StatsMBean
 	*******************************************************************************/
 	public int getBlogsUsedInLast24Hours()
 	{
-/*		System.out.println("getBlogsUsedInLast24Hours() - in = " + m_Install);
-		System.out.println("getBlogsUsedInLast24Hours() - hs = " + m_Install.getHeadlinesMgr());
-		System.out.println("getBlogsUsedInLast24Hours() - 24 = " + m_Install.getHeadlinesMgr().get24HourInstance());
-*/
-		return m_Install.getHeadlinesMgr().get24HourInstance().getBlogsCount();
+		HeadlinesIF	theHeads = m_Install.getHeadlinesMgr().get24HourInstance();
+
+		return ( theHeads != null) ? theHeads.getBlogsCount() : -1;
 	}
 
 	/*******************************************************************************
@@ -258,7 +255,9 @@ public class Stats implements StatsMBean
 	*******************************************************************************/
 	public int getPostsMadeInLast24Hours()
 	{
-		return m_Install.getHeadlinesMgr().get24HourInstance().size();
+		HeadlinesIF	theHeads = m_Install.getHeadlinesMgr().get24HourInstance();
+
+		return ( theHeads != null) ? theHeads.size() : -1;
 	}
 
 	/*******************************************************************************
@@ -272,7 +271,9 @@ public class Stats implements StatsMBean
 	*******************************************************************************/
 	public int getLinksFoundInLast24Hours()
 	{
-		return m_Install.getHeadlinesMgr().get24HourInstance().countLinks();
+		HeadlinesIF	theHeads = m_Install.getHeadlinesMgr().get24HourInstance();
+
+		return ( theHeads != null) ? theHeads.countLinks() : -1;
 	}
 
 	/*******************************************************************************
@@ -308,16 +309,16 @@ public class Stats implements StatsMBean
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public Date getLastUpdateTime()
+	public synchronized Date getLastUpdateTime()
 	{
-		return m_LastUpdateTime;
+		return (Date) m_LastUpdateTime.clone();		// FindBugs recommended this...
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public void setLastUpdateTime( Date x)
+	public synchronized void setLastUpdateTime( Date x)
 	{
-		m_LastUpdateTime = x;
+		m_LastUpdateTime = (Date) x.clone();		// FindBugs recommended this...
 	}
 
 	/*******************************************************************************
@@ -331,7 +332,7 @@ public class Stats implements StatsMBean
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public int getRSSFeedItemCount()
+	public synchronized int getRSSFeedItemCount()
 	{
 		return m_RSSFeed_Count;
 	}
@@ -340,7 +341,7 @@ public class Stats implements StatsMBean
 	*******************************************************************************/
 	public Date getRSSFeedCompletionTime()
 	{
-		return m_RSSFeed_Completed;
+		return (Date) m_RSSFeed_Completed.clone();		// FindBugs recommended this...
 	}
 
 	/*******************************************************************************
@@ -354,7 +355,7 @@ public class Stats implements StatsMBean
 	*******************************************************************************/
 	public Date getStartupTime()
 	{
-		return m_StartupTime;
+		return (Date) m_StartupTime.clone();		// FindBugs recommended this...
 	}
 
 	/*******************************************************************************
@@ -375,13 +376,13 @@ public class Stats implements StatsMBean
 	*******************************************************************************/
 	public String[] getCurrentSiteNames()
 	{
-		Site[]	theSitesArray;
+		SiteIF[]	theSitesArray;
 
 		synchronized (this)
 		{
-			List<Site>	theList = m_Install.getFeedList().getSites();
+			List<SiteIF>	theList = m_Install.getFeedList().getSites();
 
-			theSitesArray = theList.toArray( new Site[0] );
+			theSitesArray = theList.toArray( new SiteIF[ theList.size() ] );
 		}
 
 		java.util.Arrays.sort(theSitesArray);	// by recno
@@ -389,9 +390,9 @@ public class Stats implements StatsMBean
 		String[]	theResult = new String[ theSitesArray.length ];
 		int		i = 0;
 
-		for ( Site s : theSitesArray)
+		for ( SiteIF s : theSitesArray)
 		{
-			theResult[i++] = s.toMiniString();
+			theResult[i++] = ((Site) s).toMiniString();
 		}
 
 		return theResult;
@@ -399,7 +400,7 @@ public class Stats implements StatsMBean
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public List<Site> getCurrentSites()
+	public List<SiteIF> getCurrentSites()
 	{
 		return m_Install.getFeedList().getSites();
 	}
@@ -445,7 +446,7 @@ public class Stats implements StatsMBean
 	/*******************************************************************************
 		(AGR) 6 June 2005. My first Operation
 	*******************************************************************************/
-	public Site getSite( long inSiteRecno)
+	public SiteIF getSite( long inSiteRecno)
 	{
 		return m_Install.getFeedList().lookup(inSiteRecno);
 	}
@@ -468,7 +469,7 @@ public class Stats implements StatsMBean
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public String toString()
+	@Override public String toString()
 	{
 		return "[Stats for \"" + m_Install.getName() + "\"]";
 	}

@@ -9,9 +9,10 @@
 
 package org.bloggers4labour.headlines;
 
-import de.nava.informa.core.ItemIF;
 import org.apache.log4j.Logger;
-import org.bloggers4labour.*;
+import org.bloggers4labour.InstallationIF;
+import org.bloggers4labour.ItemContext;
+import org.bloggers4labour.bridge.channel.item.ItemIF;
 
 /**
  *
@@ -21,7 +22,7 @@ public class LogNewCommentHandler implements AddHandler
 {
 	/*******************************************************************************
 	*******************************************************************************/
-	public void onAdd( final Installation inInstall, HeadlinesIF inHeads, final ItemIF inItem, final ItemContext inCtxt)
+	public void onAdd( final InstallationIF inInstall, HeadlinesIF inHeads, final ItemIF inItem, final ItemContext inCtxt)
 	{
 		org.bloggers4labour.jsp.DisplayItem	d = new org.bloggers4labour.jsp.DisplayItem( inInstall, inItem, System.currentTimeMillis());
 

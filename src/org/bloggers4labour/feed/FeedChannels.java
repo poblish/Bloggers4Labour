@@ -6,37 +6,34 @@
 
 package org.bloggers4labour.feed;
 
-import com.hiatus.*;
+import com.hiatus.text.UText;
+import de.nava.informa.core.ChannelBuilderIF;
+import de.nava.informa.core.ParseException;
+import de.nava.informa.parsers.FeedParser;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.NoRouteToHostException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.net.URLConnection;
-import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-import de.nava.informa.parsers.*;
-import de.nava.informa.core.*;
-import de.nava.informa.impl.basic.ChannelBuilder;
-import de.nava.informa.impl.basic.Item;
+import java.io.UTFDataFormatException;
 import org.apache.log4j.Logger;
-import org.bloggers4labour.Installation;
+import org.bloggers4labour.InstallationIF;
+import org.bloggers4labour.bridge.channel.ChannelIF;
+import org.bloggers4labour.bridge.channel.DefaultChannelBridgeFactory;
 import static org.bloggers4labour.Constants.*;
 
 /**
  *
  * @author andrewre
  */
-public class FeedChannels
+public class FeedChannels implements FeedChannelsIF
 {
 	private List<FeedChannel>		m_List = new CopyOnWriteArrayList<FeedChannel>();  // (AGR) 21 June 2005
 
-	private static ChannelBuilderIF		s_CBuilder = new ChannelBuilder();	// (AGR) post-23 May 2005
-	private static Logger			s_FC_Logger = Logger.getLogger("Main");
+	private static ChannelBuilderIF		s_CBuilder = new MyLimitedChannelBuilder();
+	private static Logger			s_FC_Logger = Logger.getLogger( FeedChannels.class );
 
 	/*******************************************************************************
 		(AGR) 21 June 2005. Changes... generally the list of Channels will
@@ -76,7 +73,7 @@ public class FeedChannels
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public String toString()
+	@Override public String toString()
 	{
 		return m_List.toString();
 	}
@@ -90,7 +87,7 @@ public class FeedChannels
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public ConnectResult connectTo( final Installation inInstall, int inThreadID, String inURL) 
+	public ConnectResult connectTo( final InstallationIF inInstall, int inThreadID, String inURL) 
 	{
 		ConnectStatus	theStatus = ConnectStatus.FAILURE;	// (AGR) 30 Nov 2005. Assume the worst...
 		String		prefix = inInstall.getLogPrefix();	// (AGR) 20 Feb 2006
@@ -182,11 +179,15 @@ public class FeedChannels
 		}
 		catch (SocketException e)
 		{
-			s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": SocketException for \"" + inURL + "\" was " + e );
+			s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": SocketException for \"" + inURL + "\" was " + e);
 		}
 		catch (FileNotFoundException e)		// (AGR) 5 June 2005
 		{
 			s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": " + e);
+		}
+		catch (UTFDataFormatException e)	// (AGR) 23 August 2008
+		{
+			s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": UTFDataFormatException for \"" + inURL + "\" was " + e.getMessage());
 		}
 		catch (IOException e)
 		{
@@ -202,7 +203,7 @@ public class FeedChannels
 
 	/*******************************************************************************
 	*******************************************************************************/
-	private class FeedChannel
+	private static class FeedChannel
 	{
 		public String		m_URL;
 		public ChannelIF	m_Channel;
@@ -217,7 +218,7 @@ public class FeedChannels
 
 		/*******************************************************************************
 		*******************************************************************************/
-		public String toString()
+		@Override public String toString()
 		{
 			return "[url=\"" + m_URL + "\",Channel=" + m_Channel + "]";
 		}
@@ -226,7 +227,7 @@ public class FeedChannels
 	/*******************************************************************************
 		(AGR) 30 Nov 2005
 	*******************************************************************************/
-	private class ParserThreadStorage
+	private static class ParserThreadStorage
 	{
 		private boolean		completed;
 		public ChannelIF	channel;
@@ -236,7 +237,7 @@ public class FeedChannels
 	/*******************************************************************************
 		(AGR) 30 Nov 2005
 	*******************************************************************************/
-	private class ParserThread extends Thread
+	private static class ParserThread extends Thread
 	{
 		private int			m_ThreadID;
 		private String			m_URL;
@@ -249,20 +250,26 @@ public class FeedChannels
 			m_ThreadID = inThreadID;
 			m_URL = inURL;
 			m_Storage = inStorage;
+
+			setDaemon(true);	// (AGR) 16 August 2008
 		}
 
 		/*******************************************************************************
 		*******************************************************************************/
-		public void run()
+		@Override public void run()
 		{
 			try
 			{
-				m_Storage.channel = FeedParser.parse( s_CBuilder, m_URL);
+				m_Storage.channel = new DefaultChannelBridgeFactory().getInstance().bridge( FeedParser.parse( s_CBuilder, m_URL) );
 				m_Storage.completed = true;
 			}
 			catch (NullPointerException ex)    // (AGR) 7 October 2005. Improve error handling
 			{
+				if ( s_FC_Logger != null)
+				{
+					ex.printStackTrace();
 				s_FC_Logger.error("connectTo() #" + m_ThreadID + ": NPE doing: " + m_URL);
+				}
 			}
 			catch (Exception e)
 			{

@@ -6,15 +6,9 @@
 
 package org.bloggers4labour.mail;
 
-import com.hiatus.CoreMail;
-import com.hiatus.ULocale2;
-import com.hiatus.UDates;
-import com.hiatus.UHTML;
-import com.hiatus.USQL_Utils;
-import com.hiatus.UText;
-import com.hiatus.htl.*;
-import de.nava.informa.core.*;
-import de.nava.informa.impl.basic.Item;
+import com.hiatus.locales.ULocale2;
+import com.hiatus.mail.CoreMail;
+import com.hiatus.sql.USQL_Utils;
 import java.io.UnsupportedEncodingException;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -22,12 +16,14 @@ import java.sql.SQLException;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Formatter;
-import java.util.Iterator;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
+import java.util.MissingResourceException;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.Timer;
@@ -39,21 +35,24 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import org.apache.log4j.Logger;
-import org.bloggers4labour.conf.Configuration;
-import org.bloggers4labour.feed.FeedList;
+import org.bloggers4labour.FeedUtils;
+import org.bloggers4labour.InstallationIF;
+import org.bloggers4labour.InstallationManager;
+import org.bloggers4labour.bridge.channel.item.ItemIF;
+import org.bloggers4labour.feed.FeedListIF;
+import org.bloggers4labour.headlines.HeadlinesIF;
 import org.bloggers4labour.sql.DataSourceConnection;
 import org.bloggers4labour.sql.QueryBuilder;
 import static org.bloggers4labour.Constants.*;
-import org.bloggers4labour.*;
 
 /**
  *
  * @author andrewre
  */
-public class DigestSender
+public class DigestSender implements DigestSenderIF
 {
-	private Timer			m_CheckerTimer;
-	private CheckerTask		m_CheckerTask;
+	private Timer			m_CheckerTimer = new Timer("DigestSender: sender Timer", /* (AGR) 16 Aug 08. Set as Daemon */ true);
+	private CheckerTask		m_CheckerTask = new CheckerTask();
 	private DateFormat		m_DF;
 	private DateFormat		m_DMYFormat;
 	private CoreMail		m_MailObj;
@@ -64,7 +63,7 @@ public class DigestSender
 
 //	private static DigestSender	s_List;    // (AGR) 3 Feb 2007. See below.
 
-	private static Logger		s_DS_Logger = Logger.getLogger("Main");
+	private static Logger		s_DS_Logger = Logger.getLogger( DigestSender.class );
 
 	private final static long	IDEAL_INTERVAL = 15;
 	private final static long	INTERVAL = IDEAL_INTERVAL;
@@ -74,36 +73,10 @@ public class DigestSender
 	private final static String	OUR_EMAIL_STR = "us@bloggers4labour.org";
 
 	/*******************************************************************************
-		(AGR) 4 July 2005. For testing!
-	*******************************************************************************/
-	public static void main( String[] args)
-	{
-		Properties	p = new Properties();
-		p.setProperty( "bm.docs_directory_path", "/Users/andrewre/www/htdocs/bloggers4labour/htl/");
-		p.setProperty( "bm.locales_dir_name", "locales/");
-		p.setProperty( "bm.default_dir_name", "default");
-
-		com.hiatus.WebApp.setProperties(p);
-
-		HTL.initHTL(p);
-		HTLCache.init();
-
-		//////////////////////////////////////////////////////
-
-		Configuration.getInstance().setDirectoryIfNotSet("/Users/andrewre/www/htdocs/bloggers4labour/conf/");	// (AGR) 15 Jan 2007
-
-		FeedList	theFL = InstallationManager.getDefaultInstallation().getFeedList();
-
-		new DigestSender( InstallationManager.getDefaultInstallation() ).test(theFL);
-	}
-
-	/*******************************************************************************
 	*******************************************************************************/
 	public DigestSender( final InstallationIF inInstall)
 	{
 		m_Install = inInstall;
-		m_CheckerTimer = new Timer("DigestSender: sender Timer");
-		m_CheckerTask = new CheckerTask();
 
 		//////////////////////////////////////////////////////
 
@@ -113,7 +86,7 @@ public class DigestSender
 		{
 			m_DMYFormat = DateFormat.getDateInstance( DateFormat.MEDIUM, m_Locale);
 		}
-		catch (Exception e)
+		catch (RuntimeException e)
 		{
 			m_DMYFormat = m_DF;
 		}
@@ -150,45 +123,85 @@ public class DigestSender
 	}
 	
 	/*******************************************************************************
-		(AGR) 3 Feb 2007. WTF is this doing?? Would weever need this
-		cancel functionality in in real-life? Comment-out for now.
 	*******************************************************************************/
-	public static void cancelTimer()
+	private InternetAddress generateSenderAddress()
 	{
-/*		if ( s_List != null)
+		try	// (AGR) 14 April 2005
 		{
-			if ( s_List.m_CheckerTimer != null)
+			return new InternetAddress( OUR_EMAIL_STR, "Bloggers4Labour");
+		}
+		catch (UnsupportedEncodingException e)
+		{
+			try
 			{
-				s_DS_Logger.info("DigestSender: cancelling Timer: " + s_List.m_CheckerTimer);
+				return new InternetAddress(OUR_EMAIL_STR);
+			}
+			catch (AddressException e2)
+			{
+				s_DS_Logger.error("", e2);
+			}
+		}
 
-				s_List.m_CheckerTimer.cancel();
-				s_List.m_CheckerTimer = null;
+		return null;
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	private StringBuffer generateEmailSubject( final Locale inLocale, final ResourceBundle inBundle)
+	{
+		return generateEmailSubject( inLocale, inBundle, new Date());
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	private StringBuffer generateEmailSubject( final Locale inLocale, final ResourceBundle inBundle, final Date inDate)
+	{
+		StringBuffer	theEmailSubject = new StringBuffer();
+		Formatter	theEmailSubjectFormatter = new Formatter( theEmailSubject, inLocale);
+
+		theEmailSubjectFormatter.format( inLocale, inBundle.getString("mail.subject"), m_DMYFormat.format(inDate));
+
+		return theEmailSubject;
 			}
 
-			s_List.m_CheckerTask = null;
+	/*******************************************************************************
+	*******************************************************************************/
+	public void test( final FeedListIF ioFL)
+	{
+		test( ioFL, null);
+	}
 
-			s_List = null;	// (AGR) 27 May 2005
+	/*******************************************************************************
+	*******************************************************************************/
+	public void test( final FeedListIF ioFL, final Observer inTestObserver)
+	{
+		ioFL.addObserver( new MailTester(inTestObserver) );
+	}
+
+	/*******************************************************************************
+		We Observe the FeedList, and "test listeners" Observe us!!
+	*******************************************************************************/
+	private class MailTester extends Observable implements Observer
+	{
+	/*******************************************************************************
+	*******************************************************************************/
+		private MailTester( final Observer inTestObserver)
+		{
+			if ( inTestObserver != null)
+			{
+				addObserver(inTestObserver);
+			}
 		}
-*/
-	}
 
-	/*******************************************************************************
-	*******************************************************************************/
-	public void test( FeedList ioFL)
-	{
-		ioFL.addObserver( new MailTester() );
-	}
-
-	/*******************************************************************************
-	*******************************************************************************/
-	class MailTester implements java.util.Observer
-	{
 		/*******************************************************************************
 		*******************************************************************************/
-		public void update( java.util.Observable o, Object obj)
+		public void update( final Observable o, Object obj)
 		{
-//			runIt( new TextMessageBuilder( InstallationManager.getDefaultInstallation() ) );
+			runIt( new TextMessageBuilder( InstallationManager.getDefaultInstallation() ) );
 			runIt( new HTMLMessageBuilder( InstallationManager.getDefaultInstallation() ) );
+
+			setChanged();
+			notifyObservers();
 		}
 
 		/*******************************************************************************
@@ -196,8 +209,6 @@ public class DigestSender
 		private synchronized void runIt( MessageBuilder ioBuilder)
 		{
 			DataSourceConnection	theConnectionObject = null;
-			StringBuffer		theBuf;
-			boolean			isGood = false;
 
 			// s_DS_Logger.info("CheckerTask.run() called at " + m_DF.format( new Date() ));
 
@@ -214,7 +225,7 @@ public class DigestSender
 						theS = theConnectionObject.createStatement();
 						_runIt( ioBuilder, theS);
 					}
-					catch (Exception e)
+					catch (SQLException e)
 					{
 						s_DS_Logger.error("creating statement", e);
 					}
@@ -228,16 +239,11 @@ public class DigestSender
 					s_DS_Logger.warn("Cannot connect!");
 				}
 			}
-			catch (Exception err)
-			{
-				s_DS_Logger.error("???", err);
-			}
 			finally
 			{
 				if ( theConnectionObject != null)
 				{
 					theConnectionObject.CloseDown();
-					theConnectionObject = null;
 				}
 			}
 		}
@@ -264,14 +270,15 @@ public class DigestSender
 				}
 			}
 
+			////////////////////////////////////////////////////////////////////////////
+
 			StringBuilder	sb = new StringBuilder();
 
 			ioBuilder.setCount(theEligibleItemsCount);
 
 			for ( int z = 0; z < theItemsA.length; z++)
 			{
-				Item	theItem = (Item) theItemsA[z];
-				Date	theItemDate = FeedUtils.getItemDate(theItem);
+				Date	theItemDate = FeedUtils.getItemDate( theItemsA[z] );
 
 				theItemAgeMSecs = theCurrMSecs - theItemDate.getTime();
 
@@ -282,7 +289,7 @@ public class DigestSender
 
 				////////////////////////////////////////////////////////////////////
 
-				ioBuilder.startNewItem(theItem);
+				ioBuilder.startNewItem( theItemsA[z] );
 
 				if (theEventsSection.gotEvents())	// (AGR) 17 Jan 2007
 				{
@@ -299,8 +306,41 @@ public class DigestSender
 
 			ioBuilder.setMessageBody(sb);
 
-			System.out.println("text = " + ioBuilder.generateMessageBodyText());
-			System.out.println("HTML = " + ioBuilder.generateMessageBodyHTML());
+			///////////////////////////////////////////////////////////////////////////
+
+			List<String>	theMsgRecipients = new ArrayList<String>(1);
+			theMsgRecipients.add("us@bloggers4labour.org");
+
+			///////////////////////////////////////////////////////////////////////////
+
+			Locale			theLocale = Locale.UK;
+			ResourceBundle		theBundle = m_Install.getBundle(theLocale);
+			String			prefix = m_Install.getLogPrefix();
+
+			///////////////////////////////////////////////////////////////////////////
+
+			MimeMessage	theMailMsg;
+			theMailMsg = m_MailObj.create1Message( m_MailSession,
+								generateSenderAddress(),
+								theMsgRecipients,
+								generateEmailSubject( theLocale, theBundle).toString(),
+								ioBuilder.generateMessageBodyText().toString(),
+								ioBuilder.generateMessageBodyHTML(),
+								theLocale);
+
+			if ( theMailMsg != null)
+			{
+				try
+				{
+					Transport.send(theMailMsg);
+
+					s_DS_Logger.info( prefix + "Test Message sent to " + theMsgRecipients);
+				}
+				catch (MessagingException e)
+				{
+					s_DS_Logger.error( prefix + "Test Message failed", e);
+				}
+			}
 		}
 	}
 
@@ -310,21 +350,27 @@ public class DigestSender
 	{
 		/*******************************************************************************
 		*******************************************************************************/
-		public CheckerTask()
-		{
-			;
-		}
-
-		/*******************************************************************************
-		*******************************************************************************/
 		private void _handleStatement( Statement inS) throws SQLException
 		{
 			Locale			theLocale = Locale.UK;
-			ResourceBundle		theBundle = m_Install.getBundle(theLocale);
+			ResourceBundle		theBundle;
+
+			try
+			{
+				theBundle = m_Install.getBundle(theLocale);
+			}
+			catch (MissingResourceException e)
+			{
+				s_DS_Logger.error( "", e);	// Let's handle this gracefully, don't let the RuntimeException propagate.
+				return;
+			}
+
+			////////////////////////////////////////////////////////////////////////////////////
+
 			GregorianCalendar	currLocalTimeCal = ULocale2.getGregorianCalendar(theLocale);
 			int			currLocalHour = currLocalTimeCal.get( Calendar.HOUR_OF_DAY );
 			int			currLocalMinute = currLocalTimeCal.get( Calendar.MINUTE );
-			long			adjustedMins = (long)( currLocalMinute / IDEAL_INTERVAL) * IDEAL_INTERVAL;
+			long			adjustedMins = ( currLocalMinute / IDEAL_INTERVAL) * IDEAL_INTERVAL;
 
 			// s_DS_Logger.info("CURRENT hr=" + currLocalHour + ", currLocalMinute=" + currLocalMinute);
 
@@ -351,7 +397,7 @@ public class DigestSender
 
 			if (theRS.next())
 			{
-				Headlines	h = m_Install.getHeadlinesMgr().getEmailPostsInstance();
+				HeadlinesIF	h = m_Install.getHeadlinesMgr().getEmailPostsInstance();
 
 				if ( h == null)		// (AGR) 2 April 2006
 				{
@@ -391,15 +437,11 @@ public class DigestSender
 
 				////////////////////////////////////////////////////////////////////////////
 
-				StringBuilder	recipientsMsgBuf = new StringBuilder(10000);	// (AGR) 28 May 2005. Was a 5000 byte StringBuffer
-				List<String>	theMsgRecipients = new ArrayList<String>(1);
-				Date		theItemDate;
-				Item		theItem;
+				StringBuilder		recipientsMsgBuf = new StringBuilder(10000);	// (AGR) 28 May 2005. Was a 5000 byte StringBuffer
+				List<String>		theMsgRecipients = new ArrayList<String>(1);
+				Date			theItemDate;
 
-				StringBuffer	theEmailSubject = new StringBuffer();
-				Formatter	theEmailSubjectFormatter = new Formatter( theEmailSubject, theLocale);
-
-				theEmailSubjectFormatter.format( theLocale, theBundle.getString("mail.subject"), m_DMYFormat.format(theCurrDate));
+				StringBuffer		theEmailSubject = generateEmailSubject( theLocale, theBundle, theCurrDate);
 
 				////////////////////////////////////////////////
 
@@ -407,26 +449,7 @@ public class DigestSender
 
 				do	// loop through the Users
 				{
-					InternetAddress	theSenderAddress;
-
-					try	// (AGR) 14 April 2005
-					{
-						theSenderAddress = new InternetAddress( OUR_EMAIL_STR, "Bloggers4Labour");
-					}
-					catch (UnsupportedEncodingException e)
-					{
-						try
-						{
-							theSenderAddress = new InternetAddress(OUR_EMAIL_STR);
-						}
-						catch (AddressException e2)
-						{
-							return;		// FIXME - error message!
-						}
-					}
-
-					////////////////////////////////////////////////////////////////////
-
+					InternetAddress	theSenderAddress = generateSenderAddress();
 					String		prefix = m_Install.getLogPrefix();
 					MimeMessage	theMailMsg;
 					String		emailAddr = theRS.getString(2);
@@ -450,8 +473,7 @@ public class DigestSender
 
 					for ( int z = 0; z < theItemsA.length; z++)
 					{
-						theItem = (Item) theItemsA[z];
-						theItemDate = FeedUtils.getItemDate(theItem);
+						theItemDate = FeedUtils.getItemDate( theItemsA[z] );
 						theItemAgeMSecs = theCurrMSecs - theItemDate.getTime();
 						if ( theItemAgeMSecs >= ONE_DAY_MSECS)
 						{
@@ -460,7 +482,7 @@ public class DigestSender
 
 						////////////////////////////////////////////////////////////////////
 
-						mb.startNewItem(theItem);
+						mb.startNewItem( theItemsA[z] );
 						mb.buildMail( theItemAgeMSecs, theEmailSubject, z, theItemDate, wantsSummary);
 						mb.handleCategories();
 
@@ -522,8 +544,6 @@ public class DigestSender
 		public void run()
 		{
 			DataSourceConnection	theConnectionObject = null;
-			StringBuffer		theBuf;
-			boolean			isGood = false;
 
 			// s_DS_Logger.info("CheckerTask.run() called at " + m_DF.format( new Date() ));
 
@@ -540,7 +560,7 @@ public class DigestSender
 						theS = theConnectionObject.createStatement();
 						_handleStatement(theS);
 					}
-					catch (Exception e)
+					catch (SQLException e)
 					{
 						s_DS_Logger.error("creating statement", e);
 					}
@@ -549,21 +569,20 @@ public class DigestSender
 						USQL_Utils.closeStatementCatch(theS);
 					}
 				}
-				else
+				else if ( s_DS_Logger != null)
 				{
 					s_DS_Logger.warn("Cannot connect!");
 				}
-			}
-			catch (Exception err)
-			{
-				s_DS_Logger.error("???", err);
+				else
+				{
+					System.err.println("Cannot connect!");
+				}
 			}
 			finally
 			{
 				if ( theConnectionObject != null)
 				{
 					theConnectionObject.CloseDown();
-					theConnectionObject = null;
 				}
 			}
 		}

@@ -10,11 +10,13 @@
 
 package org.bloggers4labour.mail;
 
-import com.hiatus.*;
-import com.hiatus.htl.*;
-import de.nava.informa.core.*;
-import java.text.*;
-import java.util.*;
+import com.hiatus.htl.HTL;
+import com.hiatus.htl.HTLTemplate;
+import com.hiatus.html.UHTML;
+import com.hiatus.text.UText;
+import java.text.DateFormat;
+import java.util.Date;
+import java.util.EnumSet;
 import org.bloggers4labour.FeedUtils;
 import org.bloggers4labour.FormatOption;
 import org.bloggers4labour.InstallationIF;
@@ -26,6 +28,7 @@ import org.bloggers4labour.InstallationIF;
 public class HTMLMessageBuilder extends MessageBuilder
 {
 	private static HTLTemplate	s_HTMLItemTemplate;
+	private static HTLTemplate	s_HTML1stItemTemplate;
 	private static HTLTemplate	s_HTMLDescTemplate;
 	private static HTLTemplate	s_HTMLNoDescTemplate;
 	private static HTLTemplate	s_HTMLCatsTemplate;
@@ -37,6 +40,7 @@ public class HTMLMessageBuilder extends MessageBuilder
 	static
 	{
 		s_HTMLItemTemplate = HTL.createTemplate( "each_item.html", s_Locale);
+		s_HTML1stItemTemplate = HTL.createTemplate( "each_item_first.html", s_Locale);
 		s_HTMLDescTemplate = HTL.createTemplate( "item_desc.html", s_Locale);
 		s_HTMLNoDescTemplate = HTL.createTemplate( "item_no_desc.html", s_Locale);
 		s_HTMLCatsTemplate = HTL.createTemplate( "item_cats.html", s_Locale);
@@ -49,8 +53,6 @@ public class HTMLMessageBuilder extends MessageBuilder
 	public HTMLMessageBuilder( final InstallationIF inInstall)
 	{
 		super(inInstall);
-
-		_loadTemplates();
 	}
 
 	/*******************************************************************************
@@ -58,21 +60,6 @@ public class HTMLMessageBuilder extends MessageBuilder
 	public HTMLMessageBuilder( final InstallationIF inInstall, DateFormat inDF)
 	{
 		super( inInstall, inDF);
-
-		_loadTemplates();
-	}
-
-	/*******************************************************************************
-	*******************************************************************************/
-	private void _loadTemplates()
-	{
-/*		m_HTMLItemTemplate = HTL.createTemplate( "each_item.html", m_Locale);
-		m_HTMLDescTemplate = HTL.createTemplate( "item_desc.html", m_Locale);
-		m_HTMLNoDescTemplate = HTL.createTemplate( "item_no_desc.html", m_Locale);
-		m_HTMLCatsTemplate = HTL.createTemplate( "item_cats.html", m_Locale);
-		m_HTMLTitleTemplate = HTL.createTemplate( "item_title.html", m_Locale);
-		m_HTMLNoTitleTemplate = HTL.createTemplate( "item_no_title.html", m_Locale);
-*/
 	}
 
 	/*******************************************************************************
@@ -93,7 +80,11 @@ public class HTMLMessageBuilder extends MessageBuilder
 		if ( wantsSummary == 1)
 		{
 			String	cs = m_Item.getDescription();
-			theDescrStr = FeedUtils.newAdjustDescription( cs, Integer.MAX_VALUE, EnumSet.of( FormatOption.ALLOW_IMAGES, FormatOption.ALLOW_BREAKS)); // FeedUtils.adjustDescription( cs, false).trim();
+//			theDescrStr = FeedUtils.newAdjustDescription( cs, Integer.MAX_VALUE, EnumSet.of( FormatOption.ALLOW_IMAGES, FormatOption.ALLOW_BREAKS)); // FeedUtils.adjustDescription( cs, false).trim();
+
+			// (AGR) 3 Feb 2007. Added size limit to save bandwidth!
+
+			theDescrStr = FeedUtils.newAdjustDescription( cs, 300, EnumSet.of( FormatOption.ALLOW_IMAGES, FormatOption.ALLOW_BREAKS)); // FeedUtils.adjustDescription( cs, false).trim();
 			wantDesc = UText.isValidString(theDescrStr);
 		}
 		else
@@ -148,23 +139,19 @@ public class HTMLMessageBuilder extends MessageBuilder
 	}
 
 	/*******************************************************************************
+		(AGR) 17 Jan 2007
+	*******************************************************************************/
+	public CharSequence generate1stMessageBody()
+	{
+		return HTL.mergeTemplate( s_HTML1stItemTemplate, m_MailContext);
+	}
+
+	/*******************************************************************************
 	*******************************************************************************/
 	public CharSequence generateMessageBodyText()
 	{
 		return "Your daily digest from Bloggers4Labour";
 	}
-
-	/*******************************************************************************
-	*******************************************************************************
-	public void handleFirstMessage()
-	{
-	}/
-
-	/*******************************************************************************
-	*******************************************************************************
-	public void handleNextMessage()
-	{
-	}/
 
 	/*******************************************************************************
 	*******************************************************************************/

@@ -9,9 +9,14 @@
 
 package org.bloggers4labour.polling;
 
-import de.nava.informa.core.*;
 import java.util.Date;
-import org.bloggers4labour.*;
+import org.bloggers4labour.AddResult;
+import org.bloggers4labour.AgeResult;
+import org.bloggers4labour.FeedUtils;
+import org.bloggers4labour.Headlines;
+import org.bloggers4labour.ItemContext;
+import org.bloggers4labour.bridge.channel.item.ItemIF;
+import org.bloggers4labour.site.SiteIF;
 
 /**
  *
@@ -52,11 +57,11 @@ public class Util
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public static AddResult processItem( Headlines ioHeadlines, ItemIF inItem, long inAgeMSecs, ItemContext inCtxt)
+	public static AddResult processItem( Headlines ioHeadlines, ItemIF inItem, final SiteIF inSite, long inAgeMSecs, ItemContext inCtxt)
 	{
 		if (ioHeadlines.isItemAgeOK(inAgeMSecs))
 		{
-			return ioHeadlines.put( inItem, inCtxt);
+			return ioHeadlines.put( inItem, inSite, inCtxt);
 		}
 
 		return AddResult.FAILED_BAD_DATE;

@@ -9,7 +9,7 @@
 
 package org.bloggers4labour;
 
-import org.bloggers4labour.cats.CategoriesTable;
+import org.bloggers4labour.cats.CategoriesTableIF;
 
 /**
  *
@@ -32,13 +32,8 @@ public class AgeResult
 	{
 		m_AgeMSecs = inMSecs;
 		m_Allowable = FeedUtils.isAcceptableFutureDate(inMSecs) &&
-				/* (AGR) 3 March 2006 */ inMSecs <= CategoriesTable.getMaxPermissibleItemAge();
-
-/*			if (!m_Allowable)
-		{
-			s_Poll_Logger.info("Skipping future post: " + FeedUtils.getAgeDifferenceString(inMSecs));
-		}
-*/		}
+				/* (AGR) 3 March 2006 */ inMSecs <= CategoriesTableIF.MAX_CATEGORY_AGE_MSECS;
+	}
 
 	/*******************************************************************************
 	*******************************************************************************/

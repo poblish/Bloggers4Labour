@@ -6,25 +6,22 @@
 
 package org.bloggers4labour;
 
-import com.hiatus.UText;
-import de.nava.informa.core.*;
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.Serializable;
-import java.net.URL;
-import java.net.URLConnection;
+import com.hiatus.text.UText;
+import de.nava.informa.core.CategoryIF;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import org.apache.log4j.Logger;
+import org.bloggers4labour.bridge.channel.ChannelIF;
+import org.bloggers4labour.bridge.channel.item.ItemIF;
 import org.bloggers4labour.favicon.FaviconManager;
+import org.bloggers4labour.site.SiteIF;
 
 /**
  *
  * @author andrewre
  */
-public final class Site implements Serializable, Comparable<Site>	// (AGR) 6 June 2005. Now Serializable
+public final class Site implements SiteIF, Comparable<Site>	// (AGR) 6 June 2005. Now Serializable
 {
 	private transient ChannelIF	m_Channel;		// (AGR) 6 June 2005. Far too much data if we include Channel (+ Items)
 	private transient ChannelIF	m_CommentsChannel;	// (AGR) 29 Nov 2005
@@ -33,14 +30,16 @@ public final class Site implements Serializable, Comparable<Site>	// (AGR) 6 Jun
 	private String			m_SiteURL;
 	private String			m_FeedURL;
 	private String			m_DB_Category;
-	private List<String>		m_Creators;
+	private List<String>		m_Creators = null;
 	private int			m_DB_CreatorStatusRecno;	// (AGR) 21 March 2006
 
 	private transient String	m_FaviconLocation = null;
 //	private transient boolean	m_GotFavicon = false;
 	private transient String	m_DB_FaviconLocation;	// (AGR) 4 April 2005
 
-	private static Logger		s_Site_Logger = Logger.getLogger("Main");
+	private final static List<String>	EMPTY_CREATORS_LIST = new ArrayList<String>();
+
+	private static final long	serialVersionUID = 1L;
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -116,139 +115,31 @@ public final class Site implements Serializable, Comparable<Site>	// (AGR) 6 Jun
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public boolean equals( Object inObj)
+	@Override public boolean equals( Object inObj)
 	{
+		if ( inObj == null || !(inObj instanceof Site))	// (AGR) 29 Jan 2007, 26 May 2007. FindBugs made me add these tests!
+		{
+			return false;
+		}
+
+		//////////////////////////////////
+
 		Site	other = (Site) inObj;
 
 		return m_FeedURL.equals( other.m_FeedURL );
 	}
 
 	/*******************************************************************************
-	*******************************************************************************
-	public boolean findFavicon()
+		(AGR) 29 Jan 2007
+	
+		FindBugs told me to fix this. It's entirely based around equals()
+		above, which declares that the feedURL is all-important. I guess that's
+		right!
+	*******************************************************************************/
+	@Override public int hashCode()
 	{
-		if (UText.isValidString(m_DB_FaviconLocation))	// (AGR) 4 April 2005
-		{
-			m_GotFavicon = true;
-			m_FaviconLocation = m_DB_FaviconLocation;
-			return true;
-		}
-
-		if (UText.isValidString(m_SiteURL))
-		{
-			if (m_SiteURL.contains("blogspot."))	// (AGR) 23 Feb 2006. This was done purely for HUGE performance reasons. Ideally we'd search individually...
-			{
-				m_GotFavicon = true;
-				m_FaviconLocation = "http://www.blogger.com/favicon.ico";
-				return true;
-			}
-
-			if (m_SiteURL.contains(".typepad."))	// (AGR) 23 Feb 2006. Ditto
-			{
-				m_GotFavicon = true;
-				m_FaviconLocation = "http://www.typepad.com/favicon.ico";
-				return true;
-			}
-		}
-
-		return _searchForFavicon();
-	}/
-
-	/*******************************************************************************
-	*******************************************************************************
-	private boolean _searchForFavicon()
-	{
-		// s_Site_Logger.info("===> Trying: " + m_SiteURL);
-
-		try
-		{
-			URL	theBasicURL = new URL(m_SiteURL);
-			String	theBasicFile = theBasicURL.getFile();
-			String	theNewFileStr;
-
-			// s_Site_Logger.info("theBasicFile \"" + theBasicFile + "\"");
-
-			if (theBasicFile.endsWith("/"))
-			{
-				theNewFileStr = theBasicFile;
-			}
-			else
-			{
-				int	sp = theBasicFile.lastIndexOf('/');
-				String	token;
-				String	pfx;
-
-				// s_Site_Logger.info("   sp = " + sp);
-
-				if ( sp > 0)
-				{
-					token = theBasicFile.substring(sp);
-					pfx = theBasicFile.substring(0,sp);
-					// s_Site_Logger.info("   token.1 \"" + token + "\"");
-					// s_Site_Logger.info("   pfx.1 \"" + pfx + "\"");
-				}
-				else
-				{
-					token = theBasicFile;
-					pfx = "";
-					// s_Site_Logger.info("   token.2 \"" + token + "\"");
-					// s_Site_Logger.info("   pfx.2 \"" + pfx + "\"");
-				}
-
-				if ( token.indexOf('.') > 0)
-				{
-					theNewFileStr = pfx + "/";
-				}
-				else
-				{
-					theNewFileStr = theBasicFile + "/";
-				}
-			}
-
-			// s_Site_Logger.info("theNewFileStr \"" + theNewFileStr + "\"");
-
-			URL	theIconURL = new URL( theBasicURL.getProtocol(), theBasicURL.getHost(), theNewFileStr + "favicon.ico");
-		//	s_Site_Logger.info("theIconURL \"" + theIconURL + "\"");
-		//	s_Site_Logger.info("getFile() \"" + theIconURL.getFile() + "\"");
-
-			// s_Site_Logger.info("URL: " + theURL);
-
-			String	theCT = _requestFavicon(theIconURL);
-
-			if ( UText.isValidString(theCT) && theCT.equals("image/x-icon"))
-			{
-				m_GotFavicon = true;
-				m_FaviconLocation = theIconURL.toString();
-			}
-			else
-			{
-				// s_Site_Logger.info("returned \"" + theCT + "\", len = " + theConn.getContentLength() + " @ " + theConn.getURL());
-			}
-
-			return m_GotFavicon;
-		}
-		catch (Exception e)
-		{
-			// s_Site_Logger.error("Err: " + e);
-		}
-
-		return false;
-	}/
-
-	/*******************************************************************************
-	*******************************************************************************
-	private String _requestFavicon( URL inURL) throws IOException
-	{
-		URLConnection	theConn = inURL.openConnection();
-
-		theConn.setRequestProperty("User-Agent", "mozilla");
-		theConn.setRequestProperty("Pragma", "no-cache");
-		theConn.connect();
-
-//		int	contentLen = theConn.getContentLength();	// bit dodgy, but assume -1 (unknown) means there's a > 0 % chance!
-
-		return theConn.getContentType();
-	}/
+		return m_FeedURL.hashCode();
+	}
 
 	/*******************************************************************************
 		(AGR) 24 March 2005
@@ -266,9 +157,15 @@ public final class Site implements Serializable, Comparable<Site>	// (AGR) 6 Jun
 	/*******************************************************************************
 		(AGR) 24 March 2005
 	*******************************************************************************/
-	public Iterator getCreators()
+	public Iterable<String> getCreators()
 	{
-		return ( m_Creators != null) ? m_Creators.iterator() : null;
+		return new Iterable<String>()
+		{
+			public Iterator<String> iterator()
+			{
+				return ( m_Creators != null) ? m_Creators.iterator() : EMPTY_CREATORS_LIST.iterator();
+			}
+		};
 	}
 
 	/*******************************************************************************
@@ -521,8 +418,28 @@ public final class Site implements Serializable, Comparable<Site>	// (AGR) 6 Jun
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public String toString()
+	@Override public String toString()
 	{
 		return ( "[" + m_SiteRecno + "] " + m_Name + " (" + m_DB_Category + "), Channel = " + m_Channel);
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public int getMaximumPostsToAggregate()
+	{
+		if ( m_FeedURL != null)
+		{
+			if (m_FeedURL.equals("http://www.labourmatters.com/category/Labour%20Party%20News/feed"))
+			{
+				return 3;
+			}
+
+			if (m_FeedURL.equals("http://www.labourmatters.com/category/Featured/feed"))
+			{
+				return 1;
+			}
+		}
+
+		return Integer.MAX_VALUE;
 	}
 }

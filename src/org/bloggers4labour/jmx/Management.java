@@ -11,11 +11,14 @@
 package org.bloggers4labour.jmx;
 
 import java.lang.management.ManagementFactory;
-import java.util.ArrayList;
-import java.util.Set;
-import javax.management.*;
+import javax.management.InstanceAlreadyExistsException;
+import javax.management.MBeanException;
+import javax.management.MBeanRegistrationException;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.NotCompliantMBeanException;
+import javax.management.ObjectName;
 import org.apache.log4j.Logger;
-import org.bloggers4labour.InstallationManager;
 import org.bloggers4labour.Installation;
 
 /**
@@ -29,19 +32,7 @@ public class Management
 	private Stats			m_Stats;
 	private MBeanServer		m_DefaultMBeanServer;
 
-	private static Logger		s_Management_Logger = Logger.getLogger("Main");
-
-	/*******************************************************************************
-	*******************************************************************************
-	public static synchronized Management getInstance()
-	{
-		if ( s_Instance == null)
-		{
-			s_Instance = new Management();
-		}
-
-		return s_Instance;
-	}/
+	private static Logger		s_Management_Logger = Logger.getLogger( Management.class );
 
 	/*******************************************************************************
 	*******************************************************************************/

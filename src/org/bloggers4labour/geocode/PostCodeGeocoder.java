@@ -9,18 +9,17 @@
 
 package org.bloggers4labour.geocode;
 
-import com.hiatus.UDates;
-import com.hiatus.UText;
+import com.hiatus.dates.UDates;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Locale;
 import java.util.Scanner;
 import org.apache.log4j.Logger;
+import static org.bloggers4labour.Constants.*;
 
 /**
  *
@@ -28,9 +27,9 @@ import org.apache.log4j.Logger;
  */
 public class PostCodeGeocoder
 {
-	private Map<String,Location>	m_Cache = new HashMap<String,Location>();
+	private PostCodeGeocoderCacheIF		m_Cache;
 
-	private static Logger		s_Logger = Logger.getLogger("Main");
+	private static Logger			s_Logger = Logger.getLogger( PostCodeGeocoder.class );
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -40,9 +39,16 @@ public class PostCodeGeocoder
 
 	/*******************************************************************************
 	*******************************************************************************/
+	public PostCodeGeocoder( final PostCodeGeocoderCacheIF inCache)
+	{
+		m_Cache = inCache;
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
 	public Location lookupLocation( final String inPostCodeStr) throws IOException
 	{
-		long	startTimeMSecs = System.currentTimeMillis();
+//		long	startTimeMSecs = System.currentTimeMillis();
 
 		if ( inPostCodeStr == null)
 		{
@@ -51,7 +57,7 @@ public class PostCodeGeocoder
 
 		////////////////////////////////////////////////////////////////
 
-		String	thePC = inPostCodeStr.trim().toUpperCase();
+		String	thePC = inPostCodeStr.trim().toUpperCase( Locale.UK );
 
 		if ( thePC.length() < 1)
 		{
@@ -60,11 +66,14 @@ public class PostCodeGeocoder
 
 		////////////////////////////////////////////////////////////////
 
+		if ( m_Cache != null)
+		{
 		Location	cachedLoc = m_Cache.get(thePC);
 
 		if ( cachedLoc != null)
 		{
 			return cachedLoc;
+			}
 		}
 
 		////////////////////////////////////////////////////////////////
@@ -72,6 +81,7 @@ public class PostCodeGeocoder
 		InputStream	theStream = null;
 		Scanner		theScanner = null;
 		URL		theURL = null;
+		long		startTimeMS = System.currentTimeMillis();
 
 		try
 		{
@@ -83,7 +93,8 @@ public class PostCodeGeocoder
 
 			System.out.println("Connected: " + theConn);
 
-			theConn.setReadTimeout(5000);
+			theConn.setConnectTimeout( 30 * (int) ONE_SECOND_MSECS);
+			theConn.setReadTimeout( 30 * (int) ONE_SECOND_MSECS);
 			theConn.connect();
 
 			theStream = theConn.getInputStream();
@@ -103,15 +114,22 @@ public class PostCodeGeocoder
 
 			double	theLong = theScanner.nextDouble();
 
+			System.out.println("Communication took " + UDates.getFormattedTimeDiff( System.currentTimeMillis() - startTimeMS));
+
+			/////////////////////////////////////////////////////////////////////////
+
 			Location	theLoc = new Location( theLat, theLong);
 
+			if ( m_Cache != null)
+			{
 			m_Cache.put( thePC, theLoc);
+			}
 
 			return theLoc;
 		}
 		catch (SocketTimeoutException se)
 		{
-			s_Logger.error("lookupLocation() socket TIMEOUT for " + theURL);
+			s_Logger.error("lookupLocation() socket TIMEOUT for '" + theURL + "' after " + UDates.getFormattedTimeDiff( System.currentTimeMillis() - startTimeMS));
 			throw se;
 		}
 		catch (UnexpectedFormatException e)
@@ -130,7 +148,7 @@ public class PostCodeGeocoder
 			if ( theScanner != null)
 			{
 				theScanner.close();
-				theScanner = null;
+				// theScanner = null;
 			}
 
 			if ( theStream != null)
@@ -145,7 +163,7 @@ public class PostCodeGeocoder
 				}
 				finally
 				{
-					theStream = null;
+					// theStream = null;
 				}
 			}
 
@@ -157,6 +175,8 @@ public class PostCodeGeocoder
 	*******************************************************************************/
 	private static class UnexpectedFormatException extends Exception
 	{
+		private static final long serialVersionUID = 1L;
+
 		/*******************************************************************************
 		*******************************************************************************/
 		public UnexpectedFormatException( String inS)
@@ -195,7 +215,7 @@ public class PostCodeGeocoder
 		}
 		catch (IOException e)
 		{
-			;
+			// NOOP
 		}
 
 		System.out.println("=> got " + l);

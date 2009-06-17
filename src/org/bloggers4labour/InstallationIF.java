@@ -9,14 +9,18 @@
 
 package org.bloggers4labour;
 
+import java.util.Collection;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import javax.sql.DataSource;
-import org.bloggers4labour.activity.LastPostTable;
-import org.bloggers4labour.cats.CategoriesTable;
-import org.bloggers4labour.feed.FeedList;
+import org.bloggers4labour.activity.LastPostTableIF;
+import org.bloggers4labour.cats.CategoriesTableIF;
+import org.bloggers4labour.feed.FeedListIF;
 import org.bloggers4labour.index.IndexMgr;
+import org.bloggers4labour.installation.tasks.InstallationTaskIF;
 import org.bloggers4labour.jmx.Management;
+import org.bloggers4labour.mail.DigestSenderIF;
+import org.bloggers4labour.polling.PollerIF;
 
 /**
  *
@@ -24,19 +28,30 @@ import org.bloggers4labour.jmx.Management;
  */
 public interface InstallationIF
 {
+	public String getName();
+
 	public DataSource getDataSource();
 	public HeadlinesMgr getHeadlinesMgr();
 	public Management getManagement();
-	public FeedList getFeedList();
+	public FeedListIF getFeedList();
 	public IndexMgr getIndexMgr();
+
+	public boolean hasPollers();
+	public Iterable<PollerIF> getPollers();
 
 	public ResourceBundle getBundle();
 	public ResourceBundle getBundle( Locale inLocale);
 
-	public CategoriesTable getCategories();
-	public LastPostTable getLastPostDateTable();
+	public CategoriesTableIF getCategories();
+	public LastPostTableIF getLastPostDateTable();
+
+	public DigestSenderIF getDigestSender();
+
+	public Iterable<? extends InstallationTaskIF> getTasks();
+	public void setTasks( Collection<InstallationTaskIF> inTasks);
 
 	public String getLogPrefix();
+	public InstallationStatus getStatus();
 	public void restart();
 	public void stop();
 }

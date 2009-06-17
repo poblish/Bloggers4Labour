@@ -9,19 +9,17 @@
 
 package org.bloggers4labour.admin;
 
-import com.hiatus.USQL_Utils;
-import com.hiatus.sql.ResultSetList;
+import com.hiatus.sql.USQL_Utils;
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.log4j.Logger;
-import org.bloggers4labour.*;
 import org.bloggers4labour.conf.Configuration;
-import org.bloggers4labour.sql.*;
+import org.bloggers4labour.sql.DataSourceConnection;
+import org.bloggers4labour.sql.QueryBuilder;
 
 /**
  *
@@ -29,9 +27,9 @@ import org.bloggers4labour.sql.*;
  */
 public class SiteAdministration
 {
-	private static Logger		s_Logger = Logger.getLogger("Main");
+	private static Logger		s_Logger = Logger.getLogger( SiteAdministration.class );
 
-	private final static String	LINE_PREFIX = ">>> SiteAdmin.cleanup(): ";
+	private final static String	LINE_PREFIX = ">>> cleanup(): ";
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -40,9 +38,6 @@ public class SiteAdministration
 		Configuration.getInstance().setDirectoryIfNotSet("/Users/andrewre/www/htdocs/bloggers4labour/conf/");
 
 		DataSourceConnection	theConnectionObject = null;
-		StringBuffer		theBuf;
-		long			currTimeMSecs = System.currentTimeMillis();
-		boolean			isGood = false;
 
 		try
 		{
@@ -75,7 +70,7 @@ public class SiteAdministration
 					}
 */
 				}
-				catch (Exception e)
+				catch (SQLException e)
 				{
 					s_Logger.error("creating statement", e);
 				}
@@ -89,7 +84,7 @@ public class SiteAdministration
 				s_Logger.warn("Cannot connect!");
 			}
 		}
-		catch (Exception err)
+		catch (RuntimeException err)
 		{
 			s_Logger.error("???", err);
 		}
@@ -100,7 +95,6 @@ public class SiteAdministration
 			if ( theConnectionObject != null)
 			{
 				theConnectionObject.CloseDown();
-				theConnectionObject = null;
 			}
 		}
 	}
@@ -134,21 +128,21 @@ public class SiteAdministration
 
 				if ( numUpdates > 0)
 				{
-					s_Logger.info(">>> SiteAdmin.approveSite(): Site " + inSiteRecno + " approved OK.");
+					s_Logger.info(">>> approveSite(): Site " + inSiteRecno + " approved OK.");
 				}
 				else
 				{
-					s_Logger.error(">>> SiteAdmin.approveSite(): Site " + inSiteRecno + " approval FAILED.");
+					s_Logger.error(">>> approveSite(): Site " + inSiteRecno + " approval FAILED.");
 				}
 			}
 			else
 			{
-				s_Logger.info(">>> SiteAdmin.approveSite(): Site " + inSiteRecno + " found OK.");
+				s_Logger.info(">>> approveSite(): Site " + inSiteRecno + " found OK.");
 			}
 		}
 		else
 		{
-			s_Logger.warn(">>> SiteAdmin.approveSite(): Site " + inSiteRecno + " not found.");
+			s_Logger.warn(">>> approveSite(): Site " + inSiteRecno + " not found.");
 		}
 	}
 
@@ -166,21 +160,21 @@ public class SiteAdministration
 
 				if ( numDeletions > 0)
 				{
-					s_Logger.info(">>> SiteAdmin.deleteSite(): Site " + inSiteRecno + " deleted OK.");
+					s_Logger.info(">>> deleteSite(): Site " + inSiteRecno + " deleted OK.");
 				}
 				else
 				{
-					s_Logger.error(">>> SiteAdmin.deleteSite(): Site " + inSiteRecno + " deletion FAILED.");
+					s_Logger.error(">>> deleteSite(): Site " + inSiteRecno + " deletion FAILED.");
 				}
 			}
 			else
 			{
-				s_Logger.info(">>> SiteAdmin.deleteSite(): Site " + inSiteRecno + " found OK.");
+				s_Logger.info(">>> deleteSite(): Site " + inSiteRecno + " found OK.");
 			}
 		}
 		else
 		{
-			s_Logger.warn(">>> SiteAdmin.deleteSite(): Site " + inSiteRecno + " not found.");
+			s_Logger.warn(">>> deleteSite(): Site " + inSiteRecno + " not found.");
 		}
 
 //		if ( Math.random() >= 0.5)
@@ -249,7 +243,7 @@ public class SiteAdministration
 
 		while (rs.next())
 		{
-			crList.add( new Long( rs.getLong("creator_recno") ) );
+			crList.add( Long.valueOf( rs.getLong("creator_recno") ) );	// (AGR) 29 Jan 2007. FindBugs: changed from new Long
 		}
 
 		// %><p><%= crList %> = <%= crList.size() %> "creator" recs</p><%
@@ -262,7 +256,7 @@ public class SiteAdministration
 
 		while (rs.next())
 		{
-			crList2.add( new Long( rs.getLong("creator_recno") ) );
+			crList2.add( Long.valueOf( rs.getLong("creator_recno") ) );	// (AGR) 29 Jan 2007. FindBugs: changed from new Long
 		}
 
 		// %><p><%= crList2 %> = <%= crList2.size() %> "creator" recs</p><%
@@ -365,6 +359,8 @@ public class SiteAdministration
 				s_Logger.info( LINE_PREFIX + "Changes required: " + q);
 			}
 
+			deleteOrphanedGLocRecords(inStatement);
+
 			return true;
 		}
 		else if ( scrCount == 0)
@@ -372,22 +368,63 @@ public class SiteAdministration
 			s_Logger.debug( LINE_PREFIX + "No cleanup required.");
 		}
 
+		deleteOrphanedGLocRecords(inStatement);
+
 		return uncleanRecsFound;
 	}
 
 	/*******************************************************************************
+		(AGR) 11 Feb 2007
 	*******************************************************************************/
-	private class CleanupContext
+	private boolean deleteOrphanedGLocRecords( Statement inStatement) throws SQLException
+	{
+		String		theQuery = "SELECT g.gloc_recno FROM geoLocation g LEFT JOIN site s ON s.gloc_recno=g.gloc_recno WHERE g.gloc_recno > 2 AND s.gloc_recno IS NULL";
+		ResultSet	rs = inStatement.executeQuery(theQuery);
+//		List<Long>	theRecnos = new ArrayList<Long>(3);
+		StringBuilder	sb = new StringBuilder();
+
+		if (rs.next())
+		{
+			sb.append("DELETE FROM geoLocation WHERE gloc_recno IN (");
+
+			boolean	gotOne = false;
+
+			do
+			{
+				if (gotOne)
+				{
+					sb.append(",");
+				}
+				else	gotOne = true;
+
+				sb.append( Long.valueOf( rs.getLong("gloc_recno") ));
+			}
+			while (rs.next());
+
+			sb.append(")");
+
+			////////////////////////////////////////////////////////
+
+			int	numDeletions = inStatement.executeUpdate( sb.toString() );
+
+			if ( numDeletions > 0)
+			{
+				s_Logger.warn(">>> deleteSite(): Deleted " + numDeletions + " orphaned geoLocation recs.");
+				return true;
+			}
+		}
+
+		rs.close();
+
+		return false;
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	private static class CleanupContext
 	{
 		private boolean	m_NeedsCleaning;
 		private String	m_SitesQuery;
-
-		/*******************************************************************************
-		*******************************************************************************/
-		public CleanupContext()
-		{
-			;
-		}
 
 		/*******************************************************************************
 		*******************************************************************************/

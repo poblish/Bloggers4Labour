@@ -9,17 +9,20 @@
 
 package org.bloggers4labour.feed;
 
+import java.io.Serializable;
 import org.bloggers4labour.ItemType;
 
 /**
  *
  * @author andrewre
  */
-public class Feed implements Comparable<Feed>
+public class Feed implements Comparable<Feed>, Serializable
 {
 	private String		m_URL;
 	private FeedType	m_FeedType;
 	private ItemType	m_ItemType;
+
+	private static final long serialVersionUID = 1L;
 
 	/********************************************************************
 	********************************************************************/
@@ -96,7 +99,7 @@ public class Feed implements Comparable<Feed>
 
 	/********************************************************************
 	********************************************************************/
-	public String toString()
+	@Override public String toString()
 	{
 		return "[" + getFeedTypeName() + ": " + m_URL + "]";
 	}
@@ -114,5 +117,28 @@ public class Feed implements Comparable<Feed>
 		}
 
 		return m_URL.compareTo( inOther.m_URL );
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	@Override public int hashCode()
+	{
+		int hash = 5;
+		hash = 11 * hash + (this.m_FeedType != null ? this.m_FeedType.hashCode() : 0);
+		hash = 11 * hash + (this.m_URL != null ? this.m_URL.hashCode() : 0);
+//		hash = 11 * hash + (this.m_ItemType != null ? this.m_ItemType.hashCode() : 0);
+		return hash;
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	@Override public boolean equals( Object inOther)
+	{
+		if ( inOther == null || !( inOther instanceof Feed))
+		{
+			return false;
+		}
+
+		return ( compareTo((Feed) inOther) == 0);
 	}
 }

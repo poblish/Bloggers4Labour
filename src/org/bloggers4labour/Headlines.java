@@ -6,22 +6,13 @@
 
 package org.bloggers4labour;
 
-import com.hiatus.UDates;
-import com.hiatus.UText;
-import de.nava.informa.parsers.*;
-import de.nava.informa.core.*;
-import de.nava.informa.impl.basic.Channel;
-import de.nava.informa.impl.basic.Item;
-import de.nava.informa.utils.poller.*;
-import java.io.*;
+import com.hiatus.dates.UDates;
+import com.hiatus.text.UText;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
 import java.util.Formatter;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,18 +22,24 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.log4j.Logger;
-import org.bloggers4labour.feed.FeedList;
-import org.bloggers4labour.headlines.*;
+import org.bloggers4labour.bridge.channel.ChannelIF;
+import org.bloggers4labour.bridge.channel.item.ItemIF;
+import org.bloggers4labour.feed.FeedListIF;
+import org.bloggers4labour.feed.GeneratedFeed;
+import org.bloggers4labour.headlines.AddHandler;
+import org.bloggers4labour.headlines.ExpiryHandler;
+import org.bloggers4labour.headlines.Handler;
+import org.bloggers4labour.headlines.HeadlinesIF;
+import org.bloggers4labour.headlines.RemoveHandler;
 import org.bloggers4labour.index.SearchMatch;
-import org.bloggers4labour.opml.OPMLGenerator;
 import org.bloggers4labour.options.Options;
 import org.bloggers4labour.options.TaskOptionsBeanIF;
 import org.bloggers4labour.jmx.Stats;
+import org.bloggers4labour.site.SiteIF;
 import org.bloggers4labour.sql.QueryBuilder;
 import org.bloggers4labour.tag.Link;
 
@@ -50,7 +47,7 @@ import org.bloggers4labour.tag.Link;
  *
  * @author andrewre
  */
-public class Headlines implements HeadlinesIF
+public class Headlines implements HeadlinesIF, Iterable<ItemIF>
 {
 	private TreeMap<ItemIF,ItemIF>	m_Coll = new TreeMap<ItemIF,ItemIF>( new ItemsComparator() );
 	private Timer			m_CleanTimer;
@@ -62,7 +59,7 @@ public class Headlines implements HeadlinesIF
 	private boolean			m_AllowPosts;		// (AGR) 29 Nov 2005
 	private boolean			m_AllowComments;	// " " "
 
-	private Installation		m_Install;
+	private InstallationIF		m_Install;
 
 	////////////////////////////////////////////////////////////////////////  (AGR) 25-26 June 2005. Handlers
 
@@ -77,17 +74,13 @@ public class Headlines implements HeadlinesIF
 
 	////////////////////////////////////////////////////////////////////////
 
-	private static ItemIF[]		s_EmptyItemArray = new ItemIF[0];	// (AGR) 7 June 2006
-
-	private static Logger		s_Headlines_Logger = Logger.getLogger("Main");
-
-	private static ItemIF[]		s_TempArray = new ItemIF[0];
+	private static Logger		s_Headlines_Logger = Logger.getLogger( Headlines.class );
 
 	private final static int	MAX_FEED_BLOGS_LISTED = 10;		// (AGR) 10 June 2006
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public Headlines( final Installation inInstall, String inName, String inDescr, long inMinAgeMsecs, long inMaxAgeMsecs)
+	public Headlines( final InstallationIF inInstall, String inName, String inDescr, long inMinAgeMsecs, long inMaxAgeMsecs)
 	{
 		m_Install = inInstall;
 		m_Name = inName;
@@ -96,13 +89,17 @@ public class Headlines implements HeadlinesIF
 		m_MaxAgeMsecs = inMaxAgeMsecs;
 		s_Headlines_Logger.info( m_Install.getLogPrefix() + "Headlines: created \"" + UDates.getFormattedTimeDiff(m_MaxAgeMsecs) + "\" instance, \"" + m_Name + "\".");
 
-		m_CleanTimer = new Timer("Headlines: cleaner Timer");
-		m_CleanerTask = new CleanerTask( this, m_MaxAgeMsecs);
-
 		////////////////////////////////////////////////////////////////  (AGR) 29 Nov 2005
 
 		m_AllowPosts = true;
 		m_AllowComments = false;
+
+		////////////////////////////////////////////////////////////////
+
+		if ( m_MaxAgeMsecs != Long.MAX_VALUE)	// (AGR) 5 October 2008
+		{
+			m_CleanTimer = new Timer("Headlines: cleaner Timer");
+			m_CleanerTask = new CleanerTask( this, m_MaxAgeMsecs);
 
 		////////////////////////////////////////////////////////////////
 
@@ -111,6 +108,7 @@ public class Headlines implements HeadlinesIF
 		m_CleanTimer.scheduleAtFixedRate( m_CleanerTask,
 						  theOptionsBean.getDelayMsecs(),
 						  theOptionsBean.getPeriodMsecs());
+	}
 	}
 
 	/*******************************************************************************
@@ -161,11 +159,14 @@ public class Headlines implements HeadlinesIF
 
 		/////////////////////////  (AGR) 13 April 2005
 
+		synchronized (this)	// (AGR) 3 Feb 2007. FindBugs said m_Coll wasn't sync-protected. Looks to be right, too, hence change.
+		{
 		if ( m_Coll != null)
 		{
 			m_Coll.clear();
 			m_Coll = null;
 		}
+	}
 	}
 
 	/*******************************************************************************
@@ -179,10 +180,12 @@ public class Headlines implements HeadlinesIF
 	*******************************************************************************/
 	public synchronized ItemIF[] toArray()
 	{
-		if ( m_Coll == null)
-			return s_TempArray;	// Shouldn't happen!
+		if ( m_Coll == null || m_Coll.isEmpty())
+		{
+			return new ItemIF[0];
+		}
 
-		return (ItemIF[]) m_Coll.values().toArray(s_TempArray);
+		return m_Coll.values().toArray( new ItemIF[ m_Coll.size() ] );
 	}
 
 	/*******************************************************************************
@@ -215,22 +218,20 @@ public class Headlines implements HeadlinesIF
 		(AGR) 14 March 2005
 		A Set of all the Blog URLs represented in the Headlines list
 	*******************************************************************************/
-	public Set getBlogs()
+	public Collection<String> getBlogs()
 	{
 		Set<String>	theSet = new HashSet<String>();
+		ItemIF[]	theItems = toArray();
 
-		synchronized (this)
+		for ( ItemIF eachItem : theItems)
 		{
-			for ( ItemIF theItem : m_Coll.keySet())
-			{
-				Object	theSite = theItem.getChannel().getSite();
+			Object	theSite = eachItem.getChannel().getSite();
 
 				if ( theSite != null)
 				{
 					theSet.add( theSite.toString() );
 				}
 			}
-		}
 
 		return theSet;
 	}
@@ -241,19 +242,11 @@ public class Headlines implements HeadlinesIF
 	*******************************************************************************/
 	public int getBlogsCount()
 	{
-		Set	theBlogs;
-
 		synchronized (this)
 		{
-			theBlogs = getBlogs();
+			return getBlogs().size();
 		}
-
-		int	theCount = theBlogs.size();
-
-		theBlogs.clear();
-
-		return theCount;
-	}
+		}
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -264,11 +257,26 @@ public class Headlines implements HeadlinesIF
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public AddResult put( ItemIF inNewItem, ItemContext inCtxt)
+	public AddResult put( final ItemIF inNewItem, final SiteIF inItemsOwnerSite, final ItemContext inCtxt)
 	{
 		if ( inNewItem == null)
 		{
 			return AddResult.FAILED_GENERAL;
+		}
+
+		////////////////////////////////////////////////////////////////  (AGR) 4 October 2008
+
+		int			maxNumberItemsPerSite = ( inItemsOwnerSite != null) ? inItemsOwnerSite.getMaximumPostsToAggregate() : Integer.MAX_VALUE;
+		Map<ItemIF,ItemIF>	allItemsForThisSite;
+
+		if ( maxNumberItemsPerSite != Integer.MAX_VALUE)
+		{
+			allItemsForThisSite = new TreeMap<ItemIF,ItemIF>( new ItemsComparator() );
+			allItemsForThisSite.put( inNewItem, inNewItem);
+		}
+		else
+		{
+			allItemsForThisSite = null;
 		}
 
 		////////////////////////////////////////////////////////////////
@@ -278,11 +286,11 @@ public class Headlines implements HeadlinesIF
 
 		synchronized (this)
 		{
-			for ( ItemIF theItem : m_Coll.keySet())
+			for ( ItemIF theExistingItem : m_Coll.keySet())
 			{
-				if (theItem.equals(inNewItem))	// Look for complete dupe
+				if (theExistingItem.equals(inNewItem))	// Look for complete dupe
 				{
-					s_Headlines_Logger.info( m_Install.getLogPrefix() + "\"" + m_Name + "\".put(): ignoring DUPE: " + inNewItem + ", existing: " + theItem + ", count = " + m_Coll.size());
+					s_Headlines_Logger.info( m_Install.getLogPrefix() + "\"" + m_Name + "\".put(): ignoring DUPE: " + inNewItem + ", existing: " + theExistingItem + ", count = " + m_Coll.size());
 					return AddResult.FAILED_DUPLICATE;
 				}
 
@@ -290,7 +298,7 @@ public class Headlines implements HeadlinesIF
 
 				if ( ourLink != null)
 				{
-					URL	itsLink = theItem.getLink();
+					URL	itsLink = theExistingItem.getLink();
 
 					if ( itsLink != null && ourLink.equals(itsLink))
 					{
@@ -300,12 +308,24 @@ public class Headlines implements HeadlinesIF
 
 						if ( theOldOneToRemove == null)
 						{
-							theOldOneToRemove = theItem;  // to prevent ConcurrentModificationException
+							theOldOneToRemove = theExistingItem;  // to prevent ConcurrentModificationException
 						}
 						else
 						{
 							s_Headlines_Logger.warn( m_Install.getLogPrefix() + "theOldOneToRemove is NOT null!");
 						}
+					}
+				}
+
+				////////////////////////////////////////////////////////  (AGR) 4 October 2008
+
+				if ( allItemsForThisSite != null)
+				{
+					SiteIF	theExistingItemsSite = m_Install.getFeedList().lookupChannel( theExistingItem.getOurChannel() );
+
+					if ( theExistingItemsSite != null && theExistingItemsSite.equals(inItemsOwnerSite))
+					{
+						allItemsForThisSite.put( theExistingItem, theExistingItem);
 					}
 				}
 			}
@@ -314,9 +334,39 @@ public class Headlines implements HeadlinesIF
 
 			if ( theOldOneToRemove != null)
 			{
-				boolean	removedOldOK = ( _remove(theOldOneToRemove) != null);
-				// s_Headlines_Logger.info("remove old OK? " + removedOldOK);
+				/* boolean  removedOldOK = */ _remove(theOldOneToRemove);
 			}
+
+			////////////////////////////////////////////////////////////////  (AGR) 4 October 2008. Now examine the existing Items...
+
+			if ( allItemsForThisSite != null && allItemsForThisSite.size() > maxNumberItemsPerSite)
+			{
+				// Now find the 'maxNumberItemsPerSite' youngest. Remove the rest, and exit if 'inNewItem' is one of them.
+
+				ItemIF[]	theItemsArray = allItemsForThisSite.keySet().toArray( new ItemIF[ allItemsForThisSite.size() ] );
+				boolean		doNotAddNewItem = false;
+
+				for ( int i = allItemsForThisSite.size() - 1; i >= maxNumberItemsPerSite; i--)
+				{
+					ItemIF	theNextOldest = theItemsArray[i];
+
+					if (theNextOldest.equals(inNewItem))
+					{
+						doNotAddNewItem = true;
+					}
+					else
+					{
+						_remove(theNextOldest);
+					}
+				}
+
+				if (doNotAddNewItem)
+				{
+					return AddResult.SUCCEEDED;
+				}
+			}
+
+			////////////////////////////////////////////////////////////////
 
 			_put(inNewItem);
 
@@ -355,18 +405,24 @@ public class Headlines implements HeadlinesIF
 
 	/*******************************************************************************
 	*******************************************************************************/
-	private ItemIF _remove( ItemIF inItem)
+	private boolean _remove( ItemIF inItem)
 	{
-		ItemIF	theItem = m_Coll.remove(inItem);
+		synchronized (this)
+		{
+			if ( m_Coll.remove(inItem) == null)
+			{
+				return false;	// Nothing removed...
+			}
+		}
 
-		////////////////////////////////////////////////////////////////  (AGR) 25 June 2005
+		////////////////////////////////////////////////////////////////  Call RemoveHandler for the removed ItemIF
 
 		for ( RemoveHandler rh : m_RemoveHandlers)
 		{
 			rh.onRemove( m_Install, this, inItem);
 		}
 
-		return theItem;
+		return true;
 	}
 
 	/*******************************************************************************
@@ -375,32 +431,17 @@ public class Headlines implements HeadlinesIF
 	public int countLinks()
 	{
 		TextCleaner	tc = new TextCleaner();
-		List<Link>	theFullList;
 
-		synchronized (this)
-		{
-			theFullList = _getLinks(tc);
+		return _getLinks(tc).size();
 		}
-
-		int	theCount = theFullList.size();
-
-		theFullList.clear();
-
-		return theCount;
-	}
 
 	/*******************************************************************************
 		(AGR) 13 April 2005
 	*******************************************************************************/
-	public List<Link> getLinksByName()
+	public Collection<Link> getLinksByName()
 	{
 		TextCleaner	tc = new TextCleaner();
-		List<Link>	theFullList;
-
-		synchronized (this)
-		{
-			theFullList = _getLinks(tc);
-		}
+		List<Link>	theFullList = _getLinks(tc);
 
 		Collections.sort( theFullList, tc.newLinkNameSorter());
 
@@ -410,15 +451,10 @@ public class Headlines implements HeadlinesIF
 	/*******************************************************************************
 		(AGR) 13 April 2005
 	*******************************************************************************/
-	public List<Link> getLinksByURL()
+	public Collection<Link> getLinksByURL()
 	{
 		TextCleaner	tc = new TextCleaner();
-		List<Link>	theFullList;
-
-		synchronized (this)
-		{
-			theFullList = _getLinks(tc);
-		}
+		List<Link>	theFullList = _getLinks(tc);
 
 		Collections.sort( theFullList, tc.newLinkURLSorter());
 
@@ -431,8 +467,9 @@ public class Headlines implements HeadlinesIF
 	private List<Link> _getLinks( TextCleaner inTC)
 	{
 		List<Link>	theFullList = new ArrayList<Link>(50);
+		ItemIF[]	theItems = toArray();
 
-		for ( ItemIF theItem : m_Coll.keySet())
+		for ( ItemIF theItem : theItems)
 		{
 			List<Link>	theLinks = inTC.collectLinks( theItem.getDescription(), theItem.getLink());
 
@@ -448,28 +485,22 @@ public class Headlines implements HeadlinesIF
 	/*******************************************************************************
 		Remove all entries in our table that come from the specified Channel
 	*******************************************************************************/
-	public synchronized void removeFor( ChannelIF inChannel)
+	public void removeFor( final ChannelIF inChannel)
 	{
-		List<ItemIF>	keysList = null;
-		
-		for ( ItemIF theItem : m_Coll.keySet())
+		List<ItemIF>	keysList = new ArrayList<ItemIF>();
+		ItemIF[]	theItems = toArray();
+
+		for ( ItemIF theItem : theItems)
 		{
-			ChannelIF	itemChannel = theItem.getChannel();
-
-			if (itemChannel.equals(inChannel))
+			if (theItem.getChannel().equals(inChannel))
 			{
-				if ( keysList == null)
-				{
-					keysList = new ArrayList<ItemIF>();
-				}
-
 				keysList.add(theItem);	// do this to prevent ConcurrentModificationExceptions!
 			}
 		}
 
 		////////////////////////////////////////////
 
-		if ( keysList != null)
+		if (!keysList.isEmpty())
 		{
 			// s_Headlines_Logger.info("removing keys: " + keysList);
 
@@ -482,14 +513,14 @@ public class Headlines implements HeadlinesIF
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public Set<Item> createSortedCollection()
+	public Collection<ItemIF> createSortedCollection()
 	{
-		return new TreeSet<Item>( new ItemsComparator() );
+		return new TreeSet<ItemIF>( new ItemsComparator() );
 	}
 	
 	/*******************************************************************************
 	*******************************************************************************/
-	public String toString()
+	@Override public String toString()
 	{
 		return ("Headlines \"" + m_Install.getName() + ": " + m_Name + "\"");	// m_Coll.toString();
 	}
@@ -554,7 +585,6 @@ public class Headlines implements HeadlinesIF
 			if ( keysList != null)
 			{
 				keysList.clear();
-				keysList = null;
 			}
 		}
 	}
@@ -572,8 +602,6 @@ public class Headlines implements HeadlinesIF
 		}
 
 		publishSnapshot( theItems, null, m_Name, m_Description);
-
-		theItems = null;
 	}
 
 	/*******************************************************************************
@@ -590,8 +618,6 @@ public class Headlines implements HeadlinesIF
 		}
 
 		publishSnapshot( theItems, ioStats, theBundle.getString("feed.headlines.name"), theBundle.getString("feed.headlines.description"));
-
-		theItems = null;
 	}
 
 	/*******************************************************************************
@@ -600,14 +626,16 @@ public class Headlines implements HeadlinesIF
 	public void publishSnapshot( ItemIF[] inItems, Stats ioStats, String inName, String inDescription)
 	{
 		FeedCreator	fc = new FeedCreator(s_Headlines_Logger);	// (AGR) 21 May 2005. Factored-out
+		GeneratedFeed	theFeed = fc.createChannel( ioStats, inName, inDescription, inItems);
 
-		fc.createChannel( ioStats, inName, inDescription, inItems);
-		m_HeadlinesXMLString = fc.getString();
+		if ( theFeed == null)
+		{
+			throw new RuntimeException("Feed creation failed!");
+		}
+
+		m_HeadlinesXMLString = theFeed.getXML();
 
 //		s_Headlines_Logger.info("Done snapshot: " + inItems.length);
-
-		fc.clear();
-		fc = null;	// (AGR) 23 May 2005
 	}
 
 	/*******************************************************************************
@@ -645,7 +673,7 @@ public class Headlines implements HeadlinesIF
 
 		// System.out.println("==> theBitmap = " + theBitmap.toString(2));
 
-		FeedList	theFL = m_Install.getFeedList();
+		FeedListIF	theFL = m_Install.getFeedList();
 		ItemIF[]	theFilteredArray = filterItemsList( theFL, inItems, theBitmap, inIncludeNotExclude);
 
 		// System.out.println("Result: " + Arrays.deepToString(theFilteredArray));
@@ -673,7 +701,7 @@ public class Headlines implements HeadlinesIF
 			if ( numBlogsChosen <= MAX_FEED_BLOGS_LISTED)
 			{
 				ArrayList<String>	theNames = new ArrayList<String>( MAX_FEED_BLOGS_LISTED );
-				Site			theSiteObj;
+				SiteIF			theSiteObj;
 				int			theBitmapSize = theBitmap.bitLength();
 
 				for ( int theIndex = 0; theIndex < theBitmapSize; theIndex++)
@@ -702,13 +730,12 @@ public class Headlines implements HeadlinesIF
 			theAppropriateDesc = theFormatter.toString();
 		}
 
-		fc.createChannel( null, theBundle.getString("feed.headlines.name"), theAppropriateDesc, theFilteredArray);
-		theContent = fc.getString();
+		theContent = fc.createChannel( null,
+						theBundle.getString("feed.headlines.name"),
+						theAppropriateDesc,
+						theFilteredArray).getXML();
 
 //		s_Headlines_Logger.info("Done snapshot: " + theFilteredArray.length);
-
-		fc.clear();
-		fc = null;	// (AGR) 23 May 2005
 
 		return theContent;
 	}
@@ -716,7 +743,7 @@ public class Headlines implements HeadlinesIF
 	/*******************************************************************************
 		(AGR) 6 June 2006
 	*******************************************************************************/
-	private ItemIF[] filterItemsList( final FeedList inFL, final ItemIF[] inItems, final BigInteger inBitmapToUse,
+	private ItemIF[] filterItemsList( final FeedListIF inFL, final ItemIF[] inItems, final BigInteger inBitmapToUse,
 					  boolean inIncludeNotExclude)
 	{
 		if ( inBitmapToUse == BigInteger.ZERO ||		// For efficiency...
@@ -724,7 +751,7 @@ public class Headlines implements HeadlinesIF
 		{
 			if (inIncludeNotExclude)	// if you only want to include NOTHING, simply return nothing now...
 			{
-				return s_EmptyItemArray;
+				return new ItemIF[0];
 			}
 			else
 			{
@@ -735,17 +762,23 @@ public class Headlines implements HeadlinesIF
 		////////////////////////////////////////////////////////////////
 
 		List<ItemIF>			theFilteredList = new ArrayList<ItemIF>( inItems.length / 2);
-		HashMap<ChannelIF,Site>		theMapping = new HashMap<ChannelIF,Site>();	// Done to cut down on Channel lookups
+		HashMap<ChannelIF,SiteIF>	theMapping = new HashMap<ChannelIF,SiteIF>();	// Done to cut down on Channel lookups
 
 		for ( ItemIF eachItem : inItems)
 		{
-			ChannelIF	eachChannel = eachItem.getChannel();
-			Site		eachSiteObj = theMapping.get(eachChannel);
+			ChannelIF	eachChannel = eachItem.getOurChannel();
+			SiteIF		eachSiteObj = theMapping.get(eachChannel);
 
 			if ( eachSiteObj == null)
 			{
-				eachSiteObj = inFL.lookupPostsChannel( eachChannel);
+				eachSiteObj = inFL.lookupPostsChannel(eachChannel);
 				theMapping.put( eachChannel, eachSiteObj);
+
+				if ( eachSiteObj == null)	// (AGR) 31 July 2008. Not good! Log, and skip this site.
+				{
+					s_Headlines_Logger.warn("Looking up " + eachChannel + " returned NULL Site! Cannot use in filtered list.");
+					continue;
+				}
 			}
 
 			// System.out.println("# Item: " + FeedUtils.adjustTitle(eachItem) + " => " + eachSiteObj);
@@ -762,7 +795,7 @@ public class Headlines implements HeadlinesIF
 			}
 		}
 
-		return theFilteredList.toArray(s_EmptyItemArray);
+		return theFilteredList.toArray( new ItemIF[ theFilteredList.size() ] );
 	}
 
 	/*******************************************************************************
@@ -772,23 +805,6 @@ public class Headlines implements HeadlinesIF
 	{
 		return m_HeadlinesXMLString;
 	}
-
-	/*******************************************************************************
-		(AGR) 25 June 2005
-	*******************************************************************************
-	public synchronized List<Long> getItemIDs()
-	{
-		List<Long>	ll = new ArrayList<Long>();
-
-		for ( ItemIF theItem : m_Coll.keySet())
-		{
-			ll.add( theItem.getId() );
-		}
-
-		Collections.sort(ll);
-
-		return ll;
-	}/
 
 	/*******************************************************************************
 		(AGR) 10 July 2005
@@ -898,7 +914,7 @@ public class Headlines implements HeadlinesIF
 	/*******************************************************************************
 		(AGR) 1 October 2006. For Tags page.
 	*******************************************************************************/
-	public static String getRecommendationCountsQuery( final List<ItemIF> inEntries)
+	public static String getRecommendationCountsQuery( final Collection<ItemIF> inEntries)
 	{
 		StringBuilder	sb = new StringBuilder( 40 * inEntries.size());
 		int		i = 0;
@@ -923,8 +939,15 @@ public class Headlines implements HeadlinesIF
 	/*******************************************************************************
 		(AGR) 11 October 2006
 	*******************************************************************************/
-	public static String getSearchRecommendationCountsQuery( final List<SearchMatch> inEntries)
+	public static String getSearchRecommendationCountsQuery( final Collection<SearchMatch> inEntries)
 	{
+		if ( inEntries == null || inEntries.isEmpty())	// (AGR) 28 May 2009
+		{
+			return null;
+		}
+
+		/////////////////////////////////////////////////////////////////////
+
 		StringBuilder	sb = new StringBuilder( 40 * inEntries.size());
 		int		i = 0;
 

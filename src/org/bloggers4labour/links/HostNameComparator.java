@@ -19,6 +19,8 @@ import java.util.Comparator;
  */
 public class HostNameComparator implements Comparator<HostNameCount>, /* (AGR) 3 Feb 2007. FindBugs recommended this */ Serializable
 {
+	private static final long serialVersionUID = 1L;
+
 	/*******************************************************************************
 	*******************************************************************************/
 	public int compare( HostNameCount sa, HostNameCount sb)

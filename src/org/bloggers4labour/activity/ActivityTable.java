@@ -9,7 +9,7 @@
 
 package org.bloggers4labour.activity;
 
-import org.bloggers4labour.cats.CategoriesTable;
+import org.bloggers4labour.cats.CategoriesTableIF;
 import static org.bloggers4labour.Constants.*;
 
 /**
@@ -20,7 +20,7 @@ import static org.bloggers4labour.Constants.*;
 {
 	private int		m_TotalPosts;
 
-	private TimeEntry[]	m_Entries = new TimeEntry[ (int)( CategoriesTable.getMaxPermissibleItemAge() / ONE_HOUR_MSECS) ];
+	private TimeEntry[]	m_Entries = new TimeEntry[ (int)( CategoriesTableIF.MAX_CATEGORY_AGE_MSECS / ONE_HOUR_MSECS) ];
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -65,7 +65,7 @@ import static org.bloggers4labour.Constants.*;
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public String toString()
+	@Override public String toString()
 	{
 		StringBuilder	sb = new StringBuilder("Total = " + m_TotalPosts);
 		int		i = 0;

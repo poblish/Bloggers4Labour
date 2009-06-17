@@ -11,16 +11,15 @@
 package org.bloggers4labour.index;
 
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.Date;
-import org.apache.lucene.document.*;
+import org.apache.lucene.document.Document;
 import org.bloggers4labour.FeedUtils;
 import org.bloggers4labour.Installation;
 import org.bloggers4labour.ItemType;
-import org.bloggers4labour.Site;
-import org.bloggers4labour.feed.FeedList;
 import org.bloggers4labour.jsp.AbstractDisplayable;
+import org.bloggers4labour.site.SiteIF;
 
 /**
  *
@@ -31,9 +30,11 @@ public class SearchMatch extends AbstractDisplayable implements java.io.Serializ
 	private float				m_Score;
 	private Document			m_Doc;
 	private /*transient */ long		m_ItemID;
-	private /*transient */ Site		m_Site;
+	private /*transient */ SiteIF		m_Site;
 	private /*transient */ String		m_SiteURL;
 	private /*transient */ long		m_ItemTimeMsecs;
+
+	private static final long		serialVersionUID = 1L;
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -66,7 +67,7 @@ public class SearchMatch extends AbstractDisplayable implements java.io.Serializ
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public Site getSite()
+	public SiteIF getSite()
 	{
 		return m_Site;
 	}
@@ -107,9 +108,8 @@ public class SearchMatch extends AbstractDisplayable implements java.io.Serializ
 		{
 			return new URL( m_Doc.getField("item_link").stringValue() );
 		}
-		catch (Exception e)
+		catch (MalformedURLException e)
 		{
-			;
 		}
 
 		return null;
@@ -125,7 +125,6 @@ public class SearchMatch extends AbstractDisplayable implements java.io.Serializ
 		}
 		catch (UnsupportedEncodingException e)
 		{
-			;
 		}
 
 		return null;
@@ -148,7 +147,6 @@ public class SearchMatch extends AbstractDisplayable implements java.io.Serializ
 		}
 		catch (UnsupportedEncodingException e)
 		{
-			;
 		}
 
 		return null;
@@ -201,7 +199,7 @@ public class SearchMatch extends AbstractDisplayable implements java.io.Serializ
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public String toString()
+	@Override public String toString()
 	{
 		return m_Doc.toString();
 	}

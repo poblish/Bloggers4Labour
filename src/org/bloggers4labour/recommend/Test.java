@@ -9,9 +9,8 @@
 
 package org.bloggers4labour.recommend;
 
-import com.hiatus.USQL_Utils;
+import com.hiatus.sql.USQL_Utils;
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -31,8 +30,8 @@ public class Test
 	{
 		DataSourceConnection	theConnectionObject = null;
 		StringBuffer		theBuf;
-		long			currTimeMSecs = System.currentTimeMillis();
-		boolean			isGood = false;
+//		long			currTimeMSecs = System.currentTimeMillis();
+//		boolean			isGood = false;
 
 		try
 		{
@@ -75,7 +74,7 @@ public class Test
 
 					System.out.println("DONE!");
 				}
-				catch (Exception e)
+				catch (RuntimeException e)
 				{
 					s_Logger.error("creating statement", e);
 				}
@@ -89,7 +88,7 @@ public class Test
 				s_Logger.warn("Cannot connect!");
 			}
 		}
-		catch (Exception err)
+		catch (SQLException err)
 		{
 			s_Logger.error("???", err);
 		}
@@ -100,7 +99,6 @@ public class Test
 			if ( theConnectionObject != null)
 			{
 				theConnectionObject.CloseDown();
-				theConnectionObject = null;
 			}
 		}
 	}
@@ -109,7 +107,7 @@ public class Test
 	********************************************************************/
 	public static void main( String[] args)
 	{
-		new Test();
+		// new Test();
 	}
 
 /*	private final static String	s_OtherTestURLsAndRecnos[] =

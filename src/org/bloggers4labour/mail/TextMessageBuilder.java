@@ -10,12 +10,12 @@
 
 package org.bloggers4labour.mail;
 
-import com.hiatus.UText;
-import com.hiatus.htl.*;
-import de.nava.informa.core.*;
+import com.hiatus.htl.HTL;
+import com.hiatus.htl.HTLTemplate;
+import com.hiatus.text.UText;
 import java.net.URL;
 import java.text.DateFormat;
-import java.util.*;
+import java.util.Date;
 import org.bloggers4labour.FeedUtils;
 import org.bloggers4labour.InstallationIF;
 
@@ -26,6 +26,7 @@ import org.bloggers4labour.InstallationIF;
 public class TextMessageBuilder extends MessageBuilder
 {
 	private static HTLTemplate	s_TextItemTemplate;
+	private static HTLTemplate	s_Text1stItemTemplate;
 	private static HTLTemplate	s_TextDescTemplate;
 	private static HTLTemplate	s_TextNoDescTemplate;
 	private static HTLTemplate	s_TextCatsTemplate;
@@ -37,6 +38,7 @@ public class TextMessageBuilder extends MessageBuilder
 	static
 	{
 		s_TextItemTemplate = HTL.createTemplate( "each_item.txt", s_Locale);
+		s_Text1stItemTemplate = HTL.createTemplate( "each_item_first.txt", s_Locale);
 		s_TextDescTemplate = HTL.createTemplate( "item_desc.txt", s_Locale);
 		s_TextNoDescTemplate = HTL.createTemplate( "item_no_desc.txt", s_Locale);
 		s_TextCatsTemplate = HTL.createTemplate( "item_cats.txt", s_Locale);
@@ -49,8 +51,6 @@ public class TextMessageBuilder extends MessageBuilder
 	public TextMessageBuilder( final InstallationIF inInstall)
 	{
 		super(inInstall);
-
-		// _loadTemplates();
 	}
 
 	/*******************************************************************************
@@ -58,21 +58,7 @@ public class TextMessageBuilder extends MessageBuilder
 	public TextMessageBuilder( final InstallationIF inInstall, DateFormat inDF)
 	{
 		super( inInstall, inDF);
-
-		// _loadTemplates();
 	}
-
-	/*******************************************************************************
-	*******************************************************************************
-	private void _loadTemplates()
-	{
-		m_TextItemTemplate = HTL.createTemplate( "each_item.txt", m_Locale);
-		m_TextDescTemplate = HTL.createTemplate( "item_desc.txt", m_Locale);
-		m_TextNoDescTemplate = HTL.createTemplate( "item_no_desc.txt", m_Locale);
-		m_TextCatsTemplate = HTL.createTemplate( "item_cats.txt", m_Locale);
-		m_TextTitleTemplate = HTL.createTemplate( "item_title.txt", m_Locale);
-		m_TextNoTitleTemplate = HTL.createTemplate( "item_no_title.txt", m_Locale);
-	}/
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -81,27 +67,6 @@ public class TextMessageBuilder extends MessageBuilder
 		m_MailContext.put( "categories", inStr);
 		m_MailContext.join( "cats_buf", s_TextCatsTemplate);
 	}
-
-	/*******************************************************************************
-	*******************************************************************************
-	public void setCount( int inCount)
-	{
-		super.setCount(inCount);
-
-		m_EligibleItemsCount = inCount;
-	}/
-
-	/*******************************************************************************
-	*******************************************************************************
-	public void handleFirstMessage()
-	{
-	}/
-
-	/*******************************************************************************
-	*******************************************************************************
-	public void handleNextMessage()
-	{
-	}/
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -154,6 +119,7 @@ public class TextMessageBuilder extends MessageBuilder
 		if ( m_Channel != null)
 		{
 			URL	theSiteObj = m_Channel.getSite();
+
 			m_MailContext.put( "from", ( theSiteObj != null) ? theSiteObj.toString() : "");
 		}
 		else
@@ -173,6 +139,14 @@ public class TextMessageBuilder extends MessageBuilder
 	public CharSequence generateMessageBody()
 	{
 		return HTL.mergeTemplate( s_TextItemTemplate, m_MailContext);
+	}
+
+	/*******************************************************************************
+		(AGR) 17 Jan 2007
+	*******************************************************************************/
+	public CharSequence generate1stMessageBody()
+	{
+		return HTL.mergeTemplate( s_Text1stItemTemplate, m_MailContext);
 	}
 
 	/*******************************************************************************

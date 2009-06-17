@@ -10,7 +10,8 @@
 
 package org.bloggers4labour.mapping;
 
-import com.sun.org.apache.xpath.internal.XPathAPI;
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.TreeMap;
@@ -19,7 +20,7 @@ import org.apache.log4j.Logger;
 import org.bloggers4labour.conf.Configuration;
 import org.bloggers4labour.xml.XMLUtils;
 import org.w3c.dom.*;
-import org.w3c.dom.traversal.NodeIterator;
+import org.xml.sax.SAXException;
 
 /**
  *
@@ -27,20 +28,9 @@ import org.w3c.dom.traversal.NodeIterator;
  */
 public class URLToName
 {
-//	private HashMap<String,String>	m_Mappings = new HashMap<String,String>(50);
 	private Map<String,String>	m_Mappings = new TreeMap<String,String>( new HostComparator() );
 
 	private static Logger		s_Logger = Logger.getLogger("Main");
-
-	/*******************************************************************************
-		(AGR) 26 July 2005. For testing!
-	*******************************************************************************
-	public static void main( String[] args)
-	{
-		org.bloggers4labour.Launcher	l = new org.bloggers4labour.Launcher(s_Logger);
-		l.start();
-		new URLToName();
-	}/
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -70,7 +60,15 @@ public class URLToName
 				}
 			}
 		}
-		catch (Exception e)
+		catch (ParserConfigurationException e)
+		{
+			s_Logger.error( "URLToName()", e);
+		}
+		catch (SAXException e)
+		{
+			s_Logger.error( "URLToName()", e);
+		}
+		catch (IOException e)
 		{
 			s_Logger.error( "URLToName()", e);
 		}
@@ -103,13 +101,9 @@ public class URLToName
 
 	/*******************************************************************************
 	*******************************************************************************/
-	class HostComparator implements Comparator<String>
+	static class HostComparator implements Comparator<String>, /* (AGR) 29 Jan 2007. FindBugs recommended this */ Serializable
 	{
-		/*******************************************************************************
-		*******************************************************************************/
-		public HostComparator()
-		{
-		}
+		private static final long serialVersionUID = 1L;
 
 		/*******************************************************************************
 		*******************************************************************************/

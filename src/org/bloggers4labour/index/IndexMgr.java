@@ -10,34 +10,36 @@
 
 package org.bloggers4labour.index;
 
-import com.hiatus.UDates;
-import de.nava.informa.core.ChannelIF;
-import de.nava.informa.core.ItemIF;
+import com.hiatus.dates.UDates;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 import org.apache.log4j.Logger;
-import org.apache.lucene.analysis.standard.*;
-import org.apache.lucene.document.*;
-import org.apache.lucene.index.*;
-import org.apache.lucene.queryParser.*;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.search.Filter;
+import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.bloggers4labour.FeedUtils;
-import org.bloggers4labour.Headlines;
-import org.bloggers4labour.HeadlinesMgr;
 import org.bloggers4labour.ItemContext;
 import org.bloggers4labour.Installation;
-import org.bloggers4labour.Site;
-import org.bloggers4labour.feed.FeedList;
-import org.bloggers4labour.headlines.*;
+import org.bloggers4labour.InstallationIF;
+import org.bloggers4labour.bridge.channel.ChannelIF;
+import org.bloggers4labour.bridge.channel.item.ItemIF;
+import org.bloggers4labour.headlines.AddHandler;
+import org.bloggers4labour.headlines.HeadlinesIF;
+import org.bloggers4labour.headlines.RemoveHandler;
 
 /**
  *
@@ -50,8 +52,8 @@ public class IndexMgr
 	private int			m_Dirtiness = 0;
 	private File			m_LuceneRootIndexDir;
 
-	private static Logger		s_Idx_Logger = Logger.getLogger("Main");
-	private static File		s_LuceneRootIndexDir = new File("/Users/andrewre/Development/java/Bloggers4Labour/lucene_index");
+	private static Logger		s_Idx_Logger = Logger.getLogger( IndexMgr.class );
+	private static File		s_LuceneRootIndexDir = new File("/Users/andrewregan/Development/java/Bloggers4Labour/lucene_index");
 
 	/*******************************************************************************
 		(AGR) 22 June 2005. Should really sync, in case someone calls
@@ -70,7 +72,7 @@ public class IndexMgr
 
 		try
 		{
-			Headlines	h = m_Install.getHeadlinesMgr().getIndexablePostsInstance();
+			HeadlinesIF	h = m_Install.getHeadlinesMgr().getIndexablePostsInstance();
 			s_Idx_Logger.info( prefix + "IndexMgr: storing in \"" + m_LuceneRootIndexDir + "\"");
 			iw = getIndexWriter(true);
 
@@ -95,7 +97,7 @@ public class IndexMgr
 				s_Idx_Logger.error( prefix + "IndexMgr: no Headlines object to attach to!");
 			}
 		}
-		catch (Exception e)
+		catch (IOException e)
 		{
 			s_Idx_Logger.error( prefix + "Clearing Index failed", e);
 		}
@@ -158,7 +160,6 @@ public class IndexMgr
 		{
 			theWriter = getIndexWriter(false);
 
-			int	x0 = theWriter.docCount();
 			theWriter.addDocument(inDoc);
 			m_DocCount = theWriter.docCount();
 
@@ -168,7 +169,7 @@ public class IndexMgr
 
 			return true;
 		}
-		catch (Exception err)
+		catch (IOException err)
 		{
 			s_Idx_Logger.error( "insert()", err);
 		}
@@ -190,7 +191,7 @@ public class IndexMgr
 		{
 			theWriter = getIndexWriter(false);
 
-			int	x0 = theWriter.docCount();
+		//	int	x0 = theWriter.docCount();
 
 			for ( Document eachDoc : inDocsList)
 			{
@@ -205,7 +206,7 @@ public class IndexMgr
 
 			return true;
 		}
-		catch (Exception err)
+		catch (IOException err)
 		{
 			s_Idx_Logger.error( "insert()", err);
 		}
@@ -237,7 +238,7 @@ public class IndexMgr
 				m_DocCount = theWriter.docCount();
 				s_Idx_Logger.info( m_Install.getLogPrefix() + "IDX: optimised ->  " + m_DocCount + " docs in " + UDates.getFormattedTimeDiff( afterMS - beforeMS) + ".");
 			}
-			catch (Exception err)
+			catch (IOException err)
 			{
 				s_Idx_Logger.error( m_Install.getLogPrefix() + "optimise()", err);
 			}
@@ -538,9 +539,9 @@ public class IndexMgr
 
 		/*******************************************************************************
 		*******************************************************************************/
-		public void onAdd( final Installation inInstall, HeadlinesIF inHeads, final ItemIF inItem, final ItemContext inCtxt)
+		public void onAdd( final InstallationIF inInstall, HeadlinesIF inHeads, final ItemIF inItem, final ItemContext inCtxt)
 		{
-			ChannelIF	theChannel = inItem.getChannel();
+			ChannelIF	theChannel = inItem.getOurChannel();
 /*			Site		thisChannelsSite = FeedList.getInstance().lookupChannel(theChannel);
 			boolean		itemIsAPost = ( thisChannelsSite.getChannel() == theChannel);
 
@@ -551,10 +552,18 @@ public class IndexMgr
 */
 			////////////////////////////////////////////////////////
 
+			Date	itemDate = FeedUtils.getItemDate(inItem);
+
+			if ( itemDate == null)	// (AGR) 13 August 2008
+			{
+				return;		// No! We do not accept posts with NULL dates, so might as well skip indexing now.
+			}
+
+			////////////////////////////////////////////////////////
+
 			Document	theDocument = new Document();
 			String		theDescr = FeedUtils.stripHTML( inItem.getDescription() );
 			String		theTitle = FeedUtils.adjustTitle(inItem);
-			long		itemTimeMsecs = FeedUtils.getItemDate(inItem).getTime();
 
 			theDocument.add( new Field( "desc", theDescr, Field.Store.YES, Field.Index.TOKENIZED) );
 			theDocument.add( new Field( "title", theTitle, Field.Store.YES, Field.Index.TOKENIZED) );
@@ -562,7 +571,7 @@ public class IndexMgr
 			// Need to store this so we can use it as a key for deleting this entry later!
 
 			theDocument.add( new Field( "item_id", Long.toString( inItem.getId() ), Field.Store.YES, Field.Index.UN_TOKENIZED) );
-			theDocument.add( new Field( "item_time_ms", Long.toString(itemTimeMsecs), Field.Store.YES, Field.Index.NO) );
+			theDocument.add( new Field( "item_time_ms", Long.toString( itemDate.getTime() ), Field.Store.YES, Field.Index.NO) );
 
 			URL	theLink = inItem.getLink();
 
@@ -573,8 +582,9 @@ public class IndexMgr
 
 			try {
 				theDocument.add( new Field( "channel_site", theChannel.getSite().toString(), Field.Store.YES, Field.Index.NO) );
-			} catch (Exception e) {		// (AGR) 26 July 2005
-				;
+			}
+			catch (RuntimeException e)	// (AGR) 26 July 2005
+			{
 			}
 
 			// System.out.println("Adding Doc '" + theTitle + "' to " + this);
@@ -607,7 +617,7 @@ public class IndexMgr
 	{
 		/*******************************************************************************
 		*******************************************************************************/
-		public void onRemove( final Installation inInstall, HeadlinesIF inHeads, final ItemIF inItem)
+		public void onRemove( final InstallationIF inInstall, HeadlinesIF inHeads, final ItemIF inItem)
 		{
 			remove( inHeads, new Term( "item_id", Long.toString( inItem.getId() ) ) );
 		}

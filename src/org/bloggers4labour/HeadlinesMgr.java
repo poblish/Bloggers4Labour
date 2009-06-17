@@ -10,28 +10,28 @@
 
 package org.bloggers4labour;
 
-import com.hiatus.UText;
+import com.hiatus.text.UText;
 import com.sun.org.apache.xpath.internal.XPathAPI;
-import de.nava.informa.core.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.concurrent.CopyOnWriteArrayList;
-import javax.xml.parsers.*;
 import javax.xml.transform.TransformerException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathException;
 import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import org.apache.log4j.Logger;
-import org.bloggers4labour.conf.Configuration;
-import org.bloggers4labour.feed.FeedList;
+import org.bloggers4labour.bridge.channel.ChannelIF;
+import org.bloggers4labour.headlines.Handler;
+import org.bloggers4labour.headlines.HeadlinesIF;
 import org.bloggers4labour.jmx.Stats;
-import org.bloggers4labour.headlines.*;
 import org.bloggers4labour.xml.XMLUtils;
-import org.w3c.dom.*;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.w3c.dom.traversal.NodeIterator;
 import static org.bloggers4labour.Constants.*;
 
@@ -50,7 +50,7 @@ public class HeadlinesMgr
 
 	private List<Headlines>		m_HeadlinesList = new CopyOnWriteArrayList<Headlines>();  // (AGR) 29 May 2005. Was ArrayList
 
-	private static Logger		s_HeadlinesMgr_Logger = Logger.getLogger("Main");
+	private static Logger		s_HeadlinesMgr_Logger = Logger.getLogger( HeadlinesMgr.class );
 
 	/*******************************************************************************
 	*******************************************************************************
@@ -61,7 +61,7 @@ public class HeadlinesMgr
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public HeadlinesMgr( final Element docElem, final Installation inInstallation)
+	public HeadlinesMgr( final Element docElem, final InstallationIF inInstallation)
 	{
 /*		Configuration		theConf = Configuration.getInstance();
 		DocumentBuilderFactory	docFactory = DocumentBuilderFactory.newInstance();
@@ -95,9 +95,9 @@ public class HeadlinesMgr
 					NodeList	nl = e.getChildNodes();
 					String		theName = null;
 					String		theDescription = null;
-					String		theAllowedItems = null;
+					String		theAllowedItems;
 					long		theMinValue = -1;
-					long		theMaxValue = -1;
+					long		theMaxValue = Long.MAX_VALUE;	// (AGR) 5 October 2008. Was -1
 					boolean		gotError = false;
 					boolean		wantComments = false;
 					boolean		wantPosts = false;
@@ -183,8 +183,6 @@ public class HeadlinesMgr
 						}
 
 						h.setFilterCreatorStatuses(ll);
-
-						ll = null;
 					}
 
 					////////////////////////////////////////////////////////////////
@@ -203,7 +201,15 @@ public class HeadlinesMgr
 
 							h.addHandler((Handler) clazz.newInstance());
 						}
-						catch (Exception e2)
+						catch (ClassNotFoundException e2)
+						{
+							s_HeadlinesMgr_Logger.error( "handlers...", e2);
+						}
+						catch (InstantiationException e2)
+						{
+							s_HeadlinesMgr_Logger.error( "handlers...", e2);
+						}
+						catch (IllegalAccessException e2)
 						{
 							s_HeadlinesMgr_Logger.error( "handlers...", e2);
 						}
@@ -253,7 +259,11 @@ public class HeadlinesMgr
 			}
 
 		}
-		catch (Exception e)
+		catch (TransformerException e)
+		{
+			s_HeadlinesMgr_Logger.error( "setUpDefaults()", e);
+		}
+		catch (XPathExpressionException e)
 		{
 			s_HeadlinesMgr_Logger.error( "setUpDefaults()", e);
 		}
@@ -272,42 +282,42 @@ public class HeadlinesMgr
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public Headlines getMainRSSFeedInstance()
+	public HeadlinesIF getMainRSSFeedInstance()
 	{
 		return m_MainRSSFeed_Headlines;
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public Headlines getRecentPostsInstance()
+	public HeadlinesIF getRecentPostsInstance()
 	{
 		return m_RecentPosts_Headlines;
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public Headlines getCommentsInstance()
+	public HeadlinesIF getCommentsInstance()
 	{
 		return m_Comments_Headlines;
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public Headlines getEmailPostsInstance()
+	public HeadlinesIF getEmailPostsInstance()
 	{
 		return m_EmailPosts_Headlines;
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public Headlines getIndexablePostsInstance()
+	public HeadlinesIF getIndexablePostsInstance()
 	{
 		return m_IndexablePosts_Headlines;
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public Headlines get24HourInstance()
+	public HeadlinesIF get24HourInstance()
 	{
 		return m_24Hour_Headlines;
 	}
@@ -343,9 +353,9 @@ public class HeadlinesMgr
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public synchronized Headlines findHeadlines( String inName)
+	public synchronized HeadlinesIF findHeadlines( String inName)
 	{
-		for ( Headlines h : m_HeadlinesList)
+		for ( HeadlinesIF h : m_HeadlinesList)
 		{
 			if (h.getName().equals(inName))
 			{
@@ -376,7 +386,7 @@ public class HeadlinesMgr
 		*******************************************************************************/
 		public void update( Observable o, Object arg)
 		{
-			Headlines	h = getMainRSSFeedInstance();
+			HeadlinesIF	h = getMainRSSFeedInstance();
 
 			if ( h != null)		// (AGR) 28 May 2005. Shouldn't happen, but prevent NPE
 			{

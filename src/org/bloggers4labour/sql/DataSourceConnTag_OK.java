@@ -10,8 +10,10 @@
 package org.bloggers4labour.sql;
 
 import java.io.IOException;
-import javax.servlet.jsp.*;
-import javax.servlet.jsp.tagext.*;
+import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.tagext.BodyContent;
+import javax.servlet.jsp.tagext.BodyTag;
+import javax.servlet.jsp.tagext.BodyTagSupport;
 import org.apache.log4j.Logger;
 
 /**
@@ -24,6 +26,8 @@ public class DataSourceConnTag_OK extends BodyTagSupport
 //	private String			m_ConnStr;
 	private Logger			m_Logger;
 
+	private static final long	serialVersionUID = 1L;
+
 	/*******************************************************************************
 	*******************************************************************************/
 	public DataSourceConnTag_OK()
@@ -35,7 +39,7 @@ public class DataSourceConnTag_OK extends BodyTagSupport
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public int doStartTag() throws JspException
+	@Override public int doStartTag() throws JspException
 	{
 		int	theResult = BodyTag.SKIP_BODY;
 
@@ -73,7 +77,7 @@ public class DataSourceConnTag_OK extends BodyTagSupport
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public int doEndTag() throws JspException
+	@Override public int doEndTag() throws JspException
 	{
 //		m_Logger.debug("in doEndTag()");
 
@@ -82,7 +86,7 @@ public class DataSourceConnTag_OK extends BodyTagSupport
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public int doAfterBody() throws JspException
+	@Override public int doAfterBody() throws JspException
 	{
 		BodyContent	theBody = getBodyContent();
 

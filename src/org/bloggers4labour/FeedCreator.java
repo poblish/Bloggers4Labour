@@ -10,12 +10,9 @@
 
 package org.bloggers4labour;
 
-import com.hiatus.UDates;
-import com.hiatus.ULocale2;
-import de.nava.informa.impl.basic.Item;
-import de.nava.informa.core.*;
+import com.hiatus.dates.UDates;
+import com.hiatus.locales.ULocale2;
 import de.nava.informa.exporters.RSS_2_0_Exporter;
-import de.nava.informa.impl.basic.Channel;
 import de.nava.informa.impl.basic.ChannelBuilder;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -23,7 +20,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Locale;
 import org.apache.log4j.Logger;
-import org.bloggers4labour.jmx.*;
+import org.bloggers4labour.bridge.channel.item.DefaultItemBridgeFactory;
+import org.bloggers4labour.bridge.channel.item.ItemBridgeIF;
+import org.bloggers4labour.bridge.channel.item.ItemIF;
+import org.bloggers4labour.feed.GeneratedFeed;
+import org.bloggers4labour.feed.RSS_2_0_GeneratedFeed;
+import org.bloggers4labour.jmx.Stats;
 
 /**
  *
@@ -31,10 +33,7 @@ import org.bloggers4labour.jmx.*;
  */
 public class FeedCreator
 {
-	private Logger		m_Logger;
-	private ChannelIF	m_Channel;
-	private ChannelBuilder	m_ChannelBuilder;
-	private String		m_XMLString;
+	private Logger	m_Logger;
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -46,50 +45,48 @@ public class FeedCreator
 	/*******************************************************************************
 		(AGR) 5 June 2005 - from now on, inItems could be null!
 	*******************************************************************************/
-	public void createChannel( Stats ioStats, String inTitle, String inDescrStr, ItemIF[] inItems)
+	public GeneratedFeed createChannel( Stats ioStats, String inTitle, String inDescrStr, ItemIF[] inItems)
 	{
 		int	numEntries = ( inItems != null) ? inItems.length : 0;	// (AGR) 5 June 2005
 
 //		int	itemsCount = m_Coll.size();
 //		s_Headlines_Logger.info("Do snapshot: " + numEntries + " items.");
 
-		long	start_ms = System.currentTimeMillis();
-		long	end_ms;
+		long				start_ms = System.currentTimeMillis();
+		long				end_ms;
+		de.nava.informa.core.ChannelIF	theChannel = new ChannelBuilder().createChannel(inTitle);
 
-		m_ChannelBuilder = new ChannelBuilder();
-
-		m_Channel = m_ChannelBuilder.createChannel(inTitle);
-		m_Channel.setDescription(inDescrStr);
+		theChannel.setDescription(inDescrStr);
 
 		try
 		{
-			m_Channel.setSite( new URL("http://www.bloggers4labour.org") );
-
-			m_Channel.setPubDate( ULocale2.getGregorianCalendar( Locale.UK ).getTime() );
+			theChannel.setSite( new URL("http://www.bloggers4labour.org") );
+			theChannel.setPubDate( ULocale2.getGregorianCalendar( Locale.UK ).getTime() );
 		}
 		catch (MalformedURLException e)
 		{
-			;
 		}
 
 		///////////////////////////////////////////////////
 
+		ItemBridgeIF	theBridge = new DefaultItemBridgeFactory().getInstance();
+
 		for ( int i = 0; i < numEntries; i++)
 		{
-			m_Channel.addItem( FeedUtils.cloneItem( m_Channel, inItems[i], false) );
+			theChannel.addItem( theBridge.bridge( inItems[i].clone() ) /* FeedUtils.cloneItem( theChannel, inItems[i], false) */ );
 		}
 
 		///////////////////////////////////////////////////
 
 		StringWriter		theWriter = new StringWriter();
 		RSS_2_0_Exporter	theExporter = new RSS_2_0_Exporter( theWriter, "UTF-8");
+		GeneratedFeed		theNewFeed = null;
 
 		try
 		{
-			theExporter.write(m_Channel);
+			theExporter.write(theChannel);
 
-			m_XMLString = theWriter.toString();
-			theWriter = null;
+			theNewFeed = new RSS_2_0_GeneratedFeed( theWriter.toString() );
 		}
 		catch (IOException e)
 		{
@@ -99,8 +96,6 @@ public class FeedCreator
 		{
 			m_Logger.error("Exception writing Channel", e);
 		}
-
-		theExporter = null;	// (AGR) 23 May 2005
 
 		///////////////////////////////////////////////////
 
@@ -112,20 +107,7 @@ public class FeedCreator
 
 			// m_Logger.info("Snapshot: did " + numEntries + " items. Exporting took " + UDates.getFormattedTimeDiff( end_ms - start_ms));
 		}
-	}
 
-	/*******************************************************************************
-	*******************************************************************************/
-	public void clear()
-	{
-		m_Channel = null;
-		m_ChannelBuilder = null;
-	}
-
-	/*******************************************************************************
-	*******************************************************************************/
-	public String getString()
-	{
-		return m_XMLString;
+		return theNewFeed;
 	}
 }

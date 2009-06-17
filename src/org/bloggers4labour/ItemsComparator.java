@@ -10,11 +10,10 @@
 
 package org.bloggers4labour;
 
-import de.nava.informa.core.ItemIF;
 import java.io.Serializable;
-// import de.nava.informa.impl.basic.Item;
 import java.util.Comparator;
 import java.util.Date;
+import org.bloggers4labour.bridge.channel.item.ItemIF;
 
 /**
  *
@@ -22,6 +21,8 @@ import java.util.Date;
  */
 public class ItemsComparator implements Comparator<ItemIF>, /* (AGR) 3 Feb 2007. FindBugs recommended this */ Serializable
 {
+	private static final long serialVersionUID = 1L;
+
 	/*******************************************************************************
 	*******************************************************************************/
 	public int compare( ItemIF ia, ItemIF ib)

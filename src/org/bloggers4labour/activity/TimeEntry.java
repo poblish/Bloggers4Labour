@@ -77,7 +77,7 @@ public class TimeEntry implements TimerEntryIF
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public String toString()
+	@Override public String toString()
 	{
 		return ("[" + m_BlogsUsed + " blogs, " + m_PostsCount + " posts]");
 	}

@@ -10,8 +10,12 @@
 
 package org.bloggers4labour.options;
 
-import com.hiatus.UDates;
-import java.beans.*;
+import com.hiatus.dates.UDates;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeSupport;
+import java.beans.PropertyVetoException;
+import java.beans.VetoableChangeListener;
+import java.beans.VetoableChangeSupport;
 import java.io.Serializable;
 
 /**
@@ -123,7 +127,7 @@ public abstract class AbstractTaskOptionsBean implements TaskOptionsBeanIF,
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public String toString()
+	@Override public String toString()
 	{
 		return ( "starting in " + UDates.getFormattedTimeDiff(m_Delay) + " and running every " + UDates.getFormattedTimeDiff(m_Period));
 	}

@@ -56,7 +56,7 @@ public class EventsSection
 			MessageBuilder	htmlB = new HTMLMessageBuilder( inInstall, inDF);
 
 			int		count = 1;
-			Integer		eventsCount = new Integer( theRSL.getRowsList().size() );
+			Integer		eventsCount = Integer.valueOf( theRSL.getRowsList().size() );	// (AGR) 29 Jan 2007. FindBugs: changed from new Long
 
 			m_GotEvents = true;
 

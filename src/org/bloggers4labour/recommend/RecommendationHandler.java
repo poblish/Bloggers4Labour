@@ -9,13 +9,16 @@
 
 package org.bloggers4labour.recommend;
 
-import com.hiatus.USQL_Utils;
-import com.hiatus.UText;
+import com.hiatus.sql.USQL_Utils;
+import com.hiatus.text.UText;
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
-import java.sql.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Locale;
 import javax.sql.DataSource;
-import org.bloggers4labour.sql.*;
 import org.apache.log4j.Logger;
+import org.bloggers4labour.sql.DataSourceConnection;
 
 /**
  *
@@ -57,7 +60,7 @@ public class RecommendationHandler
 
 					return _handleRequest( theS, inSessionID, inURL, inSiteRecno);
 				}
-				catch (Exception e)
+				catch (SQLException e)
 				{
 					s_Logger.error("creating statement", e);
 				}
@@ -71,7 +74,7 @@ public class RecommendationHandler
 				s_Logger.warn("Cannot connect!");
 			}
 		}
-		catch (Exception err)
+		catch (RuntimeException err)
 		{
 			s_Logger.error("???", err);
 
@@ -81,7 +84,6 @@ public class RecommendationHandler
 			if ( theConnectionObject != null)
 			{
 				theConnectionObject.CloseDown();
-				theConnectionObject = null;
 			}
 		}
 
@@ -101,7 +103,7 @@ public class RecommendationHandler
 		////////////////////////////////////////////////////////////////
 
 		long		theVoteCount;
-		CharSequence	theAdjustedURL = USQL_Utils.getQuoted( inURL.trim().toLowerCase() );
+		CharSequence	theAdjustedURL = USQL_Utils.getQuoted( inURL.trim().toLowerCase( Locale.UK ) );
 		ResultSet	theRS = inStatement.executeQuery("SELECT 1 FROM recommendations R, recommendedURLs U WHERE R.url_recno=U.recno AND U.url=" + theAdjustedURL + " AND R.session_id=" + USQL_Utils.getQuoted(inSessionID) + " AND ( NOW() - R.date) < 86400");
 
 		if (theRS.next())	// Session user (!) has already recommended this URL in the past day - reject
@@ -226,7 +228,7 @@ public class RecommendationHandler
 		////////////////////////////////////////////////////////////////
 
 //		int		expectedRecno = Integer.parseInt( s_TestURLsAndRecnos[i] );
-		String		adjustedURL = inURL.toLowerCase();
+		String		adjustedURL = inURL.toLowerCase( Locale.UK );
 		String		s = null;
 		ResultSet	rs = null;
 
@@ -260,11 +262,11 @@ public class RecommendationHandler
 			{
 				adjustedURL = "http://blog.co.uk/cllrfay";
 			}
-			else if (adjustedURL.startsWith("http://users.ox.ac.uk/~magd1368/"))
+/*			else if (adjustedURL.startsWith("http://users.ox.ac.uk/~magd1368/"))	// (AGR) 17 March 2007. Removed.
 			{
 				adjustedURL = "http://users.ox.ac.uk/~magd1368/weblog/blogger.html";
 			}
-			else if (adjustedURL.startsWith("http://www.odpm.gov.uk/cs/blogs/ministerial_blog"))
+*/			else if (adjustedURL.startsWith("http://www.odpm.gov.uk/cs/blogs/ministerial_blog"))
 			{
 				adjustedURL = "http://davidmiliband.defra.gov.uk/blogs/ministerial_blog/default.aspx";
 			}
@@ -291,10 +293,14 @@ public class RecommendationHandler
 				s = "SELECT site_recno FROM site WHERE LOCATE(" + CONVERTED_URL + "," + USQL_Utils.getQuoted(adjustedURL) + ") > 0" + SITE_VALIDITY; // AND " + LENGTH_URL + " >= " + adjustedURL.length();
 			}
 
+			// s_Logger.info("[RH] Checking with: " + s);
+
 			rs = inStatement.executeQuery(s);
 			if (rs.next())
 			{
 				long	actualRecno = rs.getLong(1);
+
+				// s_Logger.info("[RH] Got recno: " + actualRecno);
 
 				if (rs.next())
 				{
@@ -307,15 +313,14 @@ public class RecommendationHandler
 			}
 			else
 			{
-				; // System.out.println("No match for: " + s); // " + s_TestURLsAndRecnos[i+1]);
+				// System.out.println("No match for: " + s); // " + s_TestURLsAndRecnos[i+1]);
 			}
 		}
-		catch (Exception e)
+		catch (SQLException e)
 		{
 			if ( rs != null)
 			{
 				rs.close();
-				rs = null;
 			}
 		}
 

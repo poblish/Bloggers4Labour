@@ -10,8 +10,8 @@
 
 package org.bloggers4labour.headlines;
 
-import de.nava.informa.core.ItemIF;
 import org.apache.log4j.Logger;
+import org.bloggers4labour.bridge.channel.item.ItemIF;
 
 /**
  *

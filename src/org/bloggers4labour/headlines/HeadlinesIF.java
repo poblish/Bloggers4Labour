@@ -10,8 +10,9 @@
 
 package org.bloggers4labour.headlines;
 
-import java.util.List;
-import java.util.Set;
+import java.util.Collection;
+import org.bloggers4labour.bridge.channel.item.ItemIF;
+import org.bloggers4labour.jmx.Stats;
 import org.bloggers4labour.tag.Link;
 
 /**
@@ -20,10 +21,27 @@ import org.bloggers4labour.tag.Link;
  */
 public interface HeadlinesIF
 {
-	public Set getBlogs();
+	public String getName();
+	public String getHeadlinesXMLString();
+	public long getMaxAgeMsecs();
+
+	public Collection<String> getBlogs();
 	public int getBlogsCount();
 	public int size();
 
-	public List<Link> getLinksByName();
-	public List<Link> getLinksByURL();
+	public int countLinks();
+
+	public Collection<Link> getLinksByName();
+	public Collection<Link> getLinksByURL();
+	public Collection<ItemIF> createSortedCollection();
+
+	public void addHandler( Handler inHandler);
+
+	public void publishSnapshot();
+	public void publishSnapshot( Stats ioStats);
+	public String publishSnapshot_Included( ItemIF[] inItems, final String inIncludeOnlyTheseBlogs);
+	public String publishSnapshot_Excluded( ItemIF[] inItems, final String inExcludeOnlyTheseBlogs);
+	public String publishSnapshot_Filtered( ItemIF[] inItems, final String inBase36BitmapString, boolean inIncludeNotExclude);
+
+	public ItemIF[] toArray();
 }

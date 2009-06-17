@@ -9,7 +9,7 @@
 
 package org.bloggers4labour.feed;
 
-import de.nava.informa.core.*;
+import org.bloggers4labour.bridge.channel.ChannelIF;
 
 /**
  *

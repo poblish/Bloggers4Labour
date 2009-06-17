@@ -10,8 +10,7 @@
 
 package org.bloggers4labour.headlines;
 
-import de.nava.informa.core.ItemIF;
-import org.bloggers4labour.Headlines;
+import org.bloggers4labour.bridge.channel.item.ItemIF;
 
 /**
  *

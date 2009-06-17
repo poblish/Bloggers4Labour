@@ -10,17 +10,13 @@
 
 package org.bloggers4labour;
 
-import org.bloggers4labour.feed.FeedList;
-import com.hiatus.WebApp;
-import com.hiatus.htl.*;
+import com.hiatus.htl.HTL;
+import com.hiatus.htl.HTLCache;
 import java.util.Properties;
-import org.apache.log4j.*;
-// import org.bloggers4labour.cats.CategoriesTable;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 import org.bloggers4labour.conf.Configuration;
 import org.bloggers4labour.gui.MaintenanceForm;
-import org.bloggers4labour.index.IndexMgr;
-import org.bloggers4labour.jmx.Management;
-// import org.bloggers4labour.mail.DigestSender;
 
 /**
  *
@@ -31,18 +27,42 @@ public class Launcher
 	private Logger		m_Logger;
 	private Properties	m_Props = new Properties();
 
+	private static String	s_ConfigDirectory;
+	private static String	s_LoggingConfigFile;
+
 	/********************************************************************
 	********************************************************************/
-	public static void main(String[] a)
+	public static void main( final String[] inArgs)
 	{
-/*		Properties	theProps = new Properties();
-		theProps.setProperty("log4j.rootLogger","DEBUG");
-		theProps.setProperty("log4j.logger.Main","DEBUG, FOO");
-		theProps.setProperty("log4j.appender.FOO","org.apache.log4j.ConsoleAppender");
-		theProps.setProperty("log4j.appender.FOO.layout","org.apache.log4j.PatternLayout");
-		PropertyConfigurator.configure(theProps);
-		Logger.getLogger("Main").info("hello");
-*/
+		for (int i = 0; i < inArgs.length; i++)
+		{
+			if (inArgs[i].equalsIgnoreCase("-configDir"))
+			{
+				s_ConfigDirectory = inArgs[++i];
+			}
+			else if (inArgs[i].equalsIgnoreCase("-logConfigFile"))
+			{
+				s_LoggingConfigFile = inArgs[++i];
+			}
+		}
+
+		if ( s_LoggingConfigFile == null)
+		{
+			s_LoggingConfigFile = "/Users/andrewregan/www/htdocs/WEB-INF/bio-LOCAL.properties";
+		}
+
+		if ( s_ConfigDirectory == null)
+		{
+			s_ConfigDirectory = "/Users/andrewregan/www/htdocs/bloggers4labour/conf/";
+		}
+
+		System.out.println("Loading Logging Config: " + s_LoggingConfigFile);
+		PropertyConfigurator.configure(s_LoggingConfigFile);
+
+		System.out.println("Configuration dir: " + s_ConfigDirectory);
+
+		////////////////////////////////////////////////////////////////
+
 		Launcher		l = new Launcher( Logger.getLogger("Main") );
 		l.start();
 
@@ -62,24 +82,10 @@ public class Launcher
 	*******************************************************************************/
 	public void start()
 	{
-		Configuration.getInstance().setDirectoryIfNotSet("/Users/andrewre/www/htdocs/bloggers4labour/conf/");
-
-		m_Props.setProperty( "bm.docs_directory_path", "/home/htdocs/bloggers4labour/htl/");
-		m_Props.setProperty( "bm.locales_dir_name", "locales/");
-		m_Props.setProperty( "bm.default_dir_name", "default");
-
-		WebApp.setProperties(m_Props);
+		Configuration.getInstance().setDirectoryIfNotSet(s_ConfigDirectory);
 
 		HTL.initHTL(m_Props);
 		HTLCache.init();
-
-		InstallationManager.getInstance();
-
-//		HeadlinesMgr.getInstance();	// (AGR) 19 Feb 2006, 22 May 2005
-//		IndexMgr.getInstance();
-//		Poller.getInstance();		// start polling straightaway
-
-		////////////////////////////////////////
 
 		_start();
 	}
@@ -95,11 +101,6 @@ public class Launcher
 
 		InstallationManager.getInstance().restart();
 
-		////////////////////////////////////////////////////////////////
-
-//		CategoriesTable.getInstance().reconnect();
-//		Poller.getInstance().startPolling();
-
 		_start();
 	}
 
@@ -111,9 +112,7 @@ public class Launcher
 
 		////////////////////////////////////////
 
-		InstallationManager.getInstance();	// (AGR) 19 Feb 2006
-
-//		DigestSender.getInstance();
+		InstallationManager.getInstance().startIfStopped();	// (AGR) 19 Feb 2006, 10 Aug 2008
 	}
 
 	/*******************************************************************************

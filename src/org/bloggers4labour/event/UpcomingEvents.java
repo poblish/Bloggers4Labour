@@ -9,8 +9,8 @@
 
 package org.bloggers4labour.event;
 
-import com.hiatus.USQL_Utils;
 import com.hiatus.sql.ResultSetList;
+import com.hiatus.sql.USQL_Utils;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -47,7 +47,7 @@ public abstract class UpcomingEvents
 				{
 					theS = _getEvents( theConnectionObject, inNumEvents);
 				}
-				catch (Exception e)
+				catch (SQLException e)
 				{
 					s_Logger.error("creating statement", e);
 				}
@@ -61,7 +61,7 @@ public abstract class UpcomingEvents
 				s_Logger.warn("Cannot connect!");
 			}
 		}
-		catch (Exception err)
+		catch (RuntimeException err)
 		{
 			s_Logger.error("???", err);
 
@@ -71,7 +71,6 @@ public abstract class UpcomingEvents
 			if ( theConnectionObject != null)
 			{
 				theConnectionObject.CloseDown();
-				theConnectionObject = null;
 			}
 		}
 	}

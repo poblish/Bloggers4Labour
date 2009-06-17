@@ -10,10 +10,10 @@
 
 package org.bloggers4labour;
 
-import de.nava.informa.core.*;
 import java.util.Date;
 import java.util.TimerTask;
 import org.apache.log4j.Logger;
+import org.bloggers4labour.bridge.channel.item.ItemIF;
 
 /**
  *
@@ -23,7 +23,7 @@ public abstract class ItemCleanerTask extends TimerTask
 {
 	private long			m_MaxItemAgeMS;
 
-	private static Logger		s_Task_Logger = Logger.getLogger("Main");
+	private static Logger		s_Task_Logger = Logger.getLogger( ItemCleanerTask.class );
 
 	/*******************************************************************************
 	*******************************************************************************/

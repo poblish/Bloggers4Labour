@@ -9,15 +9,24 @@
 
 package org.bloggers4labour.test;
 
+import com.hiatus.sql.USQL_Utils;
+import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.regex.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.bloggers4labour.ItemType;
-import org.bloggers4labour.feed.*;
-import org.htmlparser.*;
-import org.htmlparser.filters.*;
+import org.bloggers4labour.feed.Feed;
+import org.bloggers4labour.feed.FeedType;
+import org.bloggers4labour.sql.DataSourceConnection;
+import org.bloggers4labour.sql.QueryBuilder;
+import org.htmlparser.Node;
+import org.htmlparser.Parser;
+import org.htmlparser.filters.TagNameFilter;
 import org.htmlparser.util.NodeList;
 import org.htmlparser.util.ParserException;
 
@@ -33,12 +42,15 @@ public class HTMLParserTest
 	private static Pattern		theHrefPattern	 = Pattern.compile(" +href=\"([^\"]*)\"");
 	private static Pattern		theRSS092Pattern = Pattern.compile(" +title=\"RSS .92\"");
 	private static Pattern		s_FOAFPattern	 = Pattern.compile(" +title=\"FOAF\"");
+	private static Pattern		s_ICBM_Pattern	 = Pattern.compile(" +name=\"ICBM\" +content=\"([^\"]*)\"");
 
 	/********************************************************************
 	********************************************************************/
 	public static void main( String[] args)
 	{
-		new HTMLParserTest();
+		HTMLParserTest	x = new HTMLParserTest();
+
+		x.runICBMTest();
 	}
 
 	/********************************************************************
@@ -157,9 +169,90 @@ public class HTMLParserTest
 
 	/********************************************************************
 	********************************************************************/
-	public HTMLParserTest()
+	private void runICBMTest()
 	{
-		TagNameFilter	tf = new TagNameFilter("link");
+		TagNameFilter	tf = new TagNameFilter("meta");
+		int		i = 0;
+
+		DataSourceConnection	theConnectionObject = null;
+		StringBuffer		theBuf;
+
+		try
+		{
+			MysqlDataSource	theSource = new MysqlDataSource();
+			theSource.setUrl("jdbc:mysql://localhost:3306/Bloggers4Labour?user=root&password=Militant&useUnicode=true");
+
+			theConnectionObject = new DataSourceConnection(theSource);
+			if (theConnectionObject.Connect())
+			{
+				// s_Logger.info("conn = " + theConnectionObject);
+
+				Statement	theS = null;
+				ResultSet	rs;
+
+				try
+				{
+					theS = theConnectionObject.createStatement();
+					rs = theS.executeQuery( QueryBuilder.getAllBlogFeeds() );
+					while (rs.next())
+					{
+						try
+						{
+							// String	url = rs.getString("url");
+
+							Parser		p = new Parser( rs.getString("url") );
+							NodeList	nl = p.extractAllNodesThatMatch(tf);
+							Node[]		nArray = nl.toNodeArray();
+						//	List<Feed>	theFeedsList = new ArrayList<Feed>();
+
+							for ( Node n : nArray)
+							{
+								String		theLinkStr = n.getText();
+								Matcher		icbmMatcher = s_ICBM_Pattern.matcher(theLinkStr);
+
+								if (icbmMatcher.find())
+								{
+									System.out.println(">> " + icbmMatcher.group(1) + " in " + rs.getString("url"));
+									break;
+								}
+							}
+						}
+						catch (RuntimeException e)
+						{
+							System.out.println("Error!");	// e.printStackTrace();
+						}
+					}
+				}
+				finally
+				{
+					USQL_Utils.closeStatementCatch(theS);
+				}
+			}
+			else
+			{
+				System.out.println("Cannot connect!");
+			}
+		}
+		catch (Exception err)
+		{
+			err.printStackTrace();
+		}
+		finally
+		{
+			// s_FL_Logger.info("m_FeedChannels = " + m_FeedChannels);
+
+			if ( theConnectionObject != null)
+			{
+				theConnectionObject.CloseDown();
+			}
+		}
+	}
+
+	/********************************************************************
+	********************************************************************/
+	public void runFeedTest()
+	{
+//		TagNameFilter	tf = new TagNameFilter("link");
 		int		i = 0;
 
 		while ( i < s_Entries.length)
@@ -188,9 +281,10 @@ public class HTMLParserTest
 
 	/********************************************************************
 	********************************************************************/
-	private class Entry
+	private static class Entry
 	{
-		String	m_Name, m_URL, m_FeedURL, m_CommFeedURL;
+		String	m_Name, m_URL, m_FeedURL;
+//		String	m_CommFeedURL;
 
 		/********************************************************************
 		********************************************************************/
@@ -199,7 +293,7 @@ public class HTMLParserTest
 			m_Name = a;
 			m_URL = b;
 			m_FeedURL = c;
-			m_CommFeedURL = d;
+			// m_CommFeedURL = d;
 		}
 	}
 	/********************************************************************

@@ -6,29 +6,20 @@
 
 package org.bloggers4labour;
 
-import com.hiatus.UDates;
-import com.hiatus.UHTML;
-import com.hiatus.ULocale2;
-import com.hiatus.UText;
-import de.nava.informa.core.*;
-import de.nava.informa.impl.basic.Item;
-import de.nava.informa.utils.ParserUtils;
-import java.text.DateFormat;
+import com.hiatus.dates.UDates;
+import com.hiatus.html.UHTML;
+import com.hiatus.text.UText;
 import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
-import org.bloggers4labour.feed.FeedList;
-import org.bloggers4labour.html.Encoding;
+import org.bloggers4labour.bridge.channel.ChannelIF;
+import org.bloggers4labour.bridge.channel.item.ItemIF;
 import org.bloggers4labour.tag.Tag;
 import static org.bloggers4labour.Constants.*;
 
@@ -43,7 +34,6 @@ public final class FeedUtils
 	private static Pattern		s_uumlPattern;			// (AGR) 8 April 2005
 	private static Pattern		s_SpacePattern;
 	private static Pattern		s_ClearPattern;
-	private static Pattern		s_QuotePattern;			// (AGR) 16 April 2005
 	private static Pattern		s_FookPattern;			// (AGR) 19 April 2005
 	private static Pattern		s_ImagePattern;			// (AGR) 13 May 2005. Seperated out.
 	private static Pattern		s_BreakPattern;			// (AGR) 15 May 2005. Seperated out.
@@ -54,8 +44,6 @@ public final class FeedUtils
 	private static Pattern		s_OuterHeaderPattern;		// (AGR) 10 May 2005
 	private static Pattern		s_ObjectPattern = Pattern.compile( "<object *>|<object [^>]*>", Pattern.CASE_INSENSITIVE);	// (AGR) 11 June 2006
 	private static Pattern		s_ObjectEndPattern = Pattern.compile( "</object>", Pattern.CASE_INSENSITIVE);			// (AGR) 11 June 2006
-
-//	private static Logger		s_Utils_Logger = Logger.getLogger("Main");
 
 //	private static final String	ITALIC_STRIPPER = "<i>|<i +[^>]*>|</i>";	// (AGR) 16 Jan 2006. Keep these now. (AGR) 13 May 2005. Made less greedy.
 	private static final String	BOLD_STRIPPER = "<b>|<b +[^>]*>|</b>";		// (AGR) 15 May 2005. Made less greedy.
@@ -69,10 +57,12 @@ public final class FeedUtils
 	private static Pattern		s_CommentAuthorMemPattern = Pattern.compile(" \\[Member\\]");			// (AGR) 30 Nov 2005
 
 	private static NumberFormat	s_MemoryNumFormat;		// (AGR) 22 May 2005
-	private static DateFormat	s_BigIssueDotNetDateFormat;	// (AGR) 12 July 2006
+//	private static DateFormat	s_BigIssueDotNetDateFormat;	// (AGR) 12 July 2006
 //	private static DateFormat	s_ECBScoresDateFormat;		// (AGR) 24 October 2006
 
-	private static TimeZone		s_GMTZone = TimeZone.getTimeZone("GMT");	// (AGR) 24 October 2006
+//	private static TimeZone		s_GMTZone = TimeZone.getTimeZone("GMT");	// (AGR) 24 October 2006
+
+	private static Logger		s_DateProblems_Logger = Logger.getLogger("B4L_Dates");
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -105,8 +95,8 @@ public final class FeedUtils
 		s_MemoryNumFormat = NumberFormat.getNumberInstance( Locale.UK );
 		s_MemoryNumFormat.setMaximumFractionDigits(2);
 
-		s_BigIssueDotNetDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.US);	// (AGR) 12 July 2006. Shudder...
-		s_BigIssueDotNetDateFormat.setTimeZone( ULocale2.getBestTimeZone( Locale.UK ));		// Assume published in London time
+//		s_BigIssueDotNetDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.US);	// (AGR) 12 July 2006. Shudder...
+//		s_BigIssueDotNetDateFormat.setTimeZone( ULocale2.getBestTimeZone( Locale.UK ));		// Assume published in London time
 
 //		s_ECBScoresDateFormat = new SimpleDateFormat("EEE, dd MMM yy HH:mm:ss z", Locale.US);	// (AGR) 24 October 2006. Shudder...
 //		s_ECBScoresDateFormat.setTimeZone( ULocale2.getBestTimeZone( Locale.UK ));		// Assume published in London time
@@ -342,7 +332,7 @@ public final class FeedUtils
 	*******************************************************************************/
 	public static String getCommentAuthor( final ItemIF inItem)
 	{
-		String	theAuthor = inItem.getElementValue("author/name");
+		String	theAuthor = inItem.getAuthorName();
 
 		if (UText.isNullOrBlank(theAuthor))
 		{
@@ -384,7 +374,9 @@ public final class FeedUtils
 	*******************************************************************************/
 	public static Date getItemDate( final ItemIF inItem)
 	{
-		if ( inItem != null)
+		return ( inItem != null) ? inItem.getDate() : null;
+
+/*		if ( inItem != null)
 		{
 			Date	theDate = inItem.getDate();
 
@@ -424,30 +416,11 @@ public final class FeedUtils
 				catch (Exception e2)
 				{
 					// (AGR) 4 March 2006. Haven't we tried hard enough???
-					// (AGR) 12 July 2006. For TheBigIssue.Net's benefit, handle this bogus date format...
-
-					try
-					{
-						return s_BigIssueDotNetDateFormat.parse( inItem.getElementValue("pubDate") );
-					}
-					catch (Exception e3)
-					{
-						/* // (AGR) 24 October 2006. For the ECB cricket score feed's benefit, handle this bogus date format...
-
-						try
-						{
-							return s_ECBScoresDateFormat.parse( inItem.getElementValue("pubDate") );
-						}
-						catch (Exception e4)
-						{
-							;
-						} */
-					}
 				}
 			}
 		}
 
-		return null;
+		return null; */
 	}
 
 	/*******************************************************************************
@@ -547,16 +520,22 @@ public final class FeedUtils
 		if (!isAcceptableFutureDate(inItemAgeMSecs))
 		{
 			// Leave the date alone, and let the AgeResult record flag us as unacceptable
+
+			s_DateProblems_Logger.debug("Unacceptable future date: " + inItemDate + " for " + ioItem + " from " + channelToString( ioItem.getOurChannel() ));
 		}
 		else if ( theMsecsInTheFuture > 0 &&
 			  theMsecsInTheFuture <= ( 5L * ONE_MINUTE_MSECS))	// (AGR) 3 Sep 2006. Any thing <= 5 mins in the future I take to be a problem with the clock on the feed server (see: http://www.bloggers4labour.org/2006/09/up-on-bricks-results-so-far.jsp) ...
 		{
 			theItemDateMsecs -= ( 5L * ONE_MINUTE_MSECS);		// ... so imply shift back by 5 minutes.
+
+			s_DateProblems_Logger.debug("5-minute shift for: " + inItemDate + " for " + ioItem + " from " + channelToString( ioItem.getOurChannel() ));
 		}
 		else if ( theMsecsInTheFuture > 0 &&
 			  theMsecsInTheFuture <= ( 10L * ONE_MINUTE_MSECS))	// (AGR) 28 Oct 2006. Raised this to 10 minutes - clocks are more than 5 mins out now!
 		{
 			theItemDateMsecs -= ( 10L * ONE_MINUTE_MSECS);		// ... so imply shift back by 10 minutes.
+
+			s_DateProblems_Logger.debug("10-minute shift for: " + inItemDate + " for " + ioItem + " from " + channelToString( ioItem.getOurChannel() ));
 		}
 		else if (( theMsecsInTheFuture > ( 3L * ONE_HOUR_MSECS)) &&	// (AGR) 19 Dec 2005. New logic
 		         ( theMsecsInTheFuture <= ( 8L * ONE_HOUR_MSECS)))	// (AGR) 7 Jan 2006. Had to add this when I noticed a post 25.5 hours in the future!
@@ -564,6 +543,8 @@ public final class FeedUtils
 			// Assume US time (well, PST) if the time is as far into the future as this
 
 			theItemDateMsecs -= ( 8L * ONE_HOUR_MSECS);
+
+			s_DateProblems_Logger.debug("8-hour USA shift for: " + inItemDate + " for " + ioItem + " from " + channelToString( ioItem.getOurChannel() ));
 		}
 		else
 		{
@@ -575,6 +556,8 @@ public final class FeedUtils
 			}
 
 			theItemDateMsecs -= ( numHoursToRollBack * ONE_HOUR_MSECS);
+
+			s_DateProblems_Logger.debug( numHoursToRollBack + "-hour shift for: " + inItemDate + " for " + ioItem + " from " + channelToString( ioItem.getOurChannel() ));
 		}
 
 		////////////////////////////////////////////////////////////////
@@ -610,10 +593,10 @@ public final class FeedUtils
 
 	/*******************************************************************************
 		(AGR) 25 April - 23 May 2005
-	*******************************************************************************/
-	public static ItemIF cloneItem( final ChannelIF inChannel, final ItemIF inItem, final boolean inWantCategories)
+	******************************************************************************
+	public static de.nava.informa.core.ItemIF cloneItem( final de.nava.informa.core.ChannelIF inChannel, final ItemIF inItem, final boolean inWantCategories)
 	{
-		Item	theCopy = new Item( inChannel, inItem.getTitle(), inItem.getDescription(), inItem.getLink());	// (AGR) 25 April 2005
+		de.nava.informa.core.ItemIF	theCopy = new de.nava.informa.impl.basic.Item( inChannel, inItem.getTitle(), inItem.getDescription(), inItem.getLink());	// (AGR) 25 April 2005
 
 		theCopy.setDate( getItemDate(inItem) );
 //		theCopy.setComments( inItem.getComments() );
@@ -631,7 +614,8 @@ public final class FeedUtils
 		}
 
 		return theCopy;
-	}
+	}*/
+
 	/*******************************************************************************
 		(AGR) 10 June 2006
 	*******************************************************************************/

@@ -10,20 +10,25 @@
 
 package org.bloggers4labour.mail;
 
-import com.hiatus.*;
-import com.hiatus.htl.*;
-import de.nava.informa.core.*;
+import com.hiatus.htl.HTL;
+import com.hiatus.htl.HTLContext;
+import com.hiatus.htl.HTLTemplate;
+import com.hiatus.locales.ULocale2;
+import com.hiatus.text.UText;
 import java.text.DateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.Locale;
 import org.apache.log4j.Logger;
-import org.bloggers4labour.*;
-import org.bloggers4labour.feed.*;
+import org.bloggers4labour.InstallationIF;
+import org.bloggers4labour.bridge.channel.ChannelIF;
+import org.bloggers4labour.bridge.channel.item.ItemIF;
+import org.bloggers4labour.site.SiteIF;
 
 /**
  *
  * @author andrewre
  */
-abstract class MessageBuilder
+public abstract class MessageBuilder
 {
 	private InstallationIF		m_Installation;
 
@@ -32,12 +37,12 @@ abstract class MessageBuilder
 	protected DateFormat		m_DF;
 	protected ItemIF		m_Item;
 	protected ChannelIF		m_Channel;
-	protected Site			m_SiteObj;
+	protected SiteIF		m_SiteObj;
 	protected boolean		m_GotOne = false;
 
 	protected final static Locale	s_Locale = Locale.UK;
 
-	protected static Logger		s_DS_Logger = Logger.getLogger("Main");
+	protected final static Logger	s_DS_Logger = Logger.getLogger( MessageBuilder.class );
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -81,7 +86,7 @@ abstract class MessageBuilder
 	public void startNewItem( final ItemIF inItem)
 	{
 		m_Item = inItem;
-		m_Channel = inItem.getChannel();
+		m_Channel = inItem.getOurChannel();
 		m_SiteObj = m_Installation.getFeedList().lookupPostsChannel(m_Channel);
 
 		if (m_GotOne)
@@ -115,7 +120,7 @@ abstract class MessageBuilder
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public Site getSite()
+	public SiteIF getSite()
 	{
 		return m_SiteObj;
 	}
@@ -154,6 +159,7 @@ abstract class MessageBuilder
 	/*******************************************************************************
 	*******************************************************************************/
 	public abstract CharSequence generateMessageBody();
+	public abstract CharSequence generate1stMessageBody();	// (AGR) (AGR) 17 Jan 2007
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -161,15 +167,25 @@ abstract class MessageBuilder
 	public abstract CharSequence generateMessageBodyHTML();
 
 	/*******************************************************************************
-	*******************************************************************************
-	public abstract void handleFirstMessage();
-	public abstract void handleNextMessage();
-	/
-
-	/*******************************************************************************
 	*******************************************************************************/
 	public void setMessageBody( final CharSequence inBuf)
 	{
 		m_MailContext.put( "msgs", inBuf);
+	}
+
+	/*******************************************************************************
+		(AGR) 16 January 2007
+	*******************************************************************************/
+	public void put( final String inName, final Object inObj)
+	{
+		m_MailContext.put( inName, inObj);
+	}
+
+	/*******************************************************************************
+		(AGR) 16 January 2007
+	*******************************************************************************/
+	public StringBuffer mergeTemplate( final HTLTemplate inTmpl)
+	{
+		return HTL.mergeTemplate( inTmpl, m_MailContext);
 	}
 }

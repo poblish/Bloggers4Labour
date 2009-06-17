@@ -10,18 +10,19 @@
 
 package org.bloggers4labour.jsp;
 
-import com.hiatus.UText;
-import de.nava.informa.core.*;
+import com.hiatus.text.UText;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.regex.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.bloggers4labour.FeedUtils;
 import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.ItemType;
-import org.bloggers4labour.Site;
 import org.bloggers4labour.TextCleaner;
-import org.bloggers4labour.feed.FeedList;
+import org.bloggers4labour.bridge.channel.ChannelIF;
+import org.bloggers4labour.bridge.channel.item.ItemIF;
+import org.bloggers4labour.site.SiteIF;
 
 /**
  *
@@ -29,8 +30,9 @@ import org.bloggers4labour.feed.FeedList;
  */
 public class DisplayItem extends AbstractDisplayable
 {
-	private transient ChannelIF	m_Channel;
-	private transient Site		m_Site;
+	private ChannelIF		m_Channel;	// (AGR) 29 Jan 2007. Removed pointless 'transient'
+	private SiteIF			m_Site;		// (AGR) 29 Jan 2007. Removed pointless 'transient'
+
 	private String			m_Description;
 	private String			m_DateString;
 	private String			m_SiteURL;
@@ -56,7 +58,7 @@ public class DisplayItem extends AbstractDisplayable
 		{
 			m_Description = FeedUtils.newAdjustDescription( inItem.getDescription() );
 		}
-		catch (Exception e)
+		catch (RuntimeException e)
 		{
 			m_Description = "???";
 		}
@@ -79,12 +81,11 @@ public class DisplayItem extends AbstractDisplayable
 		}
 		catch (UnsupportedEncodingException e)
 		{
-			;
 		}
 
 		////////////////////////////////////////////////////////////////
 
-		m_Channel = inItem.getChannel();
+		m_Channel = inItem.getOurChannel();
 		m_Site = inInstall.getFeedList().lookupChannel(m_Channel);
 
 		if ( m_Site != null)
@@ -172,7 +173,7 @@ public class DisplayItem extends AbstractDisplayable
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public Site getSite()
+	public SiteIF getSite()
 	{
 		return m_Site;
 	}
