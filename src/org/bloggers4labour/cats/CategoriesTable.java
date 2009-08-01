@@ -75,7 +75,7 @@ public class CategoriesTable implements CategoriesTableIF
 
 		if ( m_ExpiryTask == null)
 		{
-			m_ExpiryTask = new ExpiryTask( MAX_CATEGORY_AGE_MSECS );
+			m_ExpiryTask = new ExpiryTask( getMaxAgeMSecs() );
 		}
 
 		////////////////////////////////////////////////////////////////
@@ -329,25 +329,32 @@ public class CategoriesTable implements CategoriesTableIF
 	{
 		synchronized (_m_Map_Locker)
 		{
-		if ( m_MinEntryCount >= m_MaxEntryCount)	// well, could have just said ==
-		{
-			return inDefaultSize;
+			if ( m_MinEntryCount >= m_MaxEntryCount)	// well, could have just said ==
+			{
+				return inDefaultSize;
+			}
+
+			if ( inCount >= m_MaxEntryCount)
+			{
+				return inMaxFontSize;
+			}
+
+			if ( inCount <= m_MinEntryCount)
+			{
+				return inMinFontSize;
+			}
+
+			double	d = (double)( inCount - m_MinEntryCount) / (double)( m_MaxEntryCount - m_MinEntryCount) * (double)( inMaxFontSize - inMinFontSize);
+
+			return (int) Math.round( d + (double) inMinFontSize);
 		}
-
-		if ( inCount >= m_MaxEntryCount)
-		{
-			return inMaxFontSize;
-		}
-
-		if ( inCount <= m_MinEntryCount)
-		{
-			return inMinFontSize;
-		}
-
-		double	d = (double)( inCount - m_MinEntryCount) / (double)( m_MaxEntryCount - m_MinEntryCount) * (double)( inMaxFontSize - inMinFontSize);
-
-		return (int) Math.round( d + (double) inMinFontSize);
 	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public long getMaxAgeMSecs()
+	{
+		return org.bloggers4labour.Constants.ONE_DAY_MSECS * 5;
 	}
 
 	/*******************************************************************************

@@ -7,7 +7,6 @@ package org.bloggers4labour.cats;
 
 import java.util.Collection;
 import org.bloggers4labour.bridge.channel.item.ItemIF;
-import static org.bloggers4labour.Constants.ONE_DAY_MSECS;
 
 /**
  *
@@ -15,8 +14,6 @@ import static org.bloggers4labour.Constants.ONE_DAY_MSECS;
  */
 public interface CategoriesTableIF
 {
-	public final static long	MAX_CATEGORY_AGE_MSECS = ONE_DAY_MSECS * 5;    // (AGR) 4 March 2006. Was a week. (AGR) 19 May 2005
-
 	public void addCategories( ItemIF inItem);
 
 	public boolean hasEntries();
@@ -26,4 +23,6 @@ public interface CategoriesTableIF
 	public Collection<RankingObject> getRankedCategories();
 
 	public int getFontSize( int inCount, int inMinFontSize, int inDefaultSize, int inMaxFontSize);
+
+	long getMaxAgeMSecs();
 }
