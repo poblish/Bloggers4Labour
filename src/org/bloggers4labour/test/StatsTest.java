@@ -9,23 +9,21 @@
 
 package org.bloggers4labour.test;
 
-import java.text.*;
-import java.util.*;
-import org.bloggers4labour.*;
-import org.bloggers4labour.jmx.*;
-
 /**
  *
  * @author andrewre
  */
 public class StatsTest
 {
-	private Locale	thePageLocale = Locale.UK;
+//	private Locale	thePageLocale = Locale.UK;
 
 	/********************************************************************
 	********************************************************************/
 	public StatsTest()
 	{
+/*		(AGR) 29 Jan 2007. Commented all this out. FindBugs was moaning, for one thing!
+//		===============================================================================
+
 		InstallationIF	theInstall = InstallationManager.getInstallation("b4l");
 		Headlines	theRecentHeads = theInstall.getHeadlinesMgr().getRecentPostsInstance();
 		Headlines	the24HourHeads = theInstall.getHeadlinesMgr().get24HourInstance();
@@ -58,6 +56,6 @@ public class StatsTest
 			blogActivity24Str = " (" + thePercFormat.format((double) blogsUsed24 / theURLCount) + " of the total)";
 			blogActivity48Str = " (" + thePercFormat.format((double) blogsUsed48 / theURLCount) + " of the total)";
 		}
+*/
 	}
-	
 }

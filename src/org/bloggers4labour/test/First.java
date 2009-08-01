@@ -10,8 +10,6 @@
 
 package org.bloggers4labour.test;
 
-import de.nava.informa.core.*;
-import de.nava.informa.impl.basic.ChannelBuilder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -19,8 +17,6 @@ import java.util.Locale;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.TimeZone;
-import org.bloggers4labour.feed.*;
-import org.bloggers4labour.*;
 
 /**
  *
@@ -28,7 +24,7 @@ import org.bloggers4labour.*;
  */
 public class First implements Observer
 {
-	static FeedList		s_FL = null; // InstallationManager.getDefaultInstallation().getFeedList();
+//	static FeedList		s_FL = null; // InstallationManager.getDefaultInstallation().getFeedList();
 
 	public static void main( String[] args)
 	{
@@ -48,9 +44,9 @@ public class First implements Observer
 		theStartCal.set( Calendar.SECOND, 0);
 		theStartCal.set( Calendar.MILLISECOND, 0);
 
-		long	theNewMSecs = theStartCal.getTimeInMillis() - (( numWeeksback * 7 + diff) * 86400 * 1000);
+		long	theNewMSecs = theStartCal.getTimeInMillis() - (( numWeeksback * 7L + (long) diff) * 86400L * 1000L);
 		theStartCal.setTimeInMillis(theNewMSecs);
-		theEndCal.setTimeInMillis( theNewMSecs + ( 7 * 86400 * 1000));
+		theEndCal.setTimeInMillis( theNewMSecs + ( 7L * 86400L * 1000L));
 
 		System.out.println(">= " + sdf.format( theStartCal.getTime() ) + " or " + dtf.format( theStartCal.getTime() ));
 		System.out.println(" < " + sdf.format( theEndCal.getTime() ) + " or " + dtf.format( theEndCal.getTime() ));
@@ -74,19 +70,21 @@ public class First implements Observer
 			new Thread( new Runner() ).start();
 	}
 
-	private class Runner implements Runnable
+	private static class Runner implements Runnable
 	{
-		private ChannelIF	m_Channel;
+//		private ChannelIF	m_Channel;
 
 		public Runner()
 		{
-			m_Channel = new ChannelBuilder().createChannel("foo " + this);
+//			m_Channel = new ChannelBuilder().createChannel("foo " + this);
 		}
 
 		public void run()
 		{
-			Site		s = s_FL.lookupPostsChannel(m_Channel);
+/*
+			Site	s = s_FL.lookupPostsChannel(m_Channel);
 			System.out.println( this + " got " + s);
+*/
 		}
 	}
 }
