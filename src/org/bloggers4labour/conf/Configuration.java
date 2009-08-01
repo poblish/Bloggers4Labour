@@ -10,7 +10,7 @@
 
 package org.bloggers4labour.conf;
 
-import java.io.*;
+import java.io.File;
 import org.apache.log4j.Logger;
 
 /**
@@ -22,7 +22,7 @@ public class Configuration
 	private File		m_Dir;
 	private boolean		m_DirSet = false;
 
-	private static Logger	s_Logger = Logger.getLogger("Main");
+	private static Logger	s_Logger = Logger.getLogger( Configuration.class );
 
 	/*******************************************************************************
 	*******************************************************************************/
