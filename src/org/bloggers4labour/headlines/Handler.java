@@ -10,8 +10,6 @@
 
 package org.bloggers4labour.headlines;
 
-import org.bloggers4labour.Headlines;
-
 /**
  *
  * @author andrewre

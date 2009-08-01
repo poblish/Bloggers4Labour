@@ -8,7 +8,7 @@ package org.bloggers4labour.jmx;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import org.bloggers4labour.*;
+import org.bloggers4labour.site.SiteIF;
 
 /**
  * Interface StatsMBean
@@ -49,7 +49,7 @@ public interface StatsMBean
 	public StringBuffer getRSSFeedCompletionInterval();
 
 	public String[] getCurrentSiteNames();
-	public List<Site> getCurrentSites();
+	public List<SiteIF> getCurrentSites();
 	public int getReferencedItemsCount();
 	public String getOPMLOutputStr();
 
@@ -57,7 +57,7 @@ public interface StatsMBean
 
 	// Operations
 
-	public Site getSite( long inSiteRecno);
+	public SiteIF getSite( long inSiteRecno);
 	public String getAgeDifferenceString( long inAgeDiffMSecs);
 	public String stripHTML( String inStr);
 }
