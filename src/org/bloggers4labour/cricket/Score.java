@@ -78,7 +78,7 @@ public class Score
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public String toString()
+	@Override public String toString()
 	{
 		return displayString;
 	}
@@ -175,6 +175,6 @@ public class Score
 		this.lastScore = lastScore;
 	} */
 
-	private transient String displayString;
+	private String displayString;
 	
 }
