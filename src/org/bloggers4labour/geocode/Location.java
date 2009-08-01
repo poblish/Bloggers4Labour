@@ -23,6 +23,8 @@ public class Location implements Comparable<Location>, Serializable
 
 	final static Location	BLANK = new Location();
 
+	private static final long serialVersionUID = 1L;
+
 	/*******************************************************************************
 	*******************************************************************************/
 	private Location()
@@ -81,9 +83,9 @@ public class Location implements Comparable<Location>, Serializable
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public boolean equals( Object inOther)
+	@Override public boolean equals( Object inOther)
 	{
-		if ( inOther == null)
+		if ( inOther == null || !( inOther instanceof Location))
 		{
 			return false;
 		}
@@ -94,7 +96,7 @@ public class Location implements Comparable<Location>, Serializable
 	/*******************************************************************************
 		Copied from Point2D.java (!)
 	*******************************************************************************/
-	public int hashCode()
+	@Override public int hashCode()
 	{
 		long bits = java.lang.Double.doubleToLongBits( m_Latitude );
 		bits ^= java.lang.Double.doubleToLongBits( m_Longitude ) * 31;
@@ -103,7 +105,7 @@ public class Location implements Comparable<Location>, Serializable
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public String toString()
+	@Override public String toString()
 	{
 		if (m_IsBlank)
 		{
