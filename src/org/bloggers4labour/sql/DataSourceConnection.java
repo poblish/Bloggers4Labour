@@ -11,9 +11,13 @@
 
 package org.bloggers4labour.sql;
 
-import com.hiatus.USQL_Utils;
-import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
-import java.sql.*;
+import com.hiatus.sql.USQL_Utils;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import javax.sql.DataSource;
 import org.apache.log4j.Logger;
 
@@ -24,7 +28,9 @@ import org.apache.log4j.Logger;
 public class DataSourceConnection
 {
 	private DataSource	m_DataSource;
-	private Connection	m_DbConnection;
+	private Connection	m_DbConnection = null;
+
+	private static Logger	s_Logger = Logger.getLogger( DataSourceConnection.class );
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -57,9 +63,9 @@ public class DataSourceConnection
 					return false;
 				}
 			}
-			catch (Exception err)
+			catch (SQLException err)
 			{
-				Logger.getLogger("Main").error("???", err);
+				s_Logger.error("???", err);
 				return false;
 			}
 		}
@@ -77,11 +83,22 @@ public class DataSourceConnection
 
 			return ( m_DbConnection != null);
 		}
+		catch (NullPointerException err)
+		{
+			if ( s_Logger != null)
+			{
+				s_Logger.error("*** Could NOT open Connection: MySQL is dead.");
+			}
+			else
+			{
+				err.printStackTrace();
+			}
+		}
 		catch (Exception err)
 		{
-			err.printStackTrace();
-			err.printStackTrace( System.out );
-			Logger.getLogger("Main").error( "*** Could NOT open Connection!", err);
+	//		err.printStackTrace();
+	//		err.printStackTrace( System.out );
+			s_Logger.error( "*** Could NOT open Connection!", err);
 		}
 
 		return false;
