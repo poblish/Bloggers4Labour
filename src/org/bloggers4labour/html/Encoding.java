@@ -56,7 +56,6 @@ package org.bloggers4labour.html;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.*;
 import org.apache.log4j.Logger;
 
 /**
