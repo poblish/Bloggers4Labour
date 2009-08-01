@@ -59,9 +59,9 @@ public class RankingObject implements Comparable<RankingObject>
 	/*******************************************************************************
 		(AGR) 29 Jan 2007. FindBugs made me add this!
 	*******************************************************************************/
-	public boolean equals( Object inOther)
+	@Override public boolean equals( Object inOther)
 	{
-		if ( inOther == null)
+		if ( inOther == null || !( inOther instanceof RankingObject))
 		{
 			return false;
 		}
@@ -72,14 +72,14 @@ public class RankingObject implements Comparable<RankingObject>
 	/*******************************************************************************
 		(AGR) 3 Feb 2007. FindBugs made me add (something like!) this! Yuk?
 	*******************************************************************************/
-	public int hashCode()
+	@Override public int hashCode()
 	{
 		return ( Integer.toString(m_Score) + ":" + m_Key).hashCode();
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public String toString()
+	@Override public String toString()
 	{
 		StringBuilder	sb = new StringBuilder();
 		sb.append( m_Key ).append(" [").append(m_Score).append("]");
