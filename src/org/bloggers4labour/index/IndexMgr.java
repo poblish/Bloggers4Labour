@@ -119,41 +119,6 @@ public class IndexMgr
 	*******************************************************************************/
 	private synchronized boolean insert( HeadlinesIF inHeads, Document inDoc) // , String inTitle)
 	{
-/*		if (IndexReader.indexExists(m_LuceneRootIndexDir))
-		{
-			IndexReader	theReader = null;
-
-			try
-			{
-				theReader = IndexReader.open(m_LuceneRootIndexDir);
-
-				m_DocCount = theReader.numDocs();
-
-				String	ours = inDoc.getField("item_id").stringValue();
-
-				for ( int i = 0; i < m_DocCount; i++)
-				{
-					String	theirs = theReader.document(i).getField("item_id").stringValue();
-
-					if (theirs.equals(ours))
-					{
-						System.out.println("!!!! index #" + i + " !!!");
-						return false;
-					}
-				}
-			}
-			catch (IOException e)
-			{
-				s_Idx_Logger.error("", e);
-			}
-			finally
-			{
-				closeIndexReader(theReader);
-			}
-		}
-*/
-		////////////////////////////////////////////////////////////////
-
 		IndexWriter	theWriter = null;
 
 		try
@@ -266,16 +231,6 @@ public class IndexMgr
 				m_DocCount = theReader.numDocs();
 				m_Dirtiness++;
 
-/*				s_Idx_Logger.info("IDX: removed " + x + " docs, total is now " + m_DocCount + ", " + inHeads.size() + " in headlines"); // ", term was " + inTerm);
-
-				List	ourList = this.getItemIDs();
-				List	theirList = inHeads.getItemIDs();
-				if (!ourList.equals(theirList))
-				{
-					s_Idx_Logger.info("IDX:   ours = " + ourList);
-					s_Idx_Logger.info("IDX: theirs = " + theirList);
-				}
-*/
 				return x;
 			}
 			catch (IOException e)
@@ -290,41 +245,6 @@ public class IndexMgr
 
 		return 0;
 	}
-
-	/*******************************************************************************
-	*******************************************************************************
-	public synchronized List<Long> getItemIDs()
-	{
-		List<Long>	ll = new ArrayList<Long>();
-
-		if (IndexReader.indexExists(m_LuceneRootIndexDir))
-		{
-			IndexReader	theReader = null;
-
-			try
-			{
-				theReader = IndexReader.open(m_LuceneRootIndexDir);
-
-				int	dc = theReader.numDocs();
-
-				for ( int i = 0; i < dc; i++)
-				{
-					ll.add( Long.valueOf( theReader.document(i).getField("item_id").stringValue() ) );
-				}
-			}
-			catch (IOException e)
-			{
-				s_Idx_Logger.error("", e);
-			}
-			finally
-			{
-				closeIndexReader(theReader);
-			}
-		}
-
-		java.util.Collections.sort(ll);
-		return ll;
-	}/
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -541,18 +461,22 @@ public class IndexMgr
 		*******************************************************************************/
 		public void onAdd( final InstallationIF inInstall, HeadlinesIF inHeads, final ItemIF inItem, final ItemContext inCtxt)
 		{
-			ChannelIF	theChannel = inItem.getOurChannel();
-/*			Site		thisChannelsSite = FeedList.getInstance().lookupChannel(theChannel);
-			boolean		itemIsAPost = ( thisChannelsSite.getChannel() == theChannel);
-
-			if (!itemIsAPost)
+			try
 			{
-				return;		// (AGR) 1 Dec 2005. No, we don't index comments at this time...
+				_onAdd( inHeads, inItem, inCtxt);
 			}
-*/
-			////////////////////////////////////////////////////////
+			catch (Exception e)	// Yuk, but necessary!
+			{
+				s_Idx_Logger.error( "", e);
+			}
+		}
 
-			Date	itemDate = FeedUtils.getItemDate(inItem);
+		/*******************************************************************************
+		*******************************************************************************/
+		private void _onAdd( HeadlinesIF inHeads, final ItemIF inItem, final ItemContext inCtxt)
+		{
+			ChannelIF	theChannel = inItem.getOurChannel();
+			Date		itemDate = FeedUtils.getItemDate(inItem);
 
 			if ( itemDate == null)	// (AGR) 13 August 2008
 			{
