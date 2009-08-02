@@ -40,7 +40,6 @@ import org.bloggers4labour.options.Options;
 import org.bloggers4labour.options.TaskOptionsBeanIF;
 import org.bloggers4labour.jmx.Stats;
 import org.bloggers4labour.site.SiteIF;
-import org.bloggers4labour.sql.QueryBuilder;
 import org.bloggers4labour.tag.Link;
 
 /**
@@ -872,21 +871,21 @@ public class Headlines implements HeadlinesIF, Iterable<ItemIF>
 			return null;
 		}
 
-		return QueryBuilder.getRecommendationCountsQueryString( sb.toString() );
+		return m_Install.getQueryBuilder().getRecommendationCountsQueryString( sb.toString() );
 	}
 
 	/*******************************************************************************
 		(AGR) 30 September 2006
 	*******************************************************************************/
-	public static String getRecommendationCountsQuery( final ItemIF[] inEntries)
+	public static String getRecommendationCountsQuery( final InstallationIF inInstall, final ItemIF[] inEntries)
 	{
-		return getRecommendationCountsQuery( inEntries, Integer.MAX_VALUE);
+		return getRecommendationCountsQuery( inInstall, inEntries, Integer.MAX_VALUE);
 	}
 
 	/*******************************************************************************
 		(AGR) 30 September 2006
 	*******************************************************************************/
-	public static String getRecommendationCountsQuery( final ItemIF[] inEntries, int inMaxEntries)
+	public static String getRecommendationCountsQuery( final InstallationIF inInstall, final ItemIF[] inEntries, int inMaxEntries)
 	{
 		int		actualCount = inEntries.length > inMaxEntries ? inMaxEntries : inEntries.length;
 		StringBuilder	sb = new StringBuilder( 40 * actualCount);
@@ -908,13 +907,13 @@ public class Headlines implements HeadlinesIF, Iterable<ItemIF>
 			return null;
 		}
 
-		return QueryBuilder.getRecommendationCountsQueryString( sb.toString() );
+		return inInstall.getQueryBuilder().getRecommendationCountsQueryString( sb.toString() );
 	}
 
 	/*******************************************************************************
 		(AGR) 1 October 2006. For Tags page.
 	*******************************************************************************/
-	public static String getRecommendationCountsQuery( final Collection<ItemIF> inEntries)
+	public static String getRecommendationCountsQuery( final InstallationIF inInstall, final Collection<ItemIF> inEntries)
 	{
 		StringBuilder	sb = new StringBuilder( 40 * inEntries.size());
 		int		i = 0;
@@ -933,13 +932,13 @@ public class Headlines implements HeadlinesIF, Iterable<ItemIF>
 			return null;
 		}
 
-		return QueryBuilder.getRecommendationCountsQueryString( sb.toString() );
+		return inInstall.getQueryBuilder().getRecommendationCountsQueryString( sb.toString() );
 	}
 
 	/*******************************************************************************
 		(AGR) 11 October 2006
 	*******************************************************************************/
-	public static String getSearchRecommendationCountsQuery( final Collection<SearchMatch> inEntries)
+	public static String getSearchRecommendationCountsQuery( final InstallationIF inInstall, final Collection<SearchMatch> inEntries)
 	{
 		if ( inEntries == null || inEntries.isEmpty())	// (AGR) 28 May 2009
 		{
@@ -967,7 +966,7 @@ public class Headlines implements HeadlinesIF, Iterable<ItemIF>
 			return null;
 		}
 
-		return QueryBuilder.getRecommendationCountsQueryString( sb.toString() );
+		return inInstall.getQueryBuilder().getRecommendationCountsQueryString( sb.toString() );
 	}
 
 	/*******************************************************************************
