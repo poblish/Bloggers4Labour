@@ -20,7 +20,6 @@ import org.bloggers4labour.*;
 import org.bloggers4labour.headlines.HeadlinesIF;
 import org.bloggers4labour.site.SiteIF;
 import org.bloggers4labour.sql.DataSourceConnection;
-import org.bloggers4labour.sql.QueryBuilder;
 
 /**
  * Class Stats
@@ -112,7 +111,7 @@ public class Stats implements StatsMBean
 
 		try
 		{
-			theRS = inS.executeQuery( QueryBuilder.getBlogsTotalQuery() );
+			theRS = inS.executeQuery( m_Install.getQueryBuilder().getBlogsTotalQuery() );
 			if (theRS.next())
 			{
 				m_BlogsCount = theRS.getLong(1);
