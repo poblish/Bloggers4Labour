@@ -9,6 +9,7 @@ package org.bloggers4labour.mail;
 import com.hiatus.locales.ULocale2;
 import com.hiatus.mail.CoreMail;
 import com.hiatus.sql.USQL_Utils;
+import com.hiatus.text.UText;
 import java.io.UnsupportedEncodingException;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -42,7 +43,6 @@ import org.bloggers4labour.bridge.channel.item.ItemIF;
 import org.bloggers4labour.feed.FeedListIF;
 import org.bloggers4labour.headlines.HeadlinesIF;
 import org.bloggers4labour.sql.DataSourceConnection;
-import org.bloggers4labour.sql.QueryBuilder;
 import static org.bloggers4labour.Constants.*;
 
 /**
@@ -60,8 +60,6 @@ public class DigestSender implements DigestSenderIF
 
 	private Locale			m_Locale = Locale.UK;
 	private InstallationIF		m_Install;
-
-//	private static DigestSender	s_List;    // (AGR) 3 Feb 2007. See below.
 
 	private static Logger		s_DS_Logger = Logger.getLogger( DigestSender.class );
 
@@ -376,20 +374,25 @@ public class DigestSender implements DigestSenderIF
 
 			////////////////////////////////////////////////////////////////////////////////////  (AGR) 16 Jan 2007
 
-			EventsSection	theEventsSection = new EventsSection( m_Install, m_DF, inS);
+			EventsSection	theEventsSection = null;
+
+			try
+			{
+				theEventsSection = new EventsSection( m_Install, m_DF, inS);
+			}
+			catch (RuntimeException e)
+			{
+				s_DS_Logger.error("Couldn't get Events section: " + e);
+			}
 
 			////////////////////////////////////////////////////////////////////////////////////
 
-			String	theQuery;
+			String	theQuery = m_Install.getQueryBuilder().getDigestEmailQuery((long) currLocalHour, adjustedMins);
 
-/*			if (TESTING_EMAIL_NEWSLETTERS)
+			if (UText.isNullOrBlank(theQuery))
 			{
-				theQuery = QueryBuilder.getTestDigestEmailQuery((long) currLocalHour, adjustedMins);
+				return;
 			}
-			else
-			{ */
-				theQuery = QueryBuilder.getDigestEmailQuery((long) currLocalHour, adjustedMins);
-		/*	} */
 
 			////////////////////////////////////////////////////////////////////////////////////
 
@@ -462,7 +465,7 @@ public class DigestSender implements DigestSenderIF
 
 					////////////////////////////////////////////////////////////////////  (AGR) 16 Jan 2007
 
-					if (theEventsSection.gotEvents())
+					if ( theEventsSection != null && theEventsSection.gotEvents())
 					{
 						mb.put( "events_section", wantsHTML ? theEventsSection.getHTMLContent() : theEventsSection.getTextContent());
 					}
