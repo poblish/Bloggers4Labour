@@ -17,9 +17,9 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.log4j.Logger;
+import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.conf.Configuration;
 import org.bloggers4labour.sql.DataSourceConnection;
-import org.bloggers4labour.sql.QueryBuilder;
 
 /**
  *
@@ -107,9 +107,9 @@ public class SiteAdministration
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public ResultSet getUnapprovedBlogs( Statement inStatement) throws SQLException
+	public ResultSet getUnapprovedBlogs( final InstallationIF inInstall, Statement inStatement) throws SQLException
 	{
-		ResultSet	theRS = inStatement.executeQuery( QueryBuilder.getUnapprovedBlogsQuery() );
+		ResultSet	theRS = inStatement.executeQuery( inInstall.getQueryBuilder().getUnapprovedBlogsQuery() );
 
 		return theRS; // new ResultSetList(theRS);
 	}

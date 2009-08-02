@@ -40,7 +40,6 @@ import org.bloggers4labour.polling.PollerAllocatorIF;
 import org.bloggers4labour.polling.PollerIF;
 import org.bloggers4labour.site.SiteIF;
 import org.bloggers4labour.sql.DataSourceConnection;
-import org.bloggers4labour.sql.QueryBuilder;
 
 /**
  *
@@ -523,176 +522,176 @@ public class FeedList implements FeedListIF
 
 			////////////////////////////////////////////////////////
 
-				Number	theSiteRecno = (Number) m_CurrentRow.get("site_recno");
+			Number	theSiteRecno = (Number) m_CurrentRow.get("site_recno");
 
-				synchronized (m_Task._m_LastRecnoLocker)
+			synchronized (m_Task._m_LastRecnoLocker)
+			{
+				if (m_Task.m_SiteRecnosUsed.contains(theSiteRecno))
 				{
-					if (m_Task.m_SiteRecnosUsed.contains(theSiteRecno))
-					{
 					return true;
-					}
-					else
-					{
-						m_Task.m_SiteRecnosUsed.add(theSiteRecno);
-						// s_FL_Logger.info("adding recno: " + theSiteRecno);
-					}
 				}
+				else
+				{
+					m_Task.m_SiteRecnosUsed.add(theSiteRecno);
+					// s_FL_Logger.info("adding recno: " + theSiteRecno);
+				}
+			}
 
 			//////////////////////////////////////////////////////////////////////  Got a new siteRecno...
-				//////////////////////////////////////////////////////////////////////
+			//////////////////////////////////////////////////////////////////////
 
-					String		thePostsFeedURL = (String) m_CurrentRow.get("feed_url");
-					String		theFirstCreatorsType = (String) m_CurrentRow.get("creator_type");
-					ChannelIF	thePostsFeedChannel = m_FeedChannels.findURL(thePostsFeedURL);
-					ConnectResult	theResult;
-					boolean		gotNewPostsFeedChannel = false;
+			String		thePostsFeedURL = (String) m_CurrentRow.get("feed_url");
+			String		theFirstCreatorsType = (String) m_CurrentRow.get("creator_type");
+			ChannelIF	thePostsFeedChannel = m_FeedChannels.findURL(thePostsFeedURL);
+			ConnectResult	theResult;
+			boolean		gotNewPostsFeedChannel = false;
 
-					if ( thePostsFeedChannel == null)
-					{
-						theResult = m_FeedChannels.connectTo( m_Install, m_ID, thePostsFeedURL);
-						if (theResult.succeded())
-						{
-							thePostsFeedChannel = theResult.getChannel();
+			if ( thePostsFeedChannel == null)
+			{
+				theResult = m_FeedChannels.connectTo( m_Install, m_ID, thePostsFeedURL);
+				if (theResult.succeded())
+				{
+					thePostsFeedChannel = theResult.getChannel();
 
 					if (m_Install.hasPollers())	// (AGR) 29 May 2009. What on earth is this for???
-							{
-								// s_FL_Logger.info(">>> SHT #" + m_ID + " Trying to register: " + thePostsFeedURL);
+					{
+						// s_FL_Logger.info(">>> SHT #" + m_ID + " Trying to register: " + thePostsFeedURL);
 
-								gotNewPostsFeedChannel = true;
-							}
-
-					m_Task.getPollerAllocator().success( thePostsFeedURL, thePostsFeedChannel);
-						}
-						else if (theResult.failed())	// (AGR) 7 October 2005. connection failed
-						{
-							synchronized (m_Task.m_FailedPostFeeds)
-							{
-								m_Task.m_FailedPostFeeds.add(thePostsFeedURL);
-							}
-
-					m_Task.getPollerAllocator().failed(thePostsFeedURL);
-						}
-						else	// (AGR) 30 Nov 2005. connection timed-out
-						{
-							synchronized (m_Task.m_TimedOutPostFeeds)
-							{
-								m_Task.m_TimedOutPostFeeds.add(thePostsFeedURL);
-							}
-
-					m_Task.getPollerAllocator().timedOut(thePostsFeedURL);
-						}
+						gotNewPostsFeedChannel = true;
 					}
 
-					// s_FL_Logger.info(">>> SHT #" + m_ID + " channel=" + thePostsFeedChannel);
-
-					//////////////////////////////////////////////////////////////////////  (AGR) 29 Nov 2005
-
-					String		theCommentsFeedURL = (String) m_CurrentRow.get("comments_feed_url");
-					ChannelIF	theCommentsFeedChannel;
-					boolean		specifiedACommentsFeed = UText.isValidString(theCommentsFeedURL);
-					boolean		gotNewCommentsFeedChannel = false;
-
-					if (specifiedACommentsFeed)
+					m_Task.getPollerAllocator().success( thePostsFeedURL, thePostsFeedChannel);
+				}
+				else if (theResult.failed())	// (AGR) 7 October 2005. connection failed
+				{
+					synchronized (m_Task.m_FailedPostFeeds)
 					{
-						theCommentsFeedChannel = m_FeedChannels.findURL(theCommentsFeedURL);
+						m_Task.m_FailedPostFeeds.add(thePostsFeedURL);
+					}
 
-						if ( theCommentsFeedChannel == null)
-						{
-							theResult = m_FeedChannels.connectTo( m_Install, m_ID, theCommentsFeedURL);
-							if (theResult.succeded())
-							{							
-								theCommentsFeedChannel = theResult.getChannel();
+					m_Task.getPollerAllocator().failed(thePostsFeedURL);
+				}
+				else	// (AGR) 30 Nov 2005. connection timed-out
+				{
+					synchronized (m_Task.m_TimedOutPostFeeds)
+					{
+						m_Task.m_TimedOutPostFeeds.add(thePostsFeedURL);
+					}
+
+					m_Task.getPollerAllocator().timedOut(thePostsFeedURL);
+				}
+			}
+
+			// s_FL_Logger.info(">>> SHT #" + m_ID + " channel=" + thePostsFeedChannel);
+
+			//////////////////////////////////////////////////////////////////////  (AGR) 29 Nov 2005
+
+			String		theCommentsFeedURL = (String) m_CurrentRow.get("comments_feed_url");
+			ChannelIF	theCommentsFeedChannel;
+			boolean		specifiedACommentsFeed = UText.isValidString(theCommentsFeedURL);
+			boolean		gotNewCommentsFeedChannel = false;
+
+			if (specifiedACommentsFeed)
+			{
+				theCommentsFeedChannel = m_FeedChannels.findURL(theCommentsFeedURL);
+
+				if ( theCommentsFeedChannel == null)
+				{
+					theResult = m_FeedChannels.connectTo( m_Install, m_ID, theCommentsFeedURL);
+					if (theResult.succeded())
+					{
+						theCommentsFeedChannel = theResult.getChannel();
 
 						if (m_Install.hasPollers())	// (AGR) 29 May 2009. What on earth is this for???
-								{
-									// s_FL_Logger.info(">>> SHT #" + m_ID + " Trying to register comments: " + theCommentsFeedURL);
+						{
+							// s_FL_Logger.info(">>> SHT #" + m_ID + " Trying to register comments: " + theCommentsFeedURL);
 
 //							m_Install.getPoller().registerCommentsChannel( theCommentsFeedChannel, m_CurrTimeMSecs);
 
-									gotNewCommentsFeedChannel = true;
-								}
+							gotNewCommentsFeedChannel = true;
+						}
 
 						m_Task.getPollerAllocator().success( theCommentsFeedURL, theCommentsFeedChannel);
-							}
-							else if (theResult.failed())	// (AGR) 7 October 2005. connection failed
-							{
-								synchronized (m_Task.m_FailedCommentsFeeds)
-								{
+					}
+					else if (theResult.failed())	// (AGR) 7 October 2005. connection failed
+					{
+						synchronized (m_Task.m_FailedCommentsFeeds)
+						{
 							m_Task.m_FailedCommentsFeeds.add(theCommentsFeedURL);	// (AGR) 1 June 2009. Was: 'thePostsFeedURL'
 						}
 
 						m_Task.getPollerAllocator().failed(theCommentsFeedURL);
-							}
-							else	// (AGR) 30 Nov 2005. connection timed-out
-							{
-								synchronized (m_Task.m_TimedOutCommentsFeeds)
-								{
-									m_Task.m_TimedOutCommentsFeeds.add(theCommentsFeedURL);
-								}
+					}
+					else	// (AGR) 30 Nov 2005. connection timed-out
+					{
+						synchronized (m_Task.m_TimedOutCommentsFeeds)
+						{
+							m_Task.m_TimedOutCommentsFeeds.add(theCommentsFeedURL);
+						}
 
 						m_Task.getPollerAllocator().timedOut(theCommentsFeedURL);
-							}
-						}
 					}
-					else
-					{
-						theCommentsFeedChannel = null;
-					}
+				}
+			}
+			else
+			{
+				theCommentsFeedChannel = null;
+			}
 
-					//////////////////////////////////////////////////////////////////////
+			//////////////////////////////////////////////////////////////////////
 
-					Site	theSiteObj = new Site( thePostsFeedChannel,
-									theCommentsFeedChannel,
-									theSiteRecno.longValue(),
-									(String) m_CurrentRow.get("name"),	// (AGR) 20 April 2005
-									(String) m_CurrentRow.get("url"),
-									thePostsFeedURL,
-									((Number) m_CurrentRow.get("creator_status_recno")).intValue(),
-									(String) m_CurrentRow.get("cat"),
-									(String) m_CurrentRow.get("favicon_url"));
+			Site	theSiteObj = new Site( thePostsFeedChannel,
+							theCommentsFeedChannel,
+							theSiteRecno.longValue(),
+							(String) m_CurrentRow.get("name"),	// (AGR) 20 April 2005
+							(String) m_CurrentRow.get("url"),
+							thePostsFeedURL,
+							((Number) m_CurrentRow.get("creator_status_recno")).intValue(),
+							(String) m_CurrentRow.get("cat"),
+							(String) m_CurrentRow.get("favicon_url"));
 
-					FaviconManager.getInstance().rememberFavicon(theSiteObj);	// (AGR) 25 Feb 2006
+			FaviconManager.getInstance().rememberFavicon(theSiteObj);	// (AGR) 25 Feb 2006
 
-					theSiteObj.addCreator(theFirstCreatorsType);
-				//	theSiteObj.findFavicon();
+			theSiteObj.addCreator(theFirstCreatorsType);
+		//	theSiteObj.findFavicon();
 
-					m_PostFeedSitesList.add(theSiteObj);
+			m_PostFeedSitesList.add(theSiteObj);
 
-					if (specifiedACommentsFeed)	// (AGR) 30 Nov 2005. Keep track of how many there are...
-					{
-						m_CommentsFeedSitesList.add(theSiteObj);
-					}
+			if (specifiedACommentsFeed)	// (AGR) 30 Nov 2005. Keep track of how many there are...
+			{
+				m_CommentsFeedSitesList.add(theSiteObj);
+			}
 
-					// s_FL_Logger.info( m_Install.getLogPrefix() + ">>> SHT #" + m_ID + " adding " + theSiteObj);
+			// s_FL_Logger.info( m_Install.getLogPrefix() + ">>> SHT #" + m_ID + " adding " + theSiteObj);
 
-					//////////////////////////////////////////////////////////////////////
+			//////////////////////////////////////////////////////////////////////
 
-					if ( gotNewPostsFeedChannel || gotNewCommentsFeedChannel)
-					{
-						// (AGR) 1 Dec 2005. In order to tell if an Item is a post or a comment, we
-						// need a Site object (can't do anything with a Channel). So the Site must
-						// exist before the Channel is registered and we get the snapshot of Items
+			if ( gotNewPostsFeedChannel || gotNewCommentsFeedChannel)
+			{
+				// (AGR) 1 Dec 2005. In order to tell if an Item is a post or a comment, we
+				// need a Site object (can't do anything with a Channel). So the Site must
+				// exist before the Channel is registered and we get the snapshot of Items
 
-						if (gotNewPostsFeedChannel)
-						{
-							// s_FL_Logger.info(">>> SHT #" + m_ID + " Trying to register: " + thePostsFeedURL);
+				if (gotNewPostsFeedChannel)
+				{
+					// s_FL_Logger.info(">>> SHT #" + m_ID + " Trying to register: " + thePostsFeedURL);
 
 					for ( PollerIF eachPoller : m_Task.getPollerAllocator().allocate( thePostsFeedURL, thePostsFeedChannel))
 					{
 						eachPoller.registerChannel( theSiteObj, thePostsFeedChannel, m_CurrTimeMSecs);
 					}
-						}
+				}
 
-						if (gotNewCommentsFeedChannel)
-						{
-							// s_FL_Logger.info(">>> SHT #" + m_ID + " Trying to register comments: " + theCommentsFeedURL);
+				if (gotNewCommentsFeedChannel)
+				{
+					// s_FL_Logger.info(">>> SHT #" + m_ID + " Trying to register comments: " + theCommentsFeedURL);
 
 					for ( PollerIF eachPoller : m_Task.getPollerAllocator().allocate( theCommentsFeedURL, theCommentsFeedChannel))
 					{
 						eachPoller.registerCommentsChannel( theSiteObj, theCommentsFeedChannel, m_CurrTimeMSecs);
-						}
 					}
 				}
+			}
 
 			return true;
 		}
@@ -748,7 +747,7 @@ public class FeedList implements FeedListIF
 		*******************************************************************************/
 		private void _handleStatement( Statement inS, long inCurrTimeMSecs) throws SQLException
 		{
-			ResultSetList	theRS = new ResultSetList( inS.executeQuery( QueryBuilder.getAllBlogFeeds() ) );
+			ResultSetList	theRS = new ResultSetList( inS.executeQuery( m_Install.getQueryBuilder().getAllBlogFeeds() ) );
 			List		theRowsList = null;
 
 			try

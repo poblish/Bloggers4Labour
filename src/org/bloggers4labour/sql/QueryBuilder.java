@@ -14,168 +14,168 @@ import java.util.ResourceBundle;
  *
  * @author andrewre
  */
-public class QueryBuilder
+public class QueryBuilder implements QueryBuilderIF
 {
-	private static ResourceBundle	s_Bundle;
-	private static String		s_AdjustedNameQuery;
+	private ResourceBundle		m_Bundle;
+	private String			m_AdjustedNameQuery;
 
 	/*******************************************************************************
 	*******************************************************************************/
-	static
+	public QueryBuilder( final ResourceBundle inBundle)
 	{
-		s_Bundle = ResourceBundle.getBundle("org/bloggers4labour/Main");
-		s_AdjustedNameQuery = s_Bundle.getString("sql.adjusted.name.query");
+		m_Bundle = inBundle;
+		m_AdjustedNameQuery = m_Bundle.getString("sql.adjusted.name.query");
 	}
 
 	/*******************************************************************************
 		(AGR) 12 July 2005
 	*******************************************************************************/
-	public static String getDigestEmailQuery( long inHrs, long inMins)
+	public String getDigestEmailQuery( long inHrs, long inMins)
 	{
 		Formatter	theFormatter = new Formatter();
 
-		theFormatter.format( s_Bundle.getString("sql.digest.email.query"), inHrs, inMins);
+		theFormatter.format( m_Bundle.getString("sql.digest.email.query"), inHrs, inMins);
 
 		return theFormatter.toString();
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public static String getAllBlogFeeds()
+	public String getAllBlogFeeds()
 	{
-		return s_Bundle.getString("sql.all.blog.feeds");
+		return m_Bundle.getString("sql.all.blog.feeds");
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	private static String getBlogsByCategory( String inOrderStr)
+	private String getBlogsByCategory( String inOrderStr)
 	{
 		Formatter	theFormatter = new Formatter();
-		theFormatter.format( Locale.UK, s_Bundle.getString("sql.category_blogs.query"), inOrderStr);
+		theFormatter.format( Locale.UK, m_Bundle.getString("sql.category_blogs.query"), inOrderStr);
 		return theFormatter.toString();
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public static String getBlogsByCategoryAscending()
+	public String getBlogsByCategoryAscending()
 	{
-		return getBlogsByCategory(" ORDER BY cat.ordering," + s_AdjustedNameQuery);
+		return getBlogsByCategory(" ORDER BY cat.ordering," + m_AdjustedNameQuery);
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public static String getBlogsByCategoryDescending()
+	public String getBlogsByCategoryDescending()
 	{
-		return getBlogsByCategory(" ORDER BY cat.ordering," + s_AdjustedNameQuery);
+		return getBlogsByCategory(" ORDER BY cat.ordering," + m_AdjustedNameQuery);
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public static String getBlogsListing( String inOrderStr)
+	public String getBlogsListing( String inOrderStr)
 	{
 		return getBlogsByCategory(inOrderStr);
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public static String getBlogsByLocation( String inOrderStr)
+	public String getBlogsByLocation( String inOrderStr)
 	{
 		Formatter	theFormatter = new Formatter();
-		theFormatter.format( Locale.UK, s_Bundle.getString("sql.location_blogs.query"), inOrderStr);
+		theFormatter.format( Locale.UK, m_Bundle.getString("sql.location_blogs.query"), inOrderStr);
 		return theFormatter.toString();
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public static String getBlogsByLocationAscending()
+	public String getBlogsByLocationAscending()
 	{
-		return getBlogsByLocation(" ORDER BY loc.ordering," + s_AdjustedNameQuery);
+		return getBlogsByLocation(" ORDER BY loc.ordering," + m_AdjustedNameQuery);
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public static String getBlogsByLocationDescending()
+	public String getBlogsByLocationDescending()
 	{
-		return getBlogsByLocation(" ORDER BY loc.ordering," + s_AdjustedNameQuery + " DESC");
+		return getBlogsByLocation(" ORDER BY loc.ordering," + m_AdjustedNameQuery + " DESC");
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public static String getBlogsByStatus( String inOrderStr)
+	public String getBlogsByStatus( String inOrderStr)
 	{
 		Formatter	theFormatter = new Formatter();
-		theFormatter.format( Locale.UK, s_Bundle.getString("sql.status_blogs.query"), inOrderStr);
+		theFormatter.format( Locale.UK, m_Bundle.getString("sql.status_blogs.query"), inOrderStr);
 		return theFormatter.toString();
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public static String getBlogsByStatusAscending()
+	public String getBlogsByStatusAscending()
 	{
-		return getBlogsByStatus(" ORDER BY crs.ordering," + s_AdjustedNameQuery);
+		return getBlogsByStatus(" ORDER BY crs.ordering," + m_AdjustedNameQuery);
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public static String getBlogsByStatusDescending()
+	public String getBlogsByStatusDescending()
 	{
-		return getBlogsByStatus(" ORDER BY crs.ordering," + s_AdjustedNameQuery + " DESC");
+		return getBlogsByStatus(" ORDER BY crs.ordering," + m_AdjustedNameQuery + " DESC");
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public static String getSimpleBlogsListing( String inOrderStr)
+	public String getSimpleBlogsListing( String inOrderStr)
 	{
 		Formatter	theFormatter = new Formatter();
-		theFormatter.format( Locale.UK, s_Bundle.getString("sql.simple_blogs.query"), s_Bundle.getString("sql.name_initial.query"), inOrderStr);
+		theFormatter.format( Locale.UK, m_Bundle.getString("sql.simple_blogs.query"), m_Bundle.getString("sql.name_initial.query"), inOrderStr);
 		return theFormatter.toString();
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public static String getSimpleBlogsListingAscending()
+	public String getSimpleBlogsListingAscending()
 	{
-		return getSimpleBlogsListing(" ORDER BY " + s_AdjustedNameQuery);
+		return getSimpleBlogsListing(" ORDER BY " + m_AdjustedNameQuery);
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public static String getSimpleBlogsListingDescending()
+	public String getSimpleBlogsListingDescending()
 	{
-		return getSimpleBlogsListing(" ORDER BY " + s_AdjustedNameQuery + " DESC");
+		return getSimpleBlogsListing(" ORDER BY " + m_AdjustedNameQuery + " DESC");
 	}
 
 	/*******************************************************************************
 		(AGR) 22 May 2005
 	*******************************************************************************/
-	public static String getBlogsTotalQuery()
+	public String getBlogsTotalQuery()
 	{
-		return s_Bundle.getString("sql.total.blogs");
+		return m_Bundle.getString("sql.total.blogs");
 	}
 
 	/*******************************************************************************
 		(AGR) 27 May 2006
 	*******************************************************************************/
-	public static String getUnapprovedBlogsQuery()
+	public String getUnapprovedBlogsQuery()
 	{
-		return s_Bundle.getString("sql.unapproved.query");
+		return m_Bundle.getString("sql.unapproved.query");
 	}
 
 	/*******************************************************************************
 		(AGR) 30 September 2006
 	*******************************************************************************/
-	public static String getRecommendationCountsQueryString( String inURLsList)
+	public String getRecommendationCountsQueryString( String inURLsList)
 	{
 		Formatter	theFormatter = new Formatter();
-		theFormatter.format( s_Bundle.getString("sql.recommendationcounts.query"), inURLsList);
+		theFormatter.format( m_Bundle.getString("sql.recommendationcounts.query"), inURLsList);
 		return theFormatter.toString();
 	}
 
 	/*******************************************************************************
 		(AGR) 16 January 2007
 	*******************************************************************************/
-	public static String getUpcomingEventsQuery()
+	public String getUpcomingEventsQuery()
 	{
-		return s_Bundle.getString("sql.events.upcoming");
+		return m_Bundle.getString("sql.events.upcoming");
 	}
 }

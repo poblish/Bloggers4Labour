@@ -342,7 +342,7 @@ public class MainServlet extends HttpServlet
 									try
 									{
 										theS = theConnectionObject.createStatement();
-										theRecommendationCountMap = Headlines.getRecommendationCountsMap( theS.executeQuery( Headlines.getRecommendationCountsQuery( headlineItemsArray, actualNumPosts) ) );
+										theRecommendationCountMap = Headlines.getRecommendationCountsMap( theS.executeQuery( Headlines.getRecommendationCountsQuery( theInstallation, headlineItemsArray, actualNumPosts) ) );
 									}
 									catch (SQLException e)
 									{
@@ -665,14 +665,13 @@ public class MainServlet extends HttpServlet
 
 		////////////////////////////////////////////////
 
-		InstallationIF		theInstall;
+		InstallationIF		theInstall = InstallationManager.getDefaultInstallation();
 		List<SearchMatch>	theSearchResults;
 
 		if ( theQuery != null)
 		{
 			s_Servlet_Logger.info("Search2: " + theQuery);
 
-			theInstall = InstallationManager.getDefaultInstallation();
 			theSearchResults = theInstall.getIndexMgr().runQuery(theQuery);
 		}
 		else	theSearchResults = null;
@@ -687,7 +686,7 @@ public class MainServlet extends HttpServlet
 
 			DataSourceConnection	theConnectionObject = null;
 			Map<String,Number>	theRecommendationCountMap = null;
-			String			theReccQueryStr = Headlines.getSearchRecommendationCountsQuery(theSearchResults);
+			String			theReccQueryStr = Headlines.getSearchRecommendationCountsQuery( theInstall, theSearchResults);
 
 			if (UText.isValidString(theReccQueryStr))
 			{
