@@ -9,12 +9,6 @@
 
 package org.bloggers4labour;
 
-import org.bloggers4labour.cats.CategoriesTableIF;
-
-/**
- *
- * @author andrewre
- */
 /*******************************************************************************
 	(AGR) 14 Jan 2006
 
@@ -28,19 +22,10 @@ public class AgeResult
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public AgeResult( long inMSecs)
+	public AgeResult( final InstallationIF inInstall, long inMSecs)
 	{
 		m_AgeMSecs = inMSecs;
-		m_Allowable = FeedUtils.isAcceptableFutureDate(inMSecs) &&
-				/* (AGR) 3 March 2006 */ inMSecs <= CategoriesTableIF.MAX_CATEGORY_AGE_MSECS;
-	}
-
-	/*******************************************************************************
-	*******************************************************************************/
-	public AgeResult( long inMSecs, boolean isAllowable)
-	{
-		m_AgeMSecs = inMSecs;
-		m_Allowable = isAllowable;
+		m_Allowable = FeedUtils.isAcceptableFutureDate(inMSecs) && inMSecs <= inInstall.getMaxAgeMSecs();
 	}
 
 	/*******************************************************************************
