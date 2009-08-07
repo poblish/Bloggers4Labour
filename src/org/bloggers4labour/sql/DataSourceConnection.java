@@ -87,17 +87,15 @@ public class DataSourceConnection
 		{
 			if ( s_Logger != null)
 			{
-				s_Logger.error("*** Could NOT open Connection: MySQL is dead.");
+				s_Logger.error("*** Could not open Connection: MySQL is dead.");
 			}
 			else
 			{
-				err.printStackTrace();
+				System.err.println("Could not open Connection: MySQL is dead.");
 			}
 		}
 		catch (Exception err)
 		{
-	//		err.printStackTrace();
-	//		err.printStackTrace( System.out );
 			s_Logger.error( "*** Could NOT open Connection!", err);
 		}
 
