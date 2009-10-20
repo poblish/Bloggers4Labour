@@ -42,6 +42,7 @@ import javax.xml.xpath.XPathException;
 import javax.xml.xpath.XPathExpressionException;
 import org.bloggers4labour.conf.Configuration;
 import org.bloggers4labour.feed.auth.AuthenticationManager;
+import org.bloggers4labour.index.IndexMgr;
 import org.bloggers4labour.installation.InstallationNotFoundException;
 import org.bloggers4labour.installation.tasks.InstallationTaskIF;
 import org.bloggers4labour.polling.Poller;
@@ -185,6 +186,7 @@ public class InstallationManager implements InstallationManagerIF
 			XPathExpression		theDSNExpr = theXPathObj.compile("dataSourceName[1]/text()");	// (AGR) 14 Feb 2007
 			XPathExpression		theURLExpr = theXPathObj.compile("jdbc_url[1]/text()");
 			XPathExpression		theHMgrExpr = theXPathObj.compile("headlinesMgr[1]");
+			XPathExpression		theIdxMgrExpr = theXPathObj.compile("indexManager[1]");
 			XPathExpression		theTasksExpr = theXPathObj.compile("task");
 //			XPathExpression		theFBGroupIDExpr = theXPathObj.compile("facebook[1]/group_id[1]");
 			NodeList		theInstallsNodes = (NodeList) theInstallsExpr.evaluate( theDocument, XPathConstants.NODESET);
@@ -213,7 +215,8 @@ public class InstallationManager implements InstallationManagerIF
 				theElement = (Element) theInstallsNodes.item(i);
 
 				String		theName = theElement.getAttributes().getNamedItem("name").getTextContent();
-				Node		theBundleNameNode = theElement.getAttributes().getNamedItem("bundle_name");
+				Node		theBundleNameNode = theElement.getAttributes().getNamedItem("resourceBundle");
+				Node		theMaxItemAgeMSecsNode = theElement.getAttributes().getNamedItem("maxItemAgeMillis");
 				DataSource	theSource;
 
 				try	// (AGR) 14 Feb 2007. Pooling - at last!
@@ -277,11 +280,11 @@ public class InstallationManager implements InstallationManagerIF
 				/////////////////////////////////////////////////////////////////////////////
 
 				Installation	theInstall = new Installation( theName,
-										( theBundleNameNode != null) ? theBundleNameNode.getTextContent() : theName,
+										theBundleNameNode.getTextContent(),
 										theSource,
 										theElement.getAttributes().getNamedItem("mbean_name").getTextContent(),
+										( theMaxItemAgeMSecsNode != null) ? Long.parseLong( theMaxItemAgeMSecsNode.getTextContent() ) : Long.MAX_VALUE,
 										thePollers);
-
 
 				/////////////////////////////////////////////////////////////////////////////  (AGR) 27 October 2008. InstallationTasks...
 
@@ -348,9 +351,19 @@ public class InstallationManager implements InstallationManagerIF
 				Element		theHeadMgrElem = (Element) theHMgrExpr.evaluate( theElement, XPathConstants.NODE);
 
 				theInstall.setHeadlinesMgr( new HeadlinesMgr( theHeadMgrElem, theInstall) );
-				theInstall.complete();
 
 				/////////////////////////////////////////////////////////////////////////////
+
+				Element		theIndexMgrElem = (Element) theIdxMgrExpr.evaluate( theElement, XPathConstants.NODE);
+
+				if ( theIndexMgrElem != null)
+				{
+					theInstall.setIndexMgr(  new IndexMgr(theInstall) );
+				}
+
+				/////////////////////////////////////////////////////////////////////////////
+
+				theInstall.complete();
 
 				AuthenticationManager.getInstance();	// Yuk! Move me!!!
 

@@ -9,8 +9,7 @@
 
 package org.bloggers4labour.headlines;
 
-import java.util.List;
-import org.bloggers4labour.Headlines;
+import java.util.Collection;
 import org.bloggers4labour.Installation;
 import org.bloggers4labour.bridge.channel.ChannelIF;
 import org.bloggers4labour.bridge.channel.item.ItemIF;
@@ -37,9 +36,9 @@ public class HeadlineFilter
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public boolean filterMessage( final Headlines inHeads, final ItemIF inItem)
+	public boolean filterMessage( final HeadlinesIF inHeads, final ItemIF inItem)
 	{
-		List<Number>	theCSsWanted = inHeads.getFilterCreatorStatuses();
+		Collection<Number>	theCSsWanted = inHeads.getFilterCreatorStatuses();
 
 		if ( theCSsWanted != null)	// use categories?
 		{

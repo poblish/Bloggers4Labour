@@ -12,6 +12,8 @@ package org.bloggers4labour;
 
 import com.hiatus.text.UText;
 import com.sun.org.apache.xpath.internal.XPathAPI;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
@@ -41,14 +43,14 @@ import static org.bloggers4labour.Constants.*;
  */
 public class HeadlinesMgr
 {
-	private Headlines		m_24Hour_Headlines;
-	private Headlines		m_MainRSSFeed_Headlines;
-	private Headlines		m_EmailPosts_Headlines;
-	private Headlines		m_IndexablePosts_Headlines;
-	private Headlines		m_RecentPosts_Headlines;
-	private Headlines		m_Comments_Headlines;			// (AGR) 29 Nov 2005
+	private HeadlinesIF		m_24Hour_Headlines;
+	private HeadlinesIF		m_MainRSSFeed_Headlines;
+	private HeadlinesIF		m_EmailPosts_Headlines;
+	private HeadlinesIF		m_IndexablePosts_Headlines;
+	private HeadlinesIF		m_RecentPosts_Headlines;
+	private HeadlinesIF		m_Comments_Headlines;			// (AGR) 29 Nov 2005
 
-	private List<Headlines>		m_HeadlinesList = new CopyOnWriteArrayList<Headlines>();  // (AGR) 29 May 2005. Was ArrayList
+	private List<HeadlinesIF>	m_HeadlinesList = new CopyOnWriteArrayList<HeadlinesIF>();  // (AGR) 29 May 2005. Was ArrayList
 
 	private static Logger		s_HeadlinesMgr_Logger = Logger.getLogger( HeadlinesMgr.class );
 
@@ -61,6 +63,7 @@ public class HeadlinesMgr
 
 	/*******************************************************************************
 	*******************************************************************************/
+	@SuppressWarnings("unchecked")
 	public HeadlinesMgr( final Element docElem, final InstallationIF inInstallation)
 	{
 /*		Configuration		theConf = Configuration.getInstance();
@@ -87,11 +90,11 @@ public class HeadlinesMgr
 				XPath			theXPathObj = theFactory.newXPath();
 				XPathExpression		theCatFiltersExpr = theXPathObj.compile("filter/creatorStatus");
 
-
 				for ( int i = 0; i < headsNodes.getLength(); i++)
 				{
 					Element		e = (Element) headsNodes.item(i);
 					String		ourIDStr = XMLUtils.getNodeIDValue(e);
+					String		theImplClassName = XMLUtils.getNodeAttrValue( e, "impl");	// (AGR) 20 Oct 2009
 					NodeList	nl = e.getChildNodes();
 					String		theName = null;
 					String		theDescription = null;
@@ -101,6 +104,31 @@ public class HeadlinesMgr
 					boolean		gotError = false;
 					boolean		wantComments = false;
 					boolean		wantPosts = false;
+
+					///////////////////////////////////////////////////////////////////////////
+
+					Class<? extends HeadlinesIF>	theImplClass;
+
+					if (UText.isNullOrBlank(theImplClassName))
+					{
+						theImplClass = Headlines.class;
+					}
+					else
+					{
+						try
+						{
+							theImplClass = (Class<? extends HeadlinesIF>) Class.forName(theImplClassName);
+						}
+						catch (ClassNotFoundException ex)
+						{
+							s_HeadlinesMgr_Logger.error("Couldn't create HeadlinesIF of type '" + theImplClassName + "'");
+							continue;
+						}
+					}
+
+					s_HeadlinesMgr_Logger.debug("Impl class = " + theImplClass);
+
+					///////////////////////////////////////////////////////////////////////////
 
 					for ( int j = 0; j < nl.getLength(); j++)
 					{
@@ -160,18 +188,47 @@ public class HeadlinesMgr
 					{
 						continue;
 					}
-					
+
 					////////////////////////////////////////////////////////////////
 
-					Headlines	h = new Headlines( inInstallation, theName, theDescription, theMinValue, theMaxValue);
+					HeadlinesIF	theHeads;
 
-					h.setAllowPosts(wantPosts);
-					h.setAllowComments(wantComments);
+					try
+					{
+						@SuppressWarnings(value = "unchecked")
+						Constructor<HeadlinesIF>	theCtor = (Constructor<HeadlinesIF>) theImplClass.getConstructor( InstallationIF.class, String.class, String.class, long.class, long.class);
+
+						theHeads = theCtor.newInstance( inInstallation, theName, theDescription, theMinValue, theMaxValue);
+
+						s_HeadlinesMgr_Logger.debug("Created... " + theHeads);
+					}
+					catch (IllegalAccessException ex)
+					{
+						s_HeadlinesMgr_Logger.error("", ex);
+						continue;
+					}
+					catch (InstantiationException ex)
+					{
+						s_HeadlinesMgr_Logger.error("", ex);
+						continue;
+					}
+					catch (InvocationTargetException ex)
+					{
+						s_HeadlinesMgr_Logger.error("", ex);
+						continue;
+					}
+					catch (NoSuchMethodException ex)
+					{
+						s_HeadlinesMgr_Logger.error("", ex);
+						continue;
+					}
+
+					theHeads.setAllowPosts(wantPosts);
+					theHeads.setAllowComments(wantComments);
 
 					////////////////////////////////////////////////////////////////  (AGR) 24 March 2006
 
 					NodeList	tempNodeList = (NodeList) theCatFiltersExpr.evaluate( e, XPathConstants.NODESET);
-					Element		tempElem;
 
 					if ( tempNodeList != null && tempNodeList.getLength() >= 1)
 					{
@@ -182,7 +239,7 @@ public class HeadlinesMgr
 							ll.add( new Integer( tempNodeList.item(jj).getTextContent() ) );
 						}
 
-						h.setFilterCreatorStatuses(ll);
+						theHeads.setFilterCreatorStatuses(ll);
 					}
 
 					////////////////////////////////////////////////////////////////
@@ -199,7 +256,7 @@ public class HeadlinesMgr
 
 							Class	clazz = Class.forName(theClassName);
 
-							h.addHandler((Handler) clazz.newInstance());
+							theHeads.addHandler((Handler) clazz.newInstance());
 						}
 						catch (ClassNotFoundException e2)
 						{
@@ -221,27 +278,27 @@ public class HeadlinesMgr
 					{
 						if ( ourIDStr.equals(rss_feed_ID) && m_MainRSSFeed_Headlines == null)
 						{
-							m_MainRSSFeed_Headlines = h;
+							m_MainRSSFeed_Headlines = theHeads;
 						}
 
 						if ( ourIDStr.equals(email_ID) && m_EmailPosts_Headlines == null)
 						{
-							m_EmailPosts_Headlines = h;
+							m_EmailPosts_Headlines = theHeads;
 						}
 
 						if ( ourIDStr.equals(index_ID) && m_IndexablePosts_Headlines == null)
 						{
-							m_IndexablePosts_Headlines = h;
+							m_IndexablePosts_Headlines = theHeads;
 						}
 
 						if ( ourIDStr.equals(recent_ID) && m_RecentPosts_Headlines == null)
 						{
-							m_RecentPosts_Headlines = h;
+							m_RecentPosts_Headlines = theHeads;
 						}
 
 						if ( ourIDStr.equals(comments_ID) && m_Comments_Headlines == null)	// (AGR) 29 Nov 2005
 						{
-							m_Comments_Headlines = h;
+							m_Comments_Headlines = theHeads;
 						}
 					}
 
@@ -249,12 +306,12 @@ public class HeadlinesMgr
 
 					if ( theMinValue <= 0 && theMaxValue == ONE_DAY_MSECS && m_24Hour_Headlines == null)
 					{
-						m_24Hour_Headlines = h;
+						m_24Hour_Headlines = theHeads;
 					}
 
 					////////////////////////////////////////////////////////////////
 
-					m_HeadlinesList.add(h);
+					m_HeadlinesList.add(theHeads);
 				}
 			}
 
@@ -326,7 +383,7 @@ public class HeadlinesMgr
 	*******************************************************************************/
 	public void removeFor( ChannelIF inChannel)
 	{
-		for ( Headlines h : m_HeadlinesList)
+		for ( HeadlinesIF h : m_HeadlinesList)
 		{
 			h.removeFor(inChannel);
 		}
@@ -334,7 +391,7 @@ public class HeadlinesMgr
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public List<Headlines> getHeadlinesList()
+	public List<HeadlinesIF> getHeadlinesList()
 	{
 		return m_HeadlinesList;
 	}
@@ -343,7 +400,7 @@ public class HeadlinesMgr
 	*******************************************************************************/
 	public synchronized void shutdown()
 	{
-		for ( Headlines h : m_HeadlinesList)
+		for ( HeadlinesIF h : m_HeadlinesList)
 		{
 			h.shutdown();
 		}

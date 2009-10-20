@@ -11,6 +11,7 @@ package org.bloggers4labour.mail;
 
 import com.hiatus.htl.*;
 import com.hiatus.sql.ResultSetList;
+import com.hiatus.text.UText;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -18,7 +19,6 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.util.Map;
 import org.bloggers4labour.InstallationIF;
-import org.bloggers4labour.sql.QueryBuilder;
 
 /**
  *
@@ -39,7 +39,15 @@ public class EventsSection
 	*******************************************************************************/
 	public EventsSection( final InstallationIF inInstall, final DateFormat inDF, final Statement inS) throws SQLException
 	{
-		String		theUpcomingEventsQuery = QueryBuilder.getUpcomingEventsQuery();
+		String		theUpcomingEventsQuery = inInstall.getQueryBuilder().getUpcomingEventsQuery();
+
+		if (UText.isNullOrBlank(theUpcomingEventsQuery))
+		{
+			return;
+		}
+
+		////////////////////////////////////////////////////////////////////////
+
 		ResultSet	theEventsRS = inS.executeQuery(theUpcomingEventsQuery);
 		ResultSetList	theRSL = new ResultSetList(theEventsRS);
 

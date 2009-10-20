@@ -17,7 +17,6 @@ import org.apache.log4j.Logger;
 import org.bloggers4labour.AddResult;
 import org.bloggers4labour.AgeResult;
 import org.bloggers4labour.FeedUtils;
-import org.bloggers4labour.Headlines;
 import org.bloggers4labour.HeadlinesMgr;
 import org.bloggers4labour.Installation;
 import org.bloggers4labour.ItemContext;
@@ -28,6 +27,7 @@ import org.bloggers4labour.bridge.channel.item.ItemIF;
 import org.bloggers4labour.cats.CategoriesTableIF;
 import org.bloggers4labour.feed.FeedListIF;
 import org.bloggers4labour.headlines.HeadlineFilter;
+import org.bloggers4labour.headlines.HeadlinesIF;
 import org.bloggers4labour.site.SiteIF;
 
 /**
@@ -111,7 +111,7 @@ public class MyObserver implements PollerObserverIF
 		long		currTimeMSecs = System.currentTimeMillis();
 		URL		theChannelLoc = inChannel.getLocation();
 		Date		itemDate = FeedUtils.getItemDate(theBridgedItem);
-		AgeResult	theAgeResult = Util.getItemAgeMsecs( theBridgedItem, itemDate, currTimeMSecs);
+		AgeResult	theAgeResult = Util.getItemAgeMsecs( m_Installation, theBridgedItem, itemDate, currTimeMSecs);
 
 		//////////////////////////////////////////////////////////////////  (AGR) 10 Sep 2006
 
@@ -160,7 +160,7 @@ public class MyObserver implements PollerObserverIF
 					// This test ensures - see above - (a) item is not a comment, and (b) it's a post from a feed
 					// in the current Install!
 		{
-			if (( theCatsTable != null) && ( itemDate != null) && theAgeResult.getAgeMSecs() < CategoriesTableIF.MAX_CATEGORY_AGE_MSECS)
+			if (( theCatsTable != null) && ( itemDate != null) && theAgeResult.getAgeMSecs() < theCatsTable.getMaxAgeMSecs())
 			{
 				theCatsTable.addCategories(theBridgedItem);
 			}
@@ -197,7 +197,7 @@ public class MyObserver implements PollerObserverIF
 
 		HeadlineFilter	theFilter = new HeadlineFilter( m_Installation, theBridgedChannel);
 
-		for ( Headlines	h : m_HMgr.getHeadlinesList())
+		for ( HeadlinesIF h : m_HMgr.getHeadlinesList())
 		{
 			if (( itemIsAPost && !h.allowsPosts()) ||
 			   ( !itemIsAPost && !h.allowsComments()))

@@ -11,8 +11,12 @@
 package org.bloggers4labour.headlines;
 
 import java.util.Collection;
+import org.bloggers4labour.AddResult;
+import org.bloggers4labour.ItemContext;
+import org.bloggers4labour.bridge.channel.ChannelIF;
 import org.bloggers4labour.bridge.channel.item.ItemIF;
 import org.bloggers4labour.jmx.Stats;
+import org.bloggers4labour.site.SiteIF;
 import org.bloggers4labour.tag.Link;
 
 /**
@@ -44,4 +48,20 @@ public interface HeadlinesIF
 	public String publishSnapshot_Filtered( ItemIF[] inItems, final String inBase36BitmapString, boolean inIncludeNotExclude);
 
 	public ItemIF[] toArray();
+
+	void shutdown();
+	void removeFor( final ChannelIF inChannel);
+
+	boolean allowsPosts();
+	boolean allowsComments();
+
+	void setAllowPosts( boolean x);
+	void setAllowComments( boolean x);
+
+	Collection<Number> getFilterCreatorStatuses();
+	void setFilterCreatorStatuses( Collection<Number> inList);
+
+	boolean isItemAgeOK( long inItemAgeMSecs);
+
+	AddResult put( final ItemIF inNewItem, final SiteIF inItemsOwnerSite, final ItemContext inCtxt);
 }

@@ -835,7 +835,7 @@ public class Headlines implements HeadlinesIF, Iterable<ItemIF>
 	/*******************************************************************************
 		(AGR) 24 March 2006
 	*******************************************************************************/
-	public void setFilterCreatorStatuses( List<Number> inList)
+	public void setFilterCreatorStatuses( Collection<Number> inList)
 	{
 		m_FilterCreatorStatuses = new CopyOnWriteArrayList<Number>(inList);
 	}
@@ -843,7 +843,7 @@ public class Headlines implements HeadlinesIF, Iterable<ItemIF>
 	/*******************************************************************************
 		(AGR) 24 March 2006
 	*******************************************************************************/
-	public List<Number> getFilterCreatorStatuses()
+	public Collection<Number> getFilterCreatorStatuses()
 	{
 		return m_FilterCreatorStatuses;
 	}

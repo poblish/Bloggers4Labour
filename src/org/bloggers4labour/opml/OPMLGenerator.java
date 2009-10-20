@@ -6,26 +6,20 @@
 
 package org.bloggers4labour.opml;
 
-import de.nava.informa.core.*;
-import de.nava.informa.impl.basic.Channel;
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.log4j.Logger;
-// import org.apache.xml.serialize.Method;
-// import org.apache.xml.serialize.OutputFormat;
-// import org.apache.xml.serialize.XMLSerializer;
 import com.sun.org.apache.xml.internal.serialize.Method;		// (AGR) 4 March 2006
 import com.sun.org.apache.xml.internal.serialize.OutputFormat;		// (AGR) 4 March 2006
 import com.sun.org.apache.xml.internal.serialize.XMLSerializer;		// (AGR) 4 March 2006
-import org.bloggers4labour.feed.FeedList;
-import org.bloggers4labour.Site;
+import org.bloggers4labour.bridge.channel.ChannelIF;
+import org.bloggers4labour.site.SiteIF;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -33,20 +27,11 @@ import org.w3c.dom.Element;
  *
  * @author andrewre
  */
-public class OPMLGenerator
+public class OPMLGenerator implements OPMLGeneratorIF
 {
 	private DocumentBuilder		m_DB;
-	private DocumentBuilderFactory	m_DBF;
-	private XMLSerializer		m_XMLSerializer;
 
-	private Document		m_Document;
-	private Element			m_OPML_Elem;
-	private Element			m_Head_Elem;
-	private Element			m_Title_Elem;
-	private Element			m_Body_Elem;
-
-	private static Site[]		s_TempSiteArray = new Site[0];
-	private static Logger		s_OPML_Logger = Logger.getLogger("Main");
+	private static Logger		s_OPML_Logger = Logger.getLogger( OPMLGenerator.class );
 
 	/********************************************************************
 	********************************************************************/
@@ -54,74 +39,64 @@ public class OPMLGenerator
 	{
 		try
 		{
-			m_DBF = DocumentBuilderFactory.newInstance();
-			m_DB = m_DBF.newDocumentBuilder();
+			m_DB = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 		}
 		catch (ParserConfigurationException e)
 		{
-			;
 		}
 	}
 
 	/********************************************************************
-		(AGR) 19 April 2005
 	********************************************************************/
-	public Document createDocument()
-	{
-		return m_DB.newDocument();
-	}
-
-	/********************************************************************
-	********************************************************************/
-	public synchronized boolean generate( Site[] ioSitesArray) // List<Site> inList)
+	public synchronized String generate( SiteIF[] ioSitesArray) throws IOException
 	{
 		if ( ioSitesArray == null || ioSitesArray.length < 1)
 		{
-			return true;
+			return "";
 		}
 		
 		///////////////////////////////////////////////////////
 
-		m_Document = m_DB.newDocument();
-		if ( m_Document == null)  // FIXME. How???
+		Document	theDocument = m_DB.newDocument();
+
+		if ( theDocument == null)  // FIXME. How???
 		{
-			return false;
+			return null;
 		}
 
-		m_OPML_Elem = m_Document.createElement("opml");
-		m_OPML_Elem.setAttribute("version","1.1");
+		Element	theOPML_Elem = theDocument.createElement("opml");
+		theOPML_Elem.setAttribute("version","1.1");
 
-		m_Title_Elem = m_Document.createElement("title");
-		m_Title_Elem.appendChild( m_Document.createTextNode("Bloggers4Labour feeds") );
+		Element	theTitle_Elem = theDocument.createElement("title");
+		theTitle_Elem.appendChild( theDocument.createTextNode("Bloggers4Labour feeds") );
 
-		m_Head_Elem = m_Document.createElement("head");
-		m_Head_Elem.appendChild(m_Title_Elem);
-		m_OPML_Elem.appendChild(m_Head_Elem);
+		Element	theHead_Elem = theDocument.createElement("head");
+		theHead_Elem.appendChild(theTitle_Elem);
+		theOPML_Elem.appendChild(theHead_Elem);
 
-		m_Body_Elem = m_Document.createElement("body");
-		if ( m_Body_Elem == null)  // FIXME. How???
+		Element	theBody_Elem = theDocument.createElement("body");
+		if ( theBody_Elem == null)  // FIXME. How???
 		{
-			return false;
+			return "";
 		}
 
 		///////////////////////////////////////////////////////
 
-//		Site[]	theArray;
-
 		try
 		{
-//			theArray = (Site[]) inList.toArray(s_TempSiteArray);	// (AGR) 15 April 2005. Prevent co-mod exceptions
 			Arrays.sort( ioSitesArray, new SiteComparator());	// (AGR) 18 April 2005
 		}
 		catch (ArrayIndexOutOfBoundsException ee)
 		{
-			s_OPML_Logger.error("ArrayBounds! when list = " + Arrays.deepToString(ioSitesArray) + ", s_TempSiteArray = " + s_TempSiteArray, ee);	// (AGR) 17 April 2005. How? Why?
-			return false;
+			s_OPML_Logger.error("ArrayBounds! when list = " + Arrays.deepToString(ioSitesArray), ee);    // (AGR) 17 April 2005. How? Why? (AGR) 29 Jan 2007. Removed extra logging
+			return "";
 		}
+
+		///////////////////////////////////////////////////////
 
 		for ( int i = 0; i < ioSitesArray.length; i++)
 		{
-			Site		theSite = ioSitesArray[i];
+			SiteIF		theSite = ioSitesArray[i];
 			ChannelIF	ch = theSite.getChannel();
 
 			if ( ch == null)
@@ -129,7 +104,7 @@ public class OPMLGenerator
 				continue;
 			}
 
-			Element		outlineElem = m_Document.createElement("outline");
+			Element		outlineElem = theDocument.createElement("outline");
 
 			if ( outlineElem != null)
 			{
@@ -137,43 +112,22 @@ public class OPMLGenerator
 				outlineElem.setAttribute("title", ch.getTitle());
 				outlineElem.setAttribute("xmlUrl", theSite.getFeedURL());
 				outlineElem.setAttribute("htmlUrl", theSite.getSiteURL());
-				outlineElem.setAttribute("type", ch.getFormat().toString());
+				outlineElem.setAttribute("type", ch.getFormatString());
 				outlineElem.setAttribute("description", ch.getDescription());				
 
 				try
 				{
-					m_Body_Elem.appendChild(outlineElem);
+					theBody_Elem.appendChild(outlineElem);
 				}
 				catch (NullPointerException e)
 				{
-					s_OPML_Logger.error("NPE: body = " + m_Body_Elem + ", elem = " + outlineElem, e);	// (AGR) 17 April 2005. How? Why?
+					s_OPML_Logger.error("NPE: body = " + theBody_Elem + ", elem = " + outlineElem, e);	// (AGR) 17 April 2005. How? Why?
 				}
 			}
 		}
 
-		m_OPML_Elem.appendChild(m_Body_Elem);
-		m_Document.appendChild(m_OPML_Elem);
-
-		return true;
-	}
-
-	/********************************************************************
-	********************************************************************/
-	public Document getDocument()
-	{
-		return m_Document;
-	}
-
-	/********************************************************************
-	********************************************************************/
-	public synchronized String serialize() throws IOException
-	{
-//		s_OPML_Logger.info("... m_Document = " + m_Document);
-
-		if ( m_Document == null)
-		{
-			return "";
-		}
+		theOPML_Elem.appendChild(theBody_Elem);
+		theDocument.appendChild(theOPML_Elem);
 
 		///////////////////////////////////////////////////////
 
@@ -185,42 +139,28 @@ public class OPMLGenerator
 
 //		s_OPML_Logger.info("... theFormat = " + theFormat);
 
-		m_XMLSerializer = new XMLSerializer( sw, theFormat);
-//		s_OPML_Logger.info("... serializer = " + m_XMLSerializer);
-		m_XMLSerializer.serialize(m_Document);
+		XMLSerializer	theSerializer = new XMLSerializer( sw, theFormat);
+//		s_OPML_Logger.info("... serializer = " + theSerializer);
+		theSerializer.serialize(theDocument);
 //		s_OPML_Logger.info("... serialization DONE.");
 
 		resultStr = sw.toString();
 
 		sw.close();
-		sw = null;
-
-		m_XMLSerializer = null;
 
 		return resultStr;
 	}
 
 	/********************************************************************
-	********************************************************************/
-	public void release()
-	{
-		m_OPML_Elem = null;
-		m_Head_Elem = null;
-		m_Title_Elem = null;
-		m_Body_Elem = null;
-		m_Document = null;
-
-		m_XMLSerializer = null;
-	}
-
-	/********************************************************************
 		(AGR) 18 April 2005
 	********************************************************************/
-	class SiteComparator implements Comparator<Site>
+	static class SiteComparator implements Comparator<SiteIF>, /* (AGR) 29 Jan 2007. FindBugs recommended this */ Serializable
 	{
+		private static final long serialVersionUID = 1L;
+
 		/********************************************************************
 		********************************************************************/
-		public int compare( Site s1, Site s2)
+		public int compare( SiteIF s1, SiteIF s2)
 		{
 			return ( s1.getRecno() < s2.getRecno() ? -1 : ( s1.getRecno() == s2.getRecno() ? 0 : 1));
 		}

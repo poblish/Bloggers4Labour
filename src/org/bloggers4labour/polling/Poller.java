@@ -14,7 +14,6 @@ import org.apache.log4j.Logger;
 import org.bloggers4labour.AddResult;
 import org.bloggers4labour.AgeResult;
 import org.bloggers4labour.FeedUtils;
-import org.bloggers4labour.Headlines;
 import org.bloggers4labour.HeadlinesMgr;
 import org.bloggers4labour.Installation;
 import org.bloggers4labour.ItemContext;
@@ -23,6 +22,7 @@ import org.bloggers4labour.bridge.channel.ChannelIF;
 import org.bloggers4labour.bridge.channel.item.ItemIF;
 import org.bloggers4labour.cats.CategoriesTableIF;
 import org.bloggers4labour.headlines.HeadlineFilter;
+import org.bloggers4labour.headlines.HeadlinesIF;
 import org.bloggers4labour.site.SiteIF;
 
 /**
@@ -83,7 +83,7 @@ public abstract class Poller implements PollerIF
 			for ( int i = 0; i < theItemsArray.length; i++)
 			{
 				Date		itemDate = FeedUtils.getItemDate( theItemsArray[i] );
-				AgeResult	theAgeResult = Util.getItemAgeMsecs( theItemsArray[i], itemDate, inCurrentTimeMSecs);
+				AgeResult	theAgeResult = Util.getItemAgeMsecs( m_Installation, theItemsArray[i], itemDate, inCurrentTimeMSecs);
 
 				//////////////////////////////////////////////////////////////////  (AGR) 26 Feb 2006, 9 Sep 2006
 
@@ -115,7 +115,7 @@ public abstract class Poller implements PollerIF
 
 				//////////////////////////////////////////////////////////////////  (AGR) 19 May 2005
 
-				if (( theCatsTable != null) && ( itemDate != null) && theAgeResult.getAgeMSecs() < CategoriesTableIF.MAX_CATEGORY_AGE_MSECS)
+				if (( theCatsTable != null) && ( itemDate != null) && theAgeResult.getAgeMSecs() < theCatsTable.getMaxAgeMSecs())
 				{
 					theCatsTable.addCategories( theItemsArray[i] );
 				}
@@ -124,7 +124,7 @@ public abstract class Poller implements PollerIF
 
 				int	hIndex = 0;
 
-				for ( Headlines	h : theHMgr.getHeadlinesList())
+				for ( HeadlinesIF h : theHMgr.getHeadlinesList())
 				{
 					if (!h.allowsPosts())	// (AGR) 29 Nov 2005
 					{
@@ -208,7 +208,7 @@ public abstract class Poller implements PollerIF
 		for ( int i = 0; i < theItemsArray.length; i++)
 		{
 			Date		itemDate = FeedUtils.getItemDate( theItemsArray[i] );
-			AgeResult	theAgeResult = Util.getItemAgeMsecs( theItemsArray[i], itemDate, inCurrentTimeMSecs);
+			AgeResult	theAgeResult = Util.getItemAgeMsecs( m_Installation, theItemsArray[i], itemDate, inCurrentTimeMSecs);
 
 			if (!theAgeResult.isAllowable())	// (AGR) 14 Jan 2006
 			{
@@ -220,7 +220,7 @@ public abstract class Poller implements PollerIF
 
 			int	hIndex = 0;
 
-			for ( Headlines	h : theHMgr.getHeadlinesList())
+			for ( HeadlinesIF h : theHMgr.getHeadlinesList())
 			{
 				if (!h.allowsComments())	// (AGR) 29 Nov 2005
 				{

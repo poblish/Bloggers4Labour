@@ -13,9 +13,10 @@ import java.util.Date;
 import org.bloggers4labour.AddResult;
 import org.bloggers4labour.AgeResult;
 import org.bloggers4labour.FeedUtils;
-import org.bloggers4labour.Headlines;
+import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.ItemContext;
 import org.bloggers4labour.bridge.channel.item.ItemIF;
+import org.bloggers4labour.headlines.HeadlinesIF;
 import org.bloggers4labour.site.SiteIF;
 
 /**
@@ -26,11 +27,11 @@ public class Util
 {
 	/*******************************************************************************
 	*******************************************************************************/
-	public static AgeResult getItemAgeMsecs( ItemIF inItem, Date inItemDate, long inCurrentTimeMSecs)
+	public static AgeResult getItemAgeMsecs( final InstallationIF inInstall, final ItemIF inItem, Date inItemDate, long inCurrentTimeMSecs)
 	{
 		if ( inItemDate == null)
 		{
-			return new AgeResult(0);	// !!! This value should never, in practice, be used.
+			return new AgeResult( inInstall, 0);	// !!! This value should never, in practice, be used.
 		}
 
 		////////////////////////////////////////////////////////
@@ -41,7 +42,7 @@ public class Util
 
 		if ( itemAgeMSecs >= 0)
 		{
-			return new AgeResult(itemAgeMSecs);
+			return new AgeResult( inInstall, itemAgeMSecs);
 		}
 
 // System.out.println( FeedUtils.getDisplayTitle(inItem) + "\t\t" + itemAgeMSecs);
@@ -52,12 +53,12 @@ public class Util
 
 // System.out.println( "===>\t\t" + d);
 
-		return new AgeResult( inCurrentTimeMSecs - d.getTime());
+		return new AgeResult( inInstall, inCurrentTimeMSecs - d.getTime());
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public static AddResult processItem( Headlines ioHeadlines, ItemIF inItem, final SiteIF inSite, long inAgeMSecs, ItemContext inCtxt)
+	public static AddResult processItem( HeadlinesIF ioHeadlines, ItemIF inItem, final SiteIF inSite, long inAgeMSecs, ItemContext inCtxt)
 	{
 		if (ioHeadlines.isItemAgeOK(inAgeMSecs))
 		{

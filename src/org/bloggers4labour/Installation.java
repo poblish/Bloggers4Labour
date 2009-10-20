@@ -33,6 +33,8 @@ import org.bloggers4labour.jmx.Management;
 import org.bloggers4labour.mail.DigestSender;
 import org.bloggers4labour.mail.DigestSenderIF;
 import org.bloggers4labour.polling.PollerIF;
+import org.bloggers4labour.sql.QueryBuilder;
+import org.bloggers4labour.sql.QueryBuilderIF;
 
 /**
  *
@@ -44,6 +46,8 @@ public class Installation implements InstallationIF
 	private String			m_BundleName;
 	private String			m_LogPrefix;
 	private DataSource		m_DataSource;
+
+	private long			m_MaxItemAgeMSecs;
 
 	private HeadlinesMgr		m_HeadlinesMgr = null;
 	private FeedList		m_FeedList;
@@ -66,6 +70,7 @@ public class Installation implements InstallationIF
 		(AGR) 19 Feb 2006
 	*******************************************************************************/
 	public Installation( String inName, String inBundleName, DataSource inDataSource, String inStatsBeanName,
+				final long inMaxItemAgeMSecs,
 				Collection<PollerIF> inPollers)
 	{
 		m_Name = inName;
@@ -75,6 +80,8 @@ public class Installation implements InstallationIF
 		m_DataSource = inDataSource;
 
 		m_Management = new Management( this, inStatsBeanName);
+
+		m_MaxItemAgeMSecs = inMaxItemAgeMSecs;
 
 		m_FeedList = new FeedList(this);
 
@@ -123,12 +130,17 @@ public class Installation implements InstallationIF
 
 	/*******************************************************************************
 	*******************************************************************************/
+	public void setIndexMgr( IndexMgr inIndexMgr)
+	{
+		m_IndexMgr = inIndexMgr;
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
 	public void complete()
 	{
 		m_FeedList.connect(true);
 		m_FeedList.addObserver( new FeedDoneHandler() );
-
-		m_IndexMgr = new IndexMgr(this);
 
 		m_Categories = new CategoriesTable(this);
 
@@ -139,14 +151,8 @@ public class Installation implements InstallationIF
 
 		m_DigestSender = new DigestSender(this);
 
-		///////////////////////////////////////  (AGR) 13 March 2007. Turns out this is impossible with FB API. Commenting-out
+		////////////////////////////////////////////////////////////////
 
-/*		if ( m_FacebookGroupID != null && m_FacebookTimer == null)
-		{
-			m_FacebookTimer = new Timer();
-			m_FacebookTimer.scheduleAtFixedRate( new FacebookGroupCheckTask(), 50, Constants.ONE_HOUR_SECS);
-		}
-*/
 		m_Status = InstallationStatus.STARTED;
 	}
 
@@ -175,15 +181,22 @@ public class Installation implements InstallationIF
 	*******************************************************************************/
 	public ResourceBundle getBundle( Locale inLocale)
 	{
-//		try
-		{
-			return ResourceBundle.getBundle( "org/bloggers4labour/" + m_BundleName, inLocale);
-		}
-/*		catch (java.util.MissingResourceException e)
-		{
-			return ResourceBundle.getBundle( "org/bloggers4labour/" + InstallationManager.DEFAULT_INSTALL, inLocale);
-		}
-*/	}
+		return ResourceBundle.getBundle( m_BundleName, inLocale);
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public QueryBuilderIF getQueryBuilder()
+	{
+		return new QueryBuilder( getBundle() );
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public long getMaxAgeMSecs()
+	{
+		return m_MaxItemAgeMSecs;
+	}
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -304,14 +317,6 @@ public class Installation implements InstallationIF
 	}
 
 	/*******************************************************************************
-		(AGR) 13 March 2007
-	*******************************************************************************
-	public void setFacebookGroupID( final Number inNum)
-	{
-		m_FacebookGroupID = inNum;
-	} /
-
-	/*******************************************************************************
 	*******************************************************************************/
 	@Override public String toString()
 	{
@@ -326,13 +331,6 @@ public class Installation implements InstallationIF
 		*******************************************************************************/
 		public void update( Observable inFeedList, Object inUnusedArgs)
 		{
-/*			if ( m_ActivityTable != null)
-			{
-				m_ActivityTable.complete();
-
-				// s_Install_Logger.info( getLogPrefix() + "Activity table: " + m_ActivityTable);
-			}
-*/
 			if ( m_LastPostTable != null)
 			{
 				m_LastPostTable.complete();
@@ -361,33 +359,4 @@ public class Installation implements InstallationIF
 			}
 		};
 	}
-
-	/*******************************************************************************
-		(AGR) 13 March 2007
-	*******************************************************************************
-	private static class FacebookGroupCheckTask extends TimerTask
-	{
-		public void run()
-		{
-			try
-			{
-				FacebookRestClient	theFRC = new FacebookRestClient( "0340236d55995cbcaebd9648bb3be220", "ef6d7b90060faebbf0229e5023501fd1");
-				theFRC.setDebug(true);
-
-				String			theToken = theFRC.auth_createToken();
-				String			theSessionID = theFRC.auth_getSession(theToken);
-
-				Logger.getLogger("Main").info("Facebook: Token: " + theToken + ", session: " + theSessionID);
-
-				Document		theResult = theFRC.groups_getMembers(m_FacebookGroupID);
-
-				FacebookRestClient.printDom( theResult, "  ");
-			}
-			catch (Exception e)
-			{
-				Logger.getLogger("Main").error( getLogPrefix() + "FacebookGroupCheckTask", e);
-			}
-		}
-	}
-	*/
 }

@@ -21,6 +21,7 @@ import org.bloggers4labour.installation.tasks.InstallationTaskIF;
 import org.bloggers4labour.jmx.Management;
 import org.bloggers4labour.mail.DigestSenderIF;
 import org.bloggers4labour.polling.PollerIF;
+import org.bloggers4labour.sql.QueryBuilderIF;
 
 /**
  *
@@ -54,4 +55,8 @@ public interface InstallationIF
 	public InstallationStatus getStatus();
 	public void restart();
 	public void stop();
+
+	QueryBuilderIF getQueryBuilder();
+
+	long getMaxAgeMSecs();
 }
