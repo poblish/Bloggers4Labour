@@ -17,6 +17,7 @@ import org.bloggers4labour.activity.LastPostTableIF;
 import org.bloggers4labour.cats.CategoriesTableIF;
 import org.bloggers4labour.feed.FeedListIF;
 import org.bloggers4labour.index.IndexMgr;
+import org.bloggers4labour.index.IndexMgrIF;
 import org.bloggers4labour.installation.tasks.InstallationTaskIF;
 import org.bloggers4labour.jmx.Management;
 import org.bloggers4labour.mail.DigestSenderIF;
@@ -35,7 +36,7 @@ public interface InstallationIF
 	public HeadlinesMgr getHeadlinesMgr();
 	public Management getManagement();
 	public FeedListIF getFeedList();
-	public IndexMgr getIndexMgr();
+	public IndexMgrIF getIndexMgr();
 
 	public boolean hasPollers();
 	public Iterable<PollerIF> getPollers();

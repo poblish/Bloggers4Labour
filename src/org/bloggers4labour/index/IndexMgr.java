@@ -44,7 +44,7 @@ import org.bloggers4labour.headlines.RemoveHandler;
  *
  * @author andrewre
  */
-public class IndexMgr
+public class IndexMgr implements IndexMgrIF
 {
 	private InstallationIF		m_Install;
 	private int			m_DocCount;
