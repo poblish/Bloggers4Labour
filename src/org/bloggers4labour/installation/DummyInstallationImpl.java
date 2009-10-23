@@ -76,7 +76,7 @@ public class DummyInstallationImpl implements InstallationIF
 
 	public IndexMgr getIndexMgr()
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		return null;
 	}
 
 	public boolean hasPollers()
@@ -101,7 +101,7 @@ public class DummyInstallationImpl implements InstallationIF
 
 	public CategoriesTableIF getCategories()
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		return null;
 	}
 
 	public LastPostTableIF getLastPostDateTable()
