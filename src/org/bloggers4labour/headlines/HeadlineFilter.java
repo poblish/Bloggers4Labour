@@ -10,7 +10,7 @@
 package org.bloggers4labour.headlines;
 
 import java.util.Collection;
-import org.bloggers4labour.Installation;
+import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.bridge.channel.ChannelIF;
 import org.bloggers4labour.bridge.channel.item.ItemIF;
 import org.bloggers4labour.site.SiteIF;
@@ -21,14 +21,14 @@ import org.bloggers4labour.site.SiteIF;
  */
 public class HeadlineFilter
 {
-	private Installation	m_Install;
+	private InstallationIF	m_Install;
 	private ChannelIF	m_Channel;
 
 	private SiteIF		m_Site;		// (AGR) 29 Jan 2007. Removed pointless 'transient'
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public HeadlineFilter( final Installation inInstall, final ChannelIF inChannel)
+	public HeadlineFilter( final InstallationIF inInstall, final ChannelIF inChannel)
 	{
 		m_Install = inInstall;
 		m_Channel = inChannel;

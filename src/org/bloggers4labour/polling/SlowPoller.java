@@ -15,7 +15,7 @@ import de.nava.informa.utils.poller.PollerObserverIF;
 import java.util.Observable;
 import java.util.Observer;
 import org.apache.log4j.Logger;
-import org.bloggers4labour.Installation;
+import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.bridge.channel.ChannelIF;
 import org.bloggers4labour.bridge.channel.DefaultChannelBridgeFactory;
 
@@ -63,7 +63,7 @@ public class SlowPoller extends org.bloggers4labour.polling.Poller implements Ob
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public void setInstallation( final Installation inInstallation)
+	public void setInstallation( final InstallationIF inInstallation)
 	{
 		m_Installation = inInstallation;
 

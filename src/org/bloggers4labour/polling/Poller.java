@@ -15,7 +15,7 @@ import org.bloggers4labour.AddResult;
 import org.bloggers4labour.AgeResult;
 import org.bloggers4labour.FeedUtils;
 import org.bloggers4labour.HeadlinesMgr;
-import org.bloggers4labour.Installation;
+import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.ItemContext;
 import org.bloggers4labour.activity.LastPostTableIF;
 import org.bloggers4labour.bridge.channel.ChannelIF;
@@ -31,7 +31,7 @@ import org.bloggers4labour.site.SiteIF;
  */
 public abstract class Poller implements PollerIF
 {
-	protected Installation		m_Installation;
+	protected InstallationIF	m_Installation;
 	protected String		m_Name;
 
 	private static Logger		s_Poll_Logger = Logger.getLogger( Poller.class );

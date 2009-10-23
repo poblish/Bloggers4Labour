@@ -5,7 +5,7 @@
 
 package org.bloggers4labour.polling;
 
-import org.bloggers4labour.Installation;
+import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.bridge.channel.ChannelIF;
 import org.bloggers4labour.site.SiteIF;
 
@@ -15,7 +15,7 @@ import org.bloggers4labour.site.SiteIF;
  */
 public interface PollerIF
 {
-	public void setInstallation( final Installation inInstallation);
+	public void setInstallation( final InstallationIF inInstallation);
 
 	public boolean registerChannelWithInforma( final ChannelIF inChannel);
 	public void unregisterChannelWithInforma( final ChannelIF inChannel);

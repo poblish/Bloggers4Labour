@@ -12,7 +12,7 @@ package org.bloggers4labour.cricket;
 import com.hiatus.dates.UDates;
 import de.nava.informa.utils.poller.PollerObserverIF;
 import org.apache.log4j.Logger;
-import org.bloggers4labour.Installation;
+import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.bridge.channel.ChannelIF;
 import org.bloggers4labour.bridge.channel.DefaultChannelBridgeFactory;
 import org.bloggers4labour.polling.MyObserver;
@@ -45,7 +45,7 @@ public class ScoresPoller extends org.bloggers4labour.polling.Poller
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public void setInstallation( final Installation inInstallation)
+	public void setInstallation( final InstallationIF inInstallation)
 	{
 		m_Installation = inInstallation;
 	}

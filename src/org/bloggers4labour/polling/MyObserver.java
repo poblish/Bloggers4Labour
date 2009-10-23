@@ -18,7 +18,7 @@ import org.bloggers4labour.AddResult;
 import org.bloggers4labour.AgeResult;
 import org.bloggers4labour.FeedUtils;
 import org.bloggers4labour.HeadlinesMgr;
-import org.bloggers4labour.Installation;
+import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.ItemContext;
 import org.bloggers4labour.bridge.channel.ChannelIF;
 import org.bloggers4labour.bridge.channel.DefaultChannelBridgeFactory;
@@ -38,7 +38,7 @@ import org.bloggers4labour.site.SiteIF;
 *******************************************************************************/
 public class MyObserver implements PollerObserverIF
 {
-	private Installation	m_Installation;
+	private InstallationIF	m_Installation;
 	private String		m_LogPrefix;
 	private HeadlinesMgr	m_HMgr;
 
@@ -47,7 +47,7 @@ public class MyObserver implements PollerObserverIF
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public MyObserver( final Installation inInstallation)
+	public MyObserver( final InstallationIF inInstallation)
 	{
 		m_Installation = inInstallation;
 		m_LogPrefix = inInstallation.getLogPrefix();

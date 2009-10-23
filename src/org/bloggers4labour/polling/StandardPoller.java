@@ -13,7 +13,7 @@ import com.hiatus.dates.UDates;
 import de.nava.informa.utils.poller.CompositeApprover;
 import de.nava.informa.utils.poller.PollerObserverIF;
 import org.apache.log4j.Logger;
-import org.bloggers4labour.Installation;
+import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.bridge.channel.ChannelIF;
 import org.bloggers4labour.bridge.channel.DefaultChannelBridgeFactory;
 
@@ -60,7 +60,7 @@ public class StandardPoller extends org.bloggers4labour.polling.Poller
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public void setInstallation( final Installation inInstallation)
+	public void setInstallation( final InstallationIF inInstallation)
 	{
 		m_Installation = inInstallation;
 	}
