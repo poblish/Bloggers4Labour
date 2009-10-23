@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TreeSet;
 import org.apache.log4j.Logger;
-import org.bloggers4labour.Installation;
+import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.ItemCleanerTask;
 import org.bloggers4labour.bridge.channel.ChannelIF;
 import org.bloggers4labour.bridge.channel.item.ItemIF;
@@ -53,7 +53,7 @@ public class CategoriesTable implements CategoriesTableIF
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public CategoriesTable( final Installation inInstall)
+	public CategoriesTable( final InstallationIF inInstall)
 	{
 		m_Map = new HashMap<String,Collection<ItemIF> >();
 
