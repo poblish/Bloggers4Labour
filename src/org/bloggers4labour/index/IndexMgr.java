@@ -33,7 +33,6 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.bloggers4labour.FeedUtils;
 import org.bloggers4labour.ItemContext;
-import org.bloggers4labour.Installation;
 import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.bridge.channel.ChannelIF;
 import org.bloggers4labour.bridge.channel.item.ItemIF;
@@ -47,7 +46,7 @@ import org.bloggers4labour.headlines.RemoveHandler;
  */
 public class IndexMgr
 {
-	private Installation		m_Install;
+	private InstallationIF		m_Install;
 	private int			m_DocCount;
 	private int			m_Dirtiness = 0;
 	private File			m_LuceneRootIndexDir;
@@ -59,7 +58,7 @@ public class IndexMgr
 		(AGR) 22 June 2005. Should really sync, in case someone calls
 		setDirectory() again, but that's the last thing we want to do!
 	*******************************************************************************/
-	public IndexMgr( final Installation inInstall)
+	public IndexMgr( final InstallationIF inInstall)
 	{
 		m_Install = inInstall;
 		m_LuceneRootIndexDir = new File( s_LuceneRootIndexDir, m_Install.getName());

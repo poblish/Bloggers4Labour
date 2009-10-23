@@ -19,7 +19,7 @@ import javax.management.MalformedObjectNameException;
 import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectName;
 import org.apache.log4j.Logger;
-import org.bloggers4labour.Installation;
+import org.bloggers4labour.InstallationIF;
 
 /**
  *
@@ -36,7 +36,7 @@ public class Management
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public Management( Installation inInstallation, String inBeanName)
+	public Management( InstallationIF inInstallation, String inBeanName)
 	{
 		try
 		{
@@ -60,7 +60,7 @@ public class Management
 
 	/*******************************************************************************
 	*******************************************************************************/
-	private void logContents( Installation inInstallation)
+	private void logContents( InstallationIF inInstallation)
 	{
 		String	prefix = inInstallation.getLogPrefix();
 

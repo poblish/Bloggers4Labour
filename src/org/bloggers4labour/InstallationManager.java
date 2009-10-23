@@ -48,6 +48,7 @@ import org.bloggers4labour.installation.tasks.InstallationTaskIF;
 import org.bloggers4labour.polling.Poller;
 import org.bloggers4labour.polling.PollerConfig;
 import org.bloggers4labour.polling.PollerIF;
+import org.bloggers4labour.xml.XMLUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -74,6 +75,7 @@ public class InstallationManager implements InstallationManagerIF
 
 	/*******************************************************************************
 	*******************************************************************************/
+	@SuppressWarnings("unchecked")
 	private InstallationManager()
 	{
 		XPathFactory		theFactory = XPathFactory.newInstance();
@@ -214,6 +216,32 @@ public class InstallationManager implements InstallationManagerIF
 			{
 				theElement = (Element) theInstallsNodes.item(i);
 
+				///////////////////////////////////////////////////////////////////////////  (AGR) 23 Oct 2009
+
+				String				theImplClassName = XMLUtils.getNodeAttrValue( theElement, "impl");
+				Class<? extends InstallationIF>	theImplClass;
+
+				if (UText.isNullOrBlank(theImplClassName))
+				{
+					theImplClass = Installation.class;
+				}
+				else
+				{
+					try
+					{
+						theImplClass = (Class<? extends InstallationIF>) Class.forName(theImplClassName);
+					}
+					catch (ClassNotFoundException ex)
+					{
+						s_Installations_Logger.error("Couldn't create InstallationIF of type '" + theImplClassName + "'");
+						continue;
+					}
+				}
+
+				s_Installations_Logger.info("Impl class = " + theImplClass);
+
+				///////////////////////////////////////////////////////////////////////////
+
 				String		theName = theElement.getAttributes().getNamedItem("name").getTextContent();
 				Node		theBundleNameNode = theElement.getAttributes().getNamedItem("resourceBundle");
 				Node		theMaxItemAgeMSecsNode = theElement.getAttributes().getNamedItem("maxItemAgeMillis");
@@ -259,32 +287,62 @@ public class InstallationManager implements InstallationManagerIF
 
 					s_Installations_Logger.debug("thePollerId = " + thePollerId);
 
-				PollerConfig	thePollerConfigToUse = thePollerIdsMap.get(thePollerId);
+					PollerConfig	thePollerConfigToUse = thePollerIdsMap.get(thePollerId);
 
 					s_Installations_Logger.debug("thePollerConfigToUse = " + thePollerConfigToUse);
 
-				try
-				{
+					try
+					{
 						Poller	theNewPoller = thePollerConfigToUse.newInstance();
 
 						s_Installations_Logger.debug("Adding theNewPoller = " + theNewPoller);
 
 						thePollers.add(theNewPoller);
-				}
-				catch (Exception e)
-				{
+					}
+					catch (Exception e)
+					{
 						s_Installations_Logger.error("Poller creation failed", e);
 					}
 				}
 
 				/////////////////////////////////////////////////////////////////////////////
+ 
+				InstallationIF	theInstall;
 
-				Installation	theInstall = new Installation( theName,
+				try
+				{
+					@SuppressWarnings(value = "unchecked")
+					Constructor<InstallationIF>	theCtor = (Constructor<InstallationIF>) theImplClass.getConstructor( String.class, String.class, DataSource.class, String.class, long.class, Collection.class);
+
+					theInstall = theCtor.newInstance( theName,
 										theBundleNameNode.getTextContent(),
 										theSource,
 										theElement.getAttributes().getNamedItem("mbean_name").getTextContent(),
 										( theMaxItemAgeMSecsNode != null) ? Long.parseLong( theMaxItemAgeMSecsNode.getTextContent() ) : Long.MAX_VALUE,
 										thePollers);
+
+					s_Installations_Logger.debug("Created... " + theInstall);
+				}
+				catch (IllegalAccessException ex)
+				{
+					s_Installations_Logger.error("", ex);
+					continue;
+				}
+				catch (InstantiationException ex)
+				{
+					s_Installations_Logger.error("", ex);
+					continue;
+				}
+				catch (InvocationTargetException ex)
+				{
+					s_Installations_Logger.error("", ex);
+					continue;
+				}
+				catch (NoSuchMethodException ex)
+				{
+					s_Installations_Logger.error("", ex);
+					continue;
+				}
 
 				/////////////////////////////////////////////////////////////////////////////  (AGR) 27 October 2008. InstallationTasks...
 
@@ -333,19 +391,6 @@ public class InstallationManager implements InstallationManagerIF
 
 				theInstall.setTasks(theTasksColl);
 
-				/////////////////////////////////////////////////////////////////////////////  (AGR) 13 March 2007. Facebook...
-
-/*				Element		theFBGroupIDElem = (Element) theFBGroupIDExpr.evaluate( theElement, XPathConstants.NODE);
-
-				try
-				{
-					theInstall.setFacebookGroupID( Long.valueOf( theFBGroupIDElem.getTextContent() ) );
-				}
-				catch (Exception e)
-				{
-					;
-				}
-*/
 				/////////////////////////////////////////////////////////////////////////////
 
 				Element		theHeadMgrElem = (Element) theHMgrExpr.evaluate( theElement, XPathConstants.NODE);

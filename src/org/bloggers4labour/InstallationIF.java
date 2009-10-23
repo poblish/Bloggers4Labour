@@ -59,4 +59,8 @@ public interface InstallationIF
 	QueryBuilderIF getQueryBuilder();
 
 	long getMaxAgeMSecs();
+
+	void setHeadlinesMgr( HeadlinesMgr inHeadsMgr);
+	void setIndexMgr( IndexMgr inIndexMgr);
+	void complete();
 }

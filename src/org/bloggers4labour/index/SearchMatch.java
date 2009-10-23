@@ -16,7 +16,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import org.apache.lucene.document.Document;
 import org.bloggers4labour.FeedUtils;
-import org.bloggers4labour.Installation;
+import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.ItemType;
 import org.bloggers4labour.jsp.AbstractDisplayable;
 import org.bloggers4labour.site.SiteIF;
@@ -38,7 +38,7 @@ public class SearchMatch extends AbstractDisplayable implements java.io.Serializ
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public SearchMatch( final Installation inInstall, final float inScore, final Document inDoc)
+	public SearchMatch( final InstallationIF inInstall, final float inScore, final Document inDoc)
 	{
 		m_Score = inScore;
 		m_Doc = inDoc;

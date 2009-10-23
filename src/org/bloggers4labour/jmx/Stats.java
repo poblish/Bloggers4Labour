@@ -47,14 +47,14 @@ public class Stats implements StatsMBean
 	private int			m_ActiveSiteHandlerTasks;
 	private Calendar		m_LastFeedCheckTime;		// (AGR) 23 July 2005
 
-	private Installation		m_Install;			// (AGR) 19 Feb 2006, (AGR) 29 Jan 2007. Removed pointless 'transient'
+	private InstallationIF		m_Install;			// (AGR) 19 Feb 2006, (AGR) 29 Jan 2007. Removed pointless 'transient'
 
 	private static Logger		s_Stats_Logger = Logger.getLogger("Main");
 	private static TimeZone		s_TZ = ULocale2.getBestTimeZone( Locale.UK );
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public Stats( Installation inInstall)
+	public Stats( InstallationIF inInstall)
 	{
 		m_Install = inInstall;
 
