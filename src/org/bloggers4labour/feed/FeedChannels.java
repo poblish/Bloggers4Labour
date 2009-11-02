@@ -191,7 +191,14 @@ public class FeedChannels implements FeedChannelsIF
 		}
 		catch (IOException e)
 		{
-			s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": IOException for: " + inURL, e);
+			if ( e.getMessage().contains("HTTP response code: 401"))	// (AGR) 2 November 2009
+			{
+				s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": Access DENIED for: " + inURL);
+			}
+			else
+			{
+				s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": IOException for: " + inURL, e);
+			}
 		}
 		catch (Exception e)			// (AGR) 30 Nov 2005
 		{
