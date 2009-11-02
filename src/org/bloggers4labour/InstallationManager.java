@@ -65,7 +65,8 @@ public class InstallationManager implements InstallationManagerIF
 {
 	private Map<String,InstallationIF>	m_Map = new LinkedHashMap<String,InstallationIF>();
 	private Collection<IncludeFileLocator>	m_FileLocators = new HashSet<IncludeFileLocator>();
-	private Context				m_AppContext;	// (AGR) 28 April 2007
+	private Context				m_InitialAppContext;
+	private Context				m_EnvAppContext;
 
 	private InstallationStatus		m_Status = InstallationStatus.UNCONFIGURED;
 
@@ -190,24 +191,19 @@ public class InstallationManager implements InstallationManagerIF
 			XPathExpression		theHMgrExpr = theXPathObj.compile("headlinesMgr[1]");
 			XPathExpression		theIdxMgrExpr = theXPathObj.compile("indexManager[1]");
 			XPathExpression		theTasksExpr = theXPathObj.compile("task");
-//			XPathExpression		theFBGroupIDExpr = theXPathObj.compile("facebook[1]/group_id[1]");
 			NodeList		theInstallsNodes = (NodeList) theInstallsExpr.evaluate( theDocument, XPathConstants.NODESET);
-			InitialContext		initContext = new InitialContext();	// (AGR) 14 Feb 2007
-//			Context			appContext;
 
-			// s_Installations_Logger.info("initContext: " + initContext);
+			m_InitialAppContext = new InitialContext();	// (AGR) 14 Feb 2007
+
+			// s_Installations_Logger.info("initContext: " + m_InitialAppContext);
 
 			try
 			{
-//				appContext = (Context) initContext.lookup("java:comp/env");
-				m_AppContext = (Context) initContext.lookup("java:comp/env");	// (AGR) 28 April 2007
+				m_EnvAppContext = (Context) m_InitialAppContext.lookup("java:comp/env");	// (AGR) 28 April 2007
 			}
-			catch (javax.naming.NoInitialContextException e)
+			catch (javax.naming.NoInitialContextException e)	// (AGR) 13 March 2007. Only happens when runnng locally, not at B4L
 			{
-				// (AGR) 13 March 2007. Only happens when runnng locally, not at B4L
-
-//				appContext = null;	// (AGR) 13 March 2007. Take the NPE later.
-				m_AppContext = null;	// (AGR) 28 April 2007
+				m_EnvAppContext = null;		// (AGR) 28 April 2007
 			}
 
 			// s_Installations_Logger.info("appContext: " + appContext);
@@ -245,7 +241,7 @@ public class InstallationManager implements InstallationManagerIF
 				String		theName = theElement.getAttributes().getNamedItem("name").getTextContent();
 				Node		theBundleNameNode = theElement.getAttributes().getNamedItem("resourceBundle");
 				Node		theMaxItemAgeMSecsNode = theElement.getAttributes().getNamedItem("maxItemAgeMillis");
-				DataSource	theSource;
+				DataSource	theSource = null;
 
 				try	// (AGR) 14 Feb 2007. Pooling - at last!
 				{
@@ -253,15 +249,15 @@ public class InstallationManager implements InstallationManagerIF
 
 					s_Installations_Logger.info("[IMgr] Looking up: " + theDSNStr);
 
-//					theSource = (DataSource) appContext.lookup(theDSNStr);
-					theSource = (DataSource) m_AppContext.lookup(theDSNStr);	// (AGR) 28 April 2007
+					theSource = lookupDataSource(theDSNStr);	// (AGR) 28 April 2007
 
 					s_Installations_Logger.info("[IMgr] Obtained: " + theSource);
-
-					// java.sql.Connection	c = theSource.getConnection();
-					// s_Installations_Logger.info("c: " + c);
 				}
 				catch (Exception e)
+				{
+				}
+
+				if ( theSource == null)
 				{
 					String		theURLNodeStr = (String) theURLExpr.evaluate( theElement, XPathConstants.STRING);
 
@@ -547,9 +543,28 @@ public class InstallationManager implements InstallationManagerIF
 	/*******************************************************************************
 		(AGR) 28 April 2007
 	*******************************************************************************/
-	public DataSource lookupDataSource( String inName) throws NamingException
+	public DataSource lookupDataSource( String inJNDIName)
 	{
-		return ( m_AppContext != null) ? (DataSource) m_AppContext.lookup(inName) : null;
+		try
+		{
+			return (DataSource) m_InitialAppContext.lookup(inJNDIName);	// Try this first...
+		}
+		catch (NamingException e)
+		{
+			if ( m_EnvAppContext != null)
+			{
+				try
+				{
+					return (DataSource) m_EnvAppContext.lookup(inJNDIName);
+				}
+				catch (NamingException e2)
+				{
+					s_Installations_Logger.error( "", e2);
+				}
+			}
+		}
+
+		return null;
 	}
 
 	/*******************************************************************************
