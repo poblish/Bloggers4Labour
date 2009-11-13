@@ -20,8 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.apache.log4j.Logger;
@@ -67,6 +68,9 @@ public class FeedList implements FeedListIF
 	private ProcessingObservable		m_DoneObservable = new ProcessingObservable();  // (AGR) 21 June 2005. 3 Feb 2007: removed transient
 
 	private static Logger			s_FL_Logger = Logger.getLogger( FeedList.class );
+
+	private final static long		UPDATER_TIMEOUT_PERIOD = 8;
+	private final static TimeUnit		UPDATER_TIMEOUT_UNITS = TimeUnit.MINUTES;
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -442,7 +446,7 @@ public class FeedList implements FeedListIF
 
 	/*******************************************************************************
 	*******************************************************************************/
-	class SiteHandlerTask implements Runnable
+	class SiteHandlerTask implements Callable<Object>
 	{
 		private UpdaterTask	m_Task;
 		private int		m_ID;
@@ -462,10 +466,17 @@ public class FeedList implements FeedListIF
 
 		/*******************************************************************************
 		*******************************************************************************/
-		public void run()
+		public Object call() throws Exception
 		{
 			try
 			{
+		/* 		synchronized (m_Task._m_SHTsLocker)
+				{
+					s_FL_Logger.info("SHT #" + m_ID + " STARTING. m_SHTs = " + m_Task.m_SHTs);
+				} */
+
+				////////////////////////////////////////////////////////
+
 				do
 				{
 					if (!_run())
@@ -475,24 +486,30 @@ public class FeedList implements FeedListIF
 				}
 				while ( m_CurrentRow != null);
 			}
-			catch (Exception e)
+			catch (InterruptedException e)		// Unlikely, but just possible
+			{
+				s_FL_Logger.warn("SHT #" + m_ID + " TIMED-OUT!");
+			}
+			catch (Throwable e)
 			{
 				s_FL_Logger.error( m_Install.getLogPrefix() + "in SHT.run()", e);
 			}
 			finally
 			{
-				m_Task.m_SHTs.remove(this);	// ensure this happens!
-
-				if ( m_Stats != null)
+				synchronized (m_Task._m_SHTsLocker)
 				{
-//					int	x = m_Task.m_SHTs.size();
-//					s_FL_Logger.info("@@@--> Setting stats tasks count to " + x + " - " + m_Install + " - " + m_Stats);
+					m_Task.m_SHTs.remove(this);	// ensure this happens!
 
-					m_Stats.setActiveSiteHandlerTasks( m_Task.m_SHTs.size() );
+					if ( m_Stats != null)
+					{
+						m_Stats.setActiveSiteHandlerTasks( m_Task.m_SHTs.size() );
+					}
+
+					// s_FL_Logger.info("SHT #" + m_ID + " DONE. m_SHTs = " + m_Task.m_SHTs);
 				}
-
-				// s_FL_Logger.info("SHT #" + m_ID + " DONE. m_SHTs = " + m_Task.m_SHTs);
 			}
+
+			return this;
 		}
 
 		/*******************************************************************************
@@ -732,7 +749,8 @@ public class FeedList implements FeedListIF
 		protected final List<String>		m_FailedCommentsFeeds = new ArrayList<String>();	// (AGR) 29 Nov 2005
 		protected final List<String>		m_TimedOutCommentsFeeds = new ArrayList<String>();	// (AGR) 30 Nov 2005
 
-		protected final byte[]			_m_LastRecnoLocker = new byte[1];
+		protected final byte[]			_m_LastRecnoLocker = new byte[0];
+		protected final byte[]			_m_SHTsLocker = new byte[0];
 
 		private PollerAllocatorIF		m_PollerAllocator = new DefaultPollerAllocator(m_Install);
 
@@ -769,150 +787,181 @@ public class FeedList implements FeedListIF
 
 				if (!theRS.isEmpty())
 				{
-					SiteHandlerTask		sht;
-					int			numSHT = Options.getOptions().getNumSiteHandlerThreads();
-
 					theRowsList = theRS.getRowsList();
 
-					for ( int i = 1; i <= numSHT; i++)
+					/////////////////////////////////////////////////////////////////////////////////////  (AGR) 12 Nov 2009
+
+					Collection<Callable<Object>>	theCollWrapper = new ArrayList<Callable<Object>>();
+
+					for ( int i = 1; i <= Options.getOptions().getNumSiteHandlerThreads(); i++)
 					{
-						sht = new SiteHandlerTask( this, i, inCurrTimeMSecs, theRowsList);
+						SiteHandlerTask		theSHT = new SiteHandlerTask( this, i, inCurrTimeMSecs, theRowsList);
 
-						try
-						{
-							m_STPE.schedule( sht, 50, TimeUnit.MILLISECONDS);
-							m_SHTs.add(sht);
+						m_SHTs.add(theSHT);
 
-							if ( m_Stats != null)
-							{
-								m_Stats.setActiveSiteHandlerTasks( m_SHTs.size() );
-							}
-						}
-						catch (RejectedExecutionException e)
+						theCollWrapper.add(theSHT);
+					}
+
+					if ( m_Stats != null)
+					{
+						m_Stats.setActiveSiteHandlerTasks( m_SHTs.size() );
+					}
+
+					/////////////////////////////////////////////////////////////////////////////////////
+
+					s_FL_Logger.info("UpdaterTask: invoking SHTs");
+
+					List<Future<Object>>		theFutures = m_STPE.invokeAll( theCollWrapper, UPDATER_TIMEOUT_PERIOD, UPDATER_TIMEOUT_UNITS);
+
+					// Will block until completion or timeout...
+
+					int	numCancelled = 0;
+
+					for ( Future<Object> each : theFutures)
+					{
+						if (each.isCancelled())
 						{
-							s_FL_Logger.error("Err: " + e + " for " + sht);
+							numCancelled++;
 						}
 					}
 
-					////////////////////////////////////////////
-
-					while ( m_SHTs.size() > 0)
+					if ( numCancelled == 0)
 					{
-						try
-						{
-							Thread.sleep(250);	// (AGR) 1 June 2005. Was '10'
-						}
-						catch (InterruptedException e) {}
+						s_FL_Logger.info("UpdaterTask: SHTs complete.");
+					}
+					else
+					{
+						s_FL_Logger.warn("UpdaterTask: SHTs aborted after " + UPDATER_TIMEOUT_PERIOD + " " + UPDATER_TIMEOUT_UNITS + ". " + numCancelled + " SHT(s) cancelled.");
+					}
+
+					/////////////////////////////////////////////////////////////////////////////////////
+
+					m_SHTs.clear();
+
+					if ( m_Stats != null)
+					{
+						m_Stats.setActiveSiteHandlerTasks(0);
 					}
 				}
+			}
+			catch (Throwable e)
+			{
+				s_FL_Logger.debug("UpdaterTask: Problem", e);
 			}
 			finally		// (AGR) 31 March 2005. Update the headline count figure
 			{
-				//////////////////////////////////////////////////////////////  (AGR) 26 Feb 2006
-
-				if ( theRowsList != null)
+				try
 				{
-					for ( Object eachMap : theRowsList)
+					//////////////////////////////////////////////////////////////  (AGR) 26 Feb 2006
+
+					if ( theRowsList != null)
 					{
-						((Map) eachMap).clear();
+						for ( Object eachMap : theRowsList)
+						{
+							((Map) eachMap).clear();
+						}
+
+						theRowsList.clear();
 					}
 
-					theRowsList.clear();
-				}
+					//////////////////////////////////////////////////////////////
 
-				//////////////////////////////////////////////////////////////
+					m_PostFeedsCount = m_PostFeedSitesList.size();
 
-				m_PostFeedsCount = m_PostFeedSitesList.size();
+					int	postFeedSuccesses = m_PostFeedsCount - m_FailedPostFeeds.size() - m_TimedOutPostFeeds.size();
+					int	commentFeedTimeouts = m_TimedOutCommentsFeeds.size();
+					int	commentFeedFailures = m_FailedCommentsFeeds.size();
+					int	commentFeedSuccesses = m_CommentsFeedSitesList.size() - commentFeedFailures - commentFeedTimeouts;
 
-				int	postFeedSuccesses = m_PostFeedsCount - m_FailedPostFeeds.size() - m_TimedOutPostFeeds.size();
-				int	commentFeedTimeouts = m_TimedOutCommentsFeeds.size();
-				int	commentFeedFailures = m_FailedCommentsFeeds.size();
-				int	commentFeedSuccesses = m_CommentsFeedSitesList.size() - commentFeedFailures - commentFeedTimeouts;
+					s_FL_Logger.info( m_Install.getLogPrefix() + " >>> PostFeeds:    " + m_PostFeedsCount + " feeds (" + postFeedSuccesses + " suceeded, " + m_FailedPostFeeds.size() + " failed, " + m_TimedOutPostFeeds.size() + " timed out)");
+					s_FL_Logger.info( m_Install.getLogPrefix() + " >>> CommentFeeds: " + m_CommentsFeedSitesList.size() + " feeds (" + commentFeedSuccesses + " suceeded, " + commentFeedFailures + " failed, " + commentFeedTimeouts + " timed out)");
 
-				s_FL_Logger.info( m_Install.getLogPrefix() + " >>> PostFeeds:    " + m_PostFeedsCount + " feeds (" + postFeedSuccesses + " suceeded, " + m_FailedPostFeeds.size() + " failed, " + m_TimedOutPostFeeds.size() + " timed out)");
-				s_FL_Logger.info( m_Install.getLogPrefix() + " >>> CommentFeeds: " + m_CommentsFeedSitesList.size() + " feeds (" + commentFeedSuccesses + " suceeded, " + commentFeedFailures + " failed, " + commentFeedTimeouts + " timed out)");
+					m_SiteRecnosUsed.clear();
 
-				m_SiteRecnosUsed.clear();
+					//////////////////////////////////////////////////////////////
 
-				//////////////////////////////////////////////////////////////
-
-				if ( m_Stats != null)
-				{
-					m_Stats.setLastFeedCheckTimeNow();
-					m_Stats.setActiveSiteHandlerTasks(0);
-					m_Stats.setFeedCount(m_PostFeedsCount);
-
-					// (AGR) 7 October 2005
-
-					m_Stats.setSuccessfulFeedCount(postFeedSuccesses);
-					m_Stats.setFailedFeedsList(m_FailedPostFeeds);
-
-					// (AGR) 29 Nov 2005
-
-					m_Stats.setSuccessfulCommentFeedCount( commentFeedSuccesses );
-					m_Stats.setFailedCommentFeedCount( commentFeedFailures );
-					m_Stats.setTimedOutCommentFeedCount( commentFeedTimeouts );
-					m_Stats.setFailedCommentFeedsList(m_FailedCommentsFeeds);
-				}
-
-				//////////////////////////////////////////////////////////////  (AGR) 18 April 2005 - moved here. Originally 15 April 2005
-
-				generateOPML();
-			}
-
-			///////////////////////////////////////  Are there any URLs in the old list and not in the new one?
-
-			if ( m_LastFeedURLsList != null)
-			{
-				// s_FL_Logger.info("==> lastFeedURLsList = "  + m_LastFeedURLsList);
-
-				if ( m_LastFeedURLsList.removeAll( m_PostFeedSitesList ) && ( m_LastFeedURLsList.size() >= 1))
-				{
-					for ( SiteIF oldEntryObj : m_LastFeedURLsList)
+					if ( m_Stats != null)
 					{
-						ChannelIF	theLastChannel = m_FeedChannels.findURL( oldEntryObj.getFeedURL() );
+						m_Stats.setLastFeedCheckTimeNow();
+						m_Stats.setActiveSiteHandlerTasks(0);
+						m_Stats.setFeedCount(m_PostFeedsCount);
 
-						// s_FL_Logger.info("==> theLastChannel = "  + theLastChannel);
+						// (AGR) 7 October 2005
 
-						if ( theLastChannel != null)
+						m_Stats.setSuccessfulFeedCount(postFeedSuccesses);
+						m_Stats.setFailedFeedsList(m_FailedPostFeeds);
+
+						// (AGR) 29 Nov 2005
+
+						m_Stats.setSuccessfulCommentFeedCount( commentFeedSuccesses );
+						m_Stats.setFailedCommentFeedCount( commentFeedFailures );
+						m_Stats.setTimedOutCommentFeedCount( commentFeedTimeouts );
+						m_Stats.setFailedCommentFeedsList(m_FailedCommentsFeeds);
+					}
+
+					//////////////////////////////////////////////////////////////  (AGR) 18 April 2005 - moved here. Originally 15 April 2005
+
+					generateOPML();
+
+					///////////////////////////////////////  Are there any URLs in the old list and not in the new one?
+
+					if ( m_LastFeedURLsList != null)
+					{
+						// s_FL_Logger.info("==> lastFeedURLsList = "  + m_LastFeedURLsList);
+
+						if ( m_LastFeedURLsList.removeAll( m_PostFeedSitesList ) && ( m_LastFeedURLsList.size() >= 1))
 						{
-							for ( PollerIF eachPoller : m_Install.getPollers())
+							for ( SiteIF oldEntryObj : m_LastFeedURLsList)
 							{
-								eachPoller.unregisterChannel(theLastChannel);
-							}
+								ChannelIF	theLastChannel = m_FeedChannels.findURL( oldEntryObj.getFeedURL() );
 
-							m_Install.getHeadlinesMgr().removeFor(theLastChannel);
+								// s_FL_Logger.info("==> theLastChannel = "  + theLastChannel);
+
+								if ( theLastChannel != null)
+								{
+									for ( PollerIF eachPoller : m_Install.getPollers())
+									{
+										eachPoller.unregisterChannel(theLastChannel);
+									}
+
+									m_Install.getHeadlinesMgr().removeFor(theLastChannel);
+								}
+							}
 						}
 					}
+
+					/////////////////////  (AGR) 27 May 2005. Couldn't get clone() to work with JDK 1.5 !
+
+					m_LastFeedURLsList = new ArrayList<SiteIF>( m_PostFeedSitesList.size() );
+					m_LastFeedURLsList.addAll( m_PostFeedSitesList );
+
+					//////////////////////////////////////////////////////////////
+
+					try
+					{
+						m_DoneObservable.fire();	// (AGR) 21 June 2005
+					}
+					catch (RuntimeException e)		// (AGR) 20 May 2009
+					{
+						s_FL_Logger.error("Observable error", e);
+					}
+
+					//////////////////////////////////////////////////////////////
+
+					for ( String eachFailure : m_FailedPostFeeds)
+					{
+						m_PollerAllocator.failed(eachFailure);
+					}
+
+					//////////////////////////////////////////////////////////////  (AGR) 20 June 2005
+
+					m_Install.getIndexMgr().optimise();
+				}
+				catch (Throwable e2)
+				{
+					s_FL_Logger.debug("UpdaterTask: Finally problem!", e2);
 				}
 			}
-
-			/////////////////////  (AGR) 27 May 2005. Couldn't get clone() to work with JDK 1.5 !
-
-			m_LastFeedURLsList = new ArrayList<SiteIF>( m_PostFeedSitesList.size() );
-			m_LastFeedURLsList.addAll( m_PostFeedSitesList );
-
-			//////////////////////////////////////////////////////////////
-
-			try
-			{
-			m_DoneObservable.fire();	// (AGR) 21 June 2005
-			}
-			catch (RuntimeException e)		// (AGR) 20 May 2009
-			{
-				s_FL_Logger.error("Observable error", e);
-			}
-
-			//////////////////////////////////////////////////////////////
-
-			for ( String eachFailure : m_FailedPostFeeds)
-			{
-				m_PollerAllocator.failed(eachFailure);
-			}
-
-			//////////////////////////////////////////////////////////////  (AGR) 20 June 2005
-
-			m_Install.getIndexMgr().optimise();
 		}
 
 		/*******************************************************************************
