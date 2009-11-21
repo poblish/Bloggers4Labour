@@ -9,6 +9,7 @@ import com.hiatus.text.UText;
 import de.nava.informa.core.ItemEnclosureIF;
 import de.nava.informa.core.ItemGuidIF;
 import de.nava.informa.core.ItemSourceIF;
+import de.nava.informa.impl.basic.ItemGuid;
 import de.nava.informa.utils.ParserUtils;
 import java.net.URL;
 import java.util.ArrayList;
@@ -37,6 +38,8 @@ public class DefaultItemImpl implements ItemIF
 	private URL				m_Link;
 	private String				m_AuthorName;	// (AGR) 4 June 2009
 
+	private String				m_PermLocation;	// (AGR) 18 Nov 2009
+
 	private Collection<de.nava.informa.core.CategoryIF>	m_Categories = Collections.emptyList();
 
 	private final static TimeZone		s_GMTZone = TimeZone.getTimeZone("GMT");	// (AGR) 24 October 2006
@@ -57,6 +60,7 @@ public class DefaultItemImpl implements ItemIF
 	public DefaultItemImpl( final de.nava.informa.core.ItemIF inOriginal, ChannelIF inChannel)
 	{
 		this( inOriginal.getId(),
+			null,
 			_getItemDate(inOriginal),	// Correct these sooner rather than later!!!
 			inOriginal.getTitle(),
 			inOriginal.getDescription(),
@@ -68,7 +72,8 @@ public class DefaultItemImpl implements ItemIF
 
 	/*******************************************************************************
 	*******************************************************************************/
-	private DefaultItemImpl( long inId, final Date inDate, final String inTitle, final String inDesc, final URL inLink,
+	public DefaultItemImpl( long inId, final String inPermLocation,
+					final Date inDate, final String inTitle, final String inDesc, final URL inLink,
 					final String inAuthorName,	// (AGR) 4 June 2009
 					final ChannelIF inChannel,
 					final Collection<de.nava.informa.core.CategoryIF> inCats)
@@ -80,6 +85,8 @@ public class DefaultItemImpl implements ItemIF
 		m_Link = inLink;
 		m_AuthorName = UText.isNullOrBlank(inAuthorName) ? null : inAuthorName;		// (AGR) 4 June 2009
 		m_OurChannel = inChannel;
+
+		m_PermLocation = inPermLocation;
 
 		if (!inCats.isEmpty())
 		{
@@ -196,17 +203,21 @@ public class DefaultItemImpl implements ItemIF
 	*******************************************************************************/
 	@Override public ItemIF clone()
 	{
-		return new DefaultItemImpl( m_Id, m_Date, m_Title, m_Description, m_Link, m_AuthorName, m_OurChannel, m_Categories);
+		return new DefaultItemImpl( m_Id, m_PermLocation, m_Date, m_Title, m_Description, m_Link, m_AuthorName, m_OurChannel, m_Categories);
 	}
 
+	/*******************************************************************************
+	*******************************************************************************/
 	public ItemGuidIF getGuid()
 	{
-		return null;	// new ItemGuid(this);
+		return new ItemGuid( this, m_PermLocation, ( m_PermLocation != null));
 	}
 
+	/*******************************************************************************
+	*******************************************************************************/
 	public void setGuid(ItemGuidIF guid)
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		// NOOP
 	}
 
 	public URL getComments()
