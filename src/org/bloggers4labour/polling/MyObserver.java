@@ -13,6 +13,7 @@ import de.nava.informa.utils.poller.PollerObserverIF;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.Date;
 import org.apache.log4j.Logger;
 import org.bloggers4labour.AddResult;
@@ -90,9 +91,25 @@ public class MyObserver implements PollerObserverIF
 		{
 			if ( inE.getMessage().contains("HTTP response code: 401"))
 			{
-				s_Poll_Logger.warn( m_LogPrefix + "... POLLER ACCESS DENIED for " + inChannel + "! ");
+				s_Poll_Logger.warn( m_LogPrefix + "... POLLER ACCESS DENIED for " + inChannel + "!");
 				return;
 			}
+			else if ( inE.getMessage().contains("HTTP response code: 500"))
+			{
+				s_Poll_Logger.warn( m_LogPrefix + "... POLLER got INTERNAL SERVER ERROR from " + inChannel + "!");
+				return;
+			}
+			else if ( inE.getMessage().contains("HTTP response code: 503"))
+			{
+				s_Poll_Logger.warn( m_LogPrefix + "... POLLER got SERVICE UNAVAILABLE from " + inChannel + "!");
+				return;
+			}
+		}
+
+		if ( inE instanceof UnknownHostException)	// (AGR) 25 November 2009
+		{
+			s_Poll_Logger.warn( m_LogPrefix + "... POLLER UnknownHostException for " + inChannel + "!");
+			return;
 		}
 
 		s_Poll_Logger.warn( m_LogPrefix + "... POLLER ERROR for " + inChannel + "! ", inE);
