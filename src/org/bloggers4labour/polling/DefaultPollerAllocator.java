@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import org.apache.log4j.Logger;
 import org.bloggers4labour.InstallationIF;
@@ -52,13 +51,16 @@ public class DefaultPollerAllocator implements PollerAllocatorIF
 	*******************************************************************************/
 	public Iterable<PollerIF> allocate( final String inFeedURL, final ChannelIF inChannel)
 	{
-		return new Iterable<PollerIF>() {
+		Iterable<PollerIF>	thePollers = m_Map.get(inFeedURL);
 
-			public Iterator<PollerIF> iterator()
-			{
-				return m_Map.get(inFeedURL).iterator();
-			}
-		};
+		if ( thePollers != null)
+		{
+			return thePollers;
+		}
+
+		s_Logger.error("Could not allocate() Pollers for: " + inFeedURL);
+
+		return Collections.emptyList();
 	}
 
 	/*******************************************************************************
