@@ -69,7 +69,7 @@ public class FeedList implements FeedListIF
 
 	private static Logger			s_FL_Logger = Logger.getLogger( FeedList.class );
 
-	private final static long		UPDATER_TIMEOUT_PERIOD = 8;
+	private final static long		UPDATER_TIMEOUT_PERIOD = 12;
 	private final static TimeUnit		UPDATER_TIMEOUT_UNITS = TimeUnit.MINUTES;
 
 	/*******************************************************************************

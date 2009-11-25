@@ -20,6 +20,8 @@ import static org.bloggers4labour.Constants.*;
  */
 public class FeedUpdaterTaskOptions extends AbstractTaskOptionsBean
 {
+	private static final long serialVersionUID = 1L;
+
 	/*******************************************************************************
 	*******************************************************************************/
 	public FeedUpdaterTaskOptions()
@@ -27,7 +29,7 @@ public class FeedUpdaterTaskOptions extends AbstractTaskOptionsBean
 		try
 		{
 			setDelayMsecs( 5 * ONE_SECOND_MSECS);		// 5 seconds
-			setPeriodMsecs( 10 * ONE_MINUTE_MSECS);		// Needn't be very frequent!
+			setPeriodMsecs( 15 * ONE_MINUTE_MSECS);		// Needn't be very frequent!
 		}
 		catch (PropertyVetoException e)
 		{

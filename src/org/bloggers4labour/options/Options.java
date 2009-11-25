@@ -45,7 +45,7 @@ public class Options
 		m_FeedUpdaterTaskOptions = new FeedUpdaterTaskOptions();
 
 		m_IsStoringCategories = true;
-		m_NumSiteHandlerThreads = 12;	// (AGR) 18 Feb 2007. Increased from 6. Cut startup time by 40%!
+		m_NumSiteHandlerThreads = 18;	// (AGR) 25 Nov 2009. Was 12. (AGR) 18 Feb 2007. Increased from 6. Cut startup time by 40%!
 	}
 
 	/*******************************************************************************
