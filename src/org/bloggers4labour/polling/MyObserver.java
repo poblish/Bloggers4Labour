@@ -28,6 +28,11 @@ import org.bloggers4labour.bridge.channel.item.DefaultItemBridgeFactory;
 import org.bloggers4labour.bridge.channel.item.ItemIF;
 import org.bloggers4labour.cats.CategoriesTableIF;
 import org.bloggers4labour.feed.FeedListIF;
+import org.bloggers4labour.feed.check.DefaultFeedCheckerNotification;
+import org.bloggers4labour.feed.check.FeedCheckException;
+import org.bloggers4labour.feed.check.FeedCheckSuccess;
+import org.bloggers4labour.feed.check.FeedCheckerAgentIF;
+import org.bloggers4labour.feed.check.FeedCheckerNotificationIF;
 import org.bloggers4labour.headlines.HeadlineFilter;
 import org.bloggers4labour.headlines.HeadlinesIF;
 import org.bloggers4labour.site.SiteIF;
@@ -38,7 +43,7 @@ import org.bloggers4labour.site.SiteIF;
  */
 /*******************************************************************************
 *******************************************************************************/
-public class MyObserver implements PollerObserverIF
+public class MyObserver implements PollerObserverIF, FeedCheckerAgentIF
 {
 	private InstallationIF	m_Installation;
 	private String		m_LogPrefix;
@@ -83,7 +88,11 @@ public class MyObserver implements PollerObserverIF
 	{
 		if ( inE instanceof SocketTimeoutException)	// (AGR) 13 August 2008
 		{
-			s_Poll_Logger.warn( m_LogPrefix + "... POLLER READ TIMEOUT for " + inChannel + "! ");	// , inE);
+			String	theErrorMsg = "POLLER READ TIMEOUT for " + inChannel;
+
+			notifyFeedCheckListeners( new DefaultFeedCheckerNotification( this, inChannel, new FeedCheckException( theErrorMsg, inE), System.currentTimeMillis()) );
+
+			s_Poll_Logger.warn( m_LogPrefix + "... " + theErrorMsg + "!");
 			return;
 		}
 
@@ -91,34 +100,58 @@ public class MyObserver implements PollerObserverIF
 		{
 			if ( inE.getMessage().contains("HTTP response code: 401"))
 			{
-				s_Poll_Logger.warn( m_LogPrefix + "... POLLER ACCESS DENIED for " + inChannel + "!");
+				String	theErrorMsg = "POLLER ACCESS DENIED for " + inChannel;
+
+				notifyFeedCheckListeners( new DefaultFeedCheckerNotification( this, inChannel, new FeedCheckException( theErrorMsg, inE), System.currentTimeMillis()) );
+
+				s_Poll_Logger.warn( m_LogPrefix + "... " + theErrorMsg + "!");
 				return;
 			}
 			else if ( inE.getMessage().contains("HTTP response code: 500"))
 			{
-				s_Poll_Logger.warn( m_LogPrefix + "... POLLER got INTERNAL SERVER ERROR from " + inChannel + "!");
+				String	theErrorMsg = "POLLER got INTERNAL SERVER ERROR from " + inChannel;
+
+				notifyFeedCheckListeners( new DefaultFeedCheckerNotification( this, inChannel, new FeedCheckException( theErrorMsg, inE), System.currentTimeMillis()) );
+
+				s_Poll_Logger.warn( m_LogPrefix + "... " + theErrorMsg + "!");
 				return;
 			}
 			else if ( inE.getMessage().contains("HTTP response code: 503"))
 			{
-				s_Poll_Logger.warn( m_LogPrefix + "... POLLER got SERVICE UNAVAILABLE from " + inChannel + "!");
+				String	theErrorMsg = "POLLER got SERVICE UNAVAILABLE from " + inChannel;
+
+				notifyFeedCheckListeners( new DefaultFeedCheckerNotification( this, inChannel, new FeedCheckException( theErrorMsg, inE), System.currentTimeMillis()) );
+
+				s_Poll_Logger.warn( m_LogPrefix + "... " + theErrorMsg + "!");
 				return;
 			}
 		}
 
 		if ( inE instanceof UnknownHostException)	// (AGR) 25 November 2009
 		{
-			s_Poll_Logger.warn( m_LogPrefix + "... POLLER UnknownHostException for " + inChannel + "!");
+			String	theErrorMsg = "POLLER UnknownHostException for " + inChannel;
+
+			notifyFeedCheckListeners( new DefaultFeedCheckerNotification( this, inChannel, new FeedCheckException( theErrorMsg, inE), System.currentTimeMillis()) );
+
+			s_Poll_Logger.warn( m_LogPrefix + "... " + theErrorMsg + "!");
 			return;
 		}
 
-		s_Poll_Logger.warn( m_LogPrefix + "... POLLER ERROR for " + inChannel + "! ", inE);
+		//////////////////////////////////////////////////////////////////////////////////////////
+
+		String	theErrorMsg = "POLLER ERROR for " + inChannel;
+
+		notifyFeedCheckListeners( new DefaultFeedCheckerNotification( this, inChannel, new FeedCheckException( theErrorMsg, inE), System.currentTimeMillis()) );
+
+		s_Poll_Logger.warn( m_LogPrefix + "... " + theErrorMsg + "! ", inE);
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
 	public void itemFound( final de.nava.informa.core.ItemIF inItem, final de.nava.informa.core.ChannelIF inChannel)
 	{
+		notifyFeedCheckListeners( new DefaultFeedCheckerNotification( this, inChannel, new FeedCheckSuccess(), System.currentTimeMillis()) );
+
 		////////////////////////////////////////////////////////  (AGR) 21 October 2006. Categories *seemed* to show sync problems. Perhaps not, but I think the sync here is justified.
 
 		CategoriesTableIF	theCatsTable;
@@ -275,6 +308,20 @@ public class MyObserver implements PollerObserverIF
 			{
 				// No need for an error - already done by Headlines!
 			} */
+		}
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	private void notifyFeedCheckListeners( final FeedCheckerNotificationIF inNotification)
+	{
+		try
+		{
+			m_Installation.notifyFeedCheckListeners(inNotification);
+		}
+		catch (Throwable t)
+		{
+			s_Poll_Logger.error( "notifyFeedCheckListeners()", t);
 		}
 	}
 }
