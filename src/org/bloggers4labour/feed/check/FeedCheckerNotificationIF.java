@@ -5,7 +5,7 @@
 
 package org.bloggers4labour.feed.check;
 
-import org.bloggers4labour.bridge.channel.ChannelIF;
+import de.nava.informa.core.ChannelIF;
 
 /**
  *
