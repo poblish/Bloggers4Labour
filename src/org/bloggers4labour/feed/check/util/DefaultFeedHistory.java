@@ -5,6 +5,7 @@
 
 package org.bloggers4labour.feed.check.util;
 
+import de.nava.informa.core.ChannelIF;
 import java.util.HashMap;
 import java.util.Map;
 import org.bloggers4labour.feed.check.FeedCheckerNotificationIF;
@@ -25,18 +26,35 @@ public class DefaultFeedHistory implements FeedHistoryIF
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public void onNotify( final FeedCheckerNotificationIF inNotification)
+	public boolean onNotify( final FeedCheckerNotificationIF inNotification)
 	{
 		MutableFeedHistoryEntryIF	theHistoryEntry = m_Map.get( inNotification.getAffectedURL() );
+		boolean				addedEntry = false;
 
 		if ( theHistoryEntry == null)
 		{
-			theHistoryEntry = new DefaultFeedHistoryEntry();
+			////////////////////////////////////////////////////////////////////////////
 
-			m_Map.put( inNotification.getAffectedURL(), theHistoryEntry);
+			ChannelIF	theChannel = inNotification.getAffectedChannel();
+
+			if ( theChannel != null)	// History entries should appear under *main* Channel URL, not feed URL, so look for those...
+			{
+				theHistoryEntry = m_Map.remove( theChannel.getLocation().toString() );		// If there was one, re-use it, and remove the mapping to the old key
+			}
+
+			////////////////////////////////////////////////////////////////////////////
+
+			if ( theHistoryEntry == null)
+			{
+				theHistoryEntry = new DefaultFeedHistoryEntry();
+			}
+
+			addedEntry = ( m_Map.put( inNotification.getAffectedURL(), theHistoryEntry) == null);
 		}
 
 		_updateHistoryEntry( theHistoryEntry, inNotification);
+
+		return addedEntry;
 	}
 
 	/*******************************************************************************

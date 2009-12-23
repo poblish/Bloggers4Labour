@@ -13,5 +13,5 @@ import org.bloggers4labour.feed.check.FeedCheckerNotificationIF;
  */
 public interface FeedCheckerListenerIF 
 {
-	void onNotify( final FeedCheckerNotificationIF inNotification);
+	boolean onNotify( final FeedCheckerNotificationIF inNotification);
 }

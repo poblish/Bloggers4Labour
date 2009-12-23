@@ -22,10 +22,15 @@ public class SimpleFeedCheckNotificationLogger implements FeedCheckerListenerIF
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public void onNotify( final FeedCheckerNotificationIF inNotification)
+	public boolean onNotify( final FeedCheckerNotificationIF inNotification)
 	{
-		m_History.onNotify(inNotification);
+		boolean	addedEntry = m_History.onNotify(inNotification);
 
-		s_Logger.info( inNotification + " ... " + m_History.size() + " entries");
+		if (addedEntry)
+		{
+			s_Logger.info( inNotification + " ... " + m_History.size() + " entries");
+		}
+
+		return addedEntry;
 	}
 }
