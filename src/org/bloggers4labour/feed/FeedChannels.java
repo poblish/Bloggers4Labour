@@ -22,6 +22,12 @@ import org.apache.log4j.Logger;
 import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.bridge.channel.ChannelIF;
 import org.bloggers4labour.bridge.channel.DefaultChannelBridgeFactory;
+import org.bloggers4labour.feed.check.DefaultFeedCheckerNotification;
+import org.bloggers4labour.feed.check.FeedCheckException;
+import org.bloggers4labour.feed.check.FeedCheckInterrupted;
+import org.bloggers4labour.feed.check.FeedCheckSuccess;
+import org.bloggers4labour.feed.check.FeedCheckTimeout;
+import org.bloggers4labour.feed.check.FeedCheckerNotificationIF;
 import static org.bloggers4labour.Constants.*;
 
 /**
@@ -30,6 +36,8 @@ import static org.bloggers4labour.Constants.*;
  */
 public class FeedChannels implements FeedChannelsIF
 {
+	private final InstallationIF		m_Install;
+
 	private List<FeedChannel>		m_List = new CopyOnWriteArrayList<FeedChannel>();  // (AGR) 21 June 2005
 
 	private static ChannelBuilderIF		s_CBuilder = new MyLimitedChannelBuilder();
@@ -43,8 +51,9 @@ public class FeedChannels implements FeedChannelsIF
 		also to eliminate the slow .toArray() stuff we added to prevent
 		ConcurrentModificationExceptions, plus the manual sync-ing.
 	*******************************************************************************/
-	public FeedChannels()
+	public FeedChannels( final InstallationIF inInstall)
 	{
+		m_Install = inInstall;
 	}
 
 	/*******************************************************************************
@@ -91,6 +100,7 @@ public class FeedChannels implements FeedChannelsIF
 	{
 		ConnectStatus	theStatus = ConnectStatus.FAILURE;	// (AGR) 30 Nov 2005. Assume the worst...
 		String		prefix = inInstall.getLogPrefix();	// (AGR) 20 Feb 2006
+		long		theStartTimeMsecs = System.currentTimeMillis();
 
 		try
 		{
@@ -131,6 +141,8 @@ public class FeedChannels implements FeedChannelsIF
 					{
 						theStatus = ConnectStatus.SUCCESS;
 
+						notifyFeedCheckListeners( new DefaultFeedCheckerNotification( this, inURL, new FeedCheckSuccess(), theStartTimeMsecs) );
+
 //						s_FC_Logger.info( prefix + "connectTo() #" + inThreadID + ": SUCCESS for " + inURL + " (" + numSecs + " secs left)");
 					}
 					else
@@ -142,12 +154,16 @@ public class FeedChannels implements FeedChannelsIF
 				{
 					theStatus = ConnectStatus.TIMEOUT;
 
+					notifyFeedCheckListeners( new DefaultFeedCheckerNotification( this, inURL, new FeedCheckTimeout(), theStartTimeMsecs) );
+
 					s_FC_Logger.info( prefix + "connectTo() #" + inThreadID + ": TIMEOUT for " + inURL);
 					theThread.interrupt();
 				}
 			}
 			catch (InterruptedException e)
 			{
+				notifyFeedCheckListeners( new DefaultFeedCheckerNotification( this, inURL, new FeedCheckInterrupted(), theStartTimeMsecs) );
+
 				s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": InterruptedException for: " + inURL);
 			}
 
@@ -167,45 +183,91 @@ public class FeedChannels implements FeedChannelsIF
 		}
 		catch (NoRouteToHostException e)	// (AGR) 14 August 2005
 		{
-			s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": NoRouteToHost... " + inURL);
+			String	theErrorMsg = "NoRouteToHost... " + inURL;
+
+			notifyFeedCheckListeners( new DefaultFeedCheckerNotification( this, inURL, new FeedCheckException( theErrorMsg, e), theStartTimeMsecs) );
+
+			s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": " + theErrorMsg);
 		}
 		catch (UnknownHostException e)
 		{
+			notifyFeedCheckListeners( new DefaultFeedCheckerNotification( this, inURL, new FeedCheckException(e), theStartTimeMsecs) );
+
 			s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": " + e);
 		}
 		catch (ParseException e)
 		{
-			s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": ParseException for: " + inURL);
+			String	theErrorMsg = "ParseException for: " + inURL;
+
+			notifyFeedCheckListeners( new DefaultFeedCheckerNotification( this, inURL, new FeedCheckException( theErrorMsg, e), theStartTimeMsecs) );
+
+			s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": " + theErrorMsg);
 		}
 		catch (SocketException e)
 		{
-			s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": SocketException for \"" + inURL + "\" was " + e);
+			String	theErrorMsg = "SocketException for \"" + inURL + "\" was " + e;
+
+			notifyFeedCheckListeners( new DefaultFeedCheckerNotification( this, inURL, new FeedCheckException( theErrorMsg, e), theStartTimeMsecs) );
+
+			s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": " + theErrorMsg);
 		}
 		catch (FileNotFoundException e)		// (AGR) 5 June 2005
 		{
+			notifyFeedCheckListeners( new DefaultFeedCheckerNotification( this, inURL, new FeedCheckException(e), theStartTimeMsecs) );
+
 			s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": " + e);
 		}
 		catch (UTFDataFormatException e)	// (AGR) 23 August 2008
 		{
-			s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": UTFDataFormatException for \"" + inURL + "\" was " + e.getMessage());
+			String	theErrorMsg = "UTFDataFormatException for \"" + inURL + "\" was " + e.getMessage();
+
+			notifyFeedCheckListeners( new DefaultFeedCheckerNotification( this, inURL, new FeedCheckException( theErrorMsg, e), theStartTimeMsecs) );
+
+			s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": " + theErrorMsg);
 		}
 		catch (IOException e)
 		{
+			String	theErrorMsg;
+
 			if ( e.getMessage().contains("HTTP response code: 401"))	// (AGR) 2 November 2009
 			{
-				s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": Access DENIED for: " + inURL);
+				theErrorMsg = "Access DENIED for: " + inURL;
+
+				s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": " + theErrorMsg);
 			}
 			else
 			{
-				s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": IOException for: " + inURL, e);
+				theErrorMsg = "IOException for: " + inURL;
+
+				s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": " + theErrorMsg, e);
 			}
+
+			notifyFeedCheckListeners( new DefaultFeedCheckerNotification( this, inURL, new FeedCheckException( theErrorMsg, e), theStartTimeMsecs) );
 		}
 		catch (Exception e)			// (AGR) 30 Nov 2005
 		{
-			s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": Exception for: " + inURL, e);
+			String	theErrorMsg = "Exception for: " + inURL;
+
+			notifyFeedCheckListeners( new DefaultFeedCheckerNotification( this, inURL, new FeedCheckException( theErrorMsg, e), theStartTimeMsecs) );
+
+			s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": " + theErrorMsg, e);
 		}
 
 		return new ConnectResult( null, theStatus);
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	private void notifyFeedCheckListeners( final FeedCheckerNotificationIF inNotification)
+	{
+		try
+		{
+			m_Install.notifyFeedCheckListeners(inNotification);
+		}
+		catch (Throwable t)
+		{
+			s_FC_Logger.error( "notifyFeedCheckListeners()", t);
+		}
 	}
 
 	/*******************************************************************************

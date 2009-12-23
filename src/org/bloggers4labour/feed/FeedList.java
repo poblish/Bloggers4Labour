@@ -53,7 +53,7 @@ public class FeedList implements FeedListIF
 
 	private ArrayList<SiteIF>		m_LastFeedURLsList;
 
-	private FeedChannelsIF			m_FeedChannels = new FeedChannels();
+	private final FeedChannelsIF		m_FeedChannels;
 	private ScheduledExecutorService	m_USTPE = null;
 	private ScheduledExecutorService	m_STPE = null;
 	private UpdaterTask			m_UpdateTask;
@@ -77,6 +77,9 @@ public class FeedList implements FeedListIF
 	public FeedList( InstallationIF inInstall)
 	{
 		m_Install = inInstall;
+
+		m_FeedChannels = new FeedChannels(inInstall);
+
 		m_Stats = m_Install.getManagement().getStats();    // (AGR) 1 June 2005. Store a reference to this
 	}
 

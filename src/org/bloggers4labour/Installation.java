@@ -27,6 +27,9 @@ import org.bloggers4labour.activity.LastPostTableIF;
 import org.bloggers4labour.cats.CategoriesTable;
 import org.bloggers4labour.cats.CategoriesTableIF;
 import org.bloggers4labour.feed.*;
+import org.bloggers4labour.feed.check.FeedCheckerNotificationIF;
+import org.bloggers4labour.feed.check.consume.FeedCheckerListenerIF;
+import org.bloggers4labour.feed.check.consume.SimpleFeedCheckNotificationLogger;
 import org.bloggers4labour.index.IndexMgr;
 import org.bloggers4labour.installation.tasks.InstallationTaskIF;
 import org.bloggers4labour.jmx.Management;
@@ -64,6 +67,8 @@ public class Installation implements InstallationIF
 	private Collection<InstallationTaskIF>		m_Tasks;		// (AGR) 27 October 2008
 	private ScheduledExecutorService		m_TasksExecutor;	// (AGR) 27 October 2008
 
+	private Collection<FeedCheckerListenerIF>	m_FeedCheckerListeners = new ArrayList<FeedCheckerListenerIF>();	// (AGR) 23 Dec 2009
+
 	private static Logger		s_Install_Logger = Logger.getLogger( Installation.class );
 
 	/*******************************************************************************
@@ -96,6 +101,8 @@ public class Installation implements InstallationIF
 				eachPoller.setInstallation(this);
 			}
 		}
+
+		addFeedCheckListener( new SimpleFeedCheckNotificationLogger() );
 
 		// must call: complete() at some point!
 	}
@@ -314,6 +321,37 @@ public class Installation implements InstallationIF
 	public DigestSenderIF getDigestSender()
 	{
 		return m_DigestSender;
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public void notifyFeedCheckListeners( final FeedCheckerNotificationIF inNotification)
+	{
+		for ( FeedCheckerListenerIF eachListener : m_FeedCheckerListeners)
+		{
+			eachListener.onNotify(inNotification);
+		}
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public Collection<FeedCheckerListenerIF> getFeedCheckerListeners()
+	{
+		return m_FeedCheckerListeners;
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public void addFeedCheckListener( final FeedCheckerListenerIF inListener)
+	{
+		m_FeedCheckerListeners.add(inListener);
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public void removeFeedCheckListener( final FeedCheckerListenerIF inListener)
+	{
+		m_FeedCheckerListeners.remove(inListener);
 	}
 
 	/*******************************************************************************

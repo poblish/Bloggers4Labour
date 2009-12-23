@@ -16,6 +16,8 @@ import javax.sql.DataSource;
 import org.bloggers4labour.activity.LastPostTableIF;
 import org.bloggers4labour.cats.CategoriesTableIF;
 import org.bloggers4labour.feed.FeedListIF;
+import org.bloggers4labour.feed.check.consume.FeedCheckerConsumerDelegateIF;
+import org.bloggers4labour.feed.check.consume.FeedCheckerListenerIF;
 import org.bloggers4labour.index.IndexMgr;
 import org.bloggers4labour.index.IndexMgrIF;
 import org.bloggers4labour.installation.tasks.InstallationTaskIF;
@@ -28,7 +30,7 @@ import org.bloggers4labour.sql.QueryBuilderIF;
  *
  * @author andrewre
  */
-public interface InstallationIF
+public interface InstallationIF extends FeedCheckerConsumerDelegateIF
 {
 	public String getName();
 
@@ -64,4 +66,6 @@ public interface InstallationIF
 	void setHeadlinesMgr( HeadlinesMgr inHeadsMgr);
 	void setIndexMgr( IndexMgr inIndexMgr);
 	void complete();
+
+	Collection<FeedCheckerListenerIF> getFeedCheckerListeners();
 }

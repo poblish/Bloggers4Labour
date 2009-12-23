@@ -6,7 +6,7 @@
 package org.bloggers4labour.installation;
 
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import javax.sql.DataSource;
@@ -17,6 +17,8 @@ import org.bloggers4labour.activity.LastPostTableIF;
 import org.bloggers4labour.cats.CategoriesTableIF;
 import org.bloggers4labour.feed.FeedList;
 import org.bloggers4labour.feed.FeedListIF;
+import org.bloggers4labour.feed.check.FeedCheckerNotificationIF;
+import org.bloggers4labour.feed.check.consume.FeedCheckerListenerIF;
 import org.bloggers4labour.index.IndexMgr;
 import org.bloggers4labour.installation.tasks.InstallationTaskIF;
 import org.bloggers4labour.jmx.Management;
@@ -116,13 +118,7 @@ public class DummyInstallationImpl implements InstallationIF
 
 	public Iterable<? extends InstallationTaskIF> getTasks()
 	{
-		return new Iterable<InstallationTaskIF>() {
-
-			public Iterator<InstallationTaskIF> iterator()
-			{
-				throw new UnsupportedOperationException("Not supported yet.");
-			}
-		};
+		return Collections.emptyList();
 	}
 
 	public void setTasks(Collection<InstallationTaskIF> inTasks)
@@ -171,6 +167,26 @@ public class DummyInstallationImpl implements InstallationIF
 	}
 
 	public void complete()
+	{
+		// NOOP
+	}
+
+	public void notifyFeedCheckListeners(FeedCheckerNotificationIF inNotification)
+	{
+		// NOOP
+	}
+
+	public Collection<FeedCheckerListenerIF> getFeedCheckerListeners()
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	public void addFeedCheckListener(FeedCheckerListenerIF inListener)
+	{
+		// NOOP
+	}
+
+	public void removeFeedCheckListener(FeedCheckerListenerIF inListener)
 	{
 		// NOOP
 	}
