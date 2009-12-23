@@ -5,8 +5,8 @@
 
 package org.bloggers4labour.feed.check;
 
+import de.nava.informa.core.ChannelIF;
 import java.util.Date;
-import org.bloggers4labour.bridge.channel.ChannelIF;
 
 /**
  *
@@ -26,6 +26,13 @@ public class DefaultFeedCheckerNotification implements FeedCheckerNotificationIF
 	public DefaultFeedCheckerNotification( final FeedCheckerAgentIF inAgent, final String inURL, final FeedCheckResultIF inResult, long inStartTimeMS)
 	{
 		this( inAgent, inURL, inResult, inStartTimeMS, System.currentTimeMillis());
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public DefaultFeedCheckerNotification( final FeedCheckerAgentIF inAgent, final ChannelIF inChannel, final FeedCheckResultIF inResult, long inStartTimeMS)
+	{
+		this( inAgent, inChannel, inResult, inStartTimeMS, System.currentTimeMillis());
 	}
 
 	/*******************************************************************************
