@@ -21,6 +21,10 @@ import org.bloggers4labour.activity.LastPostTableIF;
 import org.bloggers4labour.bridge.channel.ChannelIF;
 import org.bloggers4labour.bridge.channel.item.ItemIF;
 import org.bloggers4labour.cats.CategoriesTableIF;
+import org.bloggers4labour.feed.check.DefaultFeedCheckerNotification;
+import org.bloggers4labour.feed.check.FeedCheckSuccess;
+import org.bloggers4labour.feed.check.FeedCheckerAgentIF;
+import org.bloggers4labour.feed.check.FeedCheckerNotificationIF;
 import org.bloggers4labour.headlines.HeadlineFilter;
 import org.bloggers4labour.headlines.HeadlinesIF;
 import org.bloggers4labour.site.SiteIF;
@@ -29,7 +33,7 @@ import org.bloggers4labour.site.SiteIF;
  *
  * @author andrewre
  */
-public abstract class Poller implements PollerIF
+public abstract class Poller implements PollerIF, FeedCheckerAgentIF
 {
 	protected InstallationIF	m_Installation;
 	protected String		m_Name;
@@ -67,6 +71,10 @@ public abstract class Poller implements PollerIF
 	*******************************************************************************/
 	private void _processChannelItems( final SiteIF inSite, final ChannelIF inChannel, long inCurrentTimeMSecs)
 	{
+		notifyFeedCheckListeners( new DefaultFeedCheckerNotification( this, inChannel, new FeedCheckSuccess(), inCurrentTimeMSecs) );
+
+		/////////////////////////////////////////////////////////////////////////
+
 		ItemIF[]	theItemsArray = _getChannelItemsArray(inChannel);
 
 		if ( theItemsArray.length > 0)
@@ -196,6 +204,10 @@ public abstract class Poller implements PollerIF
 	*******************************************************************************/
 	private void _processCommentChannelItems( final SiteIF inSite, final ChannelIF inChannel, long inCurrentTimeMSecs)
 	{
+		notifyFeedCheckListeners( new DefaultFeedCheckerNotification( this, inChannel, new FeedCheckSuccess(), inCurrentTimeMSecs) );
+
+		/////////////////////////////////////////////////////////////////////////
+
 		ItemIF[]	theItemsArray = _getChannelItemsArray(inChannel);
 		HeadlinesMgr	theHMgr = m_Installation.getHeadlinesMgr();
 		int[]		hCommentsCountArray = new int[ theHMgr.getHeadlinesCount() ];
@@ -342,5 +354,19 @@ public abstract class Poller implements PollerIF
 	protected String getLogPrefix()
 	{
 		return (( m_Installation != null) ? m_Installation.getLogPrefix() : "[???]") + "['" + m_Name + "'] ";
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	private void notifyFeedCheckListeners( final FeedCheckerNotificationIF inNotification)
+	{
+		try
+		{
+			m_Installation.notifyFeedCheckListeners(inNotification);
+		}
+		catch (Throwable t)
+		{
+			s_Poll_Logger.error( "notifyFeedCheckListeners()", t);
+		}
 	}
 }
