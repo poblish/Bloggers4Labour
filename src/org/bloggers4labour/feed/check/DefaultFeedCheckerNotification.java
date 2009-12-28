@@ -82,7 +82,7 @@ public class DefaultFeedCheckerNotification implements FeedCheckerNotificationIF
 	*******************************************************************************/
 	public String getAffectedURL()
 	{
-		return ( m_AffectedChannel != null) ? m_AffectedChannel.getSite().toString() : m_AffectedURL;
+		return ( m_AffectedChannel != null) ? m_AffectedChannel.getLocation().toString() : m_AffectedURL;
 	}
 
 	/*******************************************************************************

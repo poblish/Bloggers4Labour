@@ -5,9 +5,9 @@
 
 package org.bloggers4labour.feed.check.util;
 
-import de.nava.informa.core.ChannelIF;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.log4j.Logger;
 import org.bloggers4labour.feed.check.FeedCheckerNotificationIF;
 
 /**
@@ -16,7 +16,9 @@ import org.bloggers4labour.feed.check.FeedCheckerNotificationIF;
  */
 public class DefaultFeedHistory implements FeedHistoryIF
 {
-	private Map<String,MutableFeedHistoryEntryIF>		m_Map = new HashMap<String,MutableFeedHistoryEntryIF>();
+	private final Map<String,MutableFeedHistoryEntryIF>	m_Map = new HashMap<String,MutableFeedHistoryEntryIF>();
+
+	private static Logger					s_Logger = Logger.getLogger( DefaultFeedHistory.class );
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -28,45 +30,74 @@ public class DefaultFeedHistory implements FeedHistoryIF
 	*******************************************************************************/
 	public boolean onNotify( final FeedCheckerNotificationIF inNotification)
 	{
-		MutableFeedHistoryEntryIF	theHistoryEntry = m_Map.get( inNotification.getAffectedURL() );
+		MutableFeedHistoryEntryIF	theHistoryEntry;
 		boolean				addedEntry = false;
 
-		if ( theHistoryEntry == null)
+		synchronized (m_Map)
 		{
-			////////////////////////////////////////////////////////////////////////////
-
-			ChannelIF	theChannel = inNotification.getAffectedChannel();
-
-			if ( theChannel != null)	// History entries should appear under *main* Channel URL, not feed URL, so look for those...
-			{
-				theHistoryEntry = m_Map.remove( theChannel.getLocation().toString() );		// If there was one, re-use it, and remove the mapping to the old key
-			}
-
-			////////////////////////////////////////////////////////////////////////////
+			theHistoryEntry = m_Map.get( inNotification.getAffectedURL() );
 
 			if ( theHistoryEntry == null)
 			{
 				theHistoryEntry = new DefaultFeedHistoryEntry();
-			}
 
-			addedEntry = ( m_Map.put( inNotification.getAffectedURL(), theHistoryEntry) == null);
+				addedEntry = ( m_Map.put( inNotification.getAffectedURL(), theHistoryEntry) == null);
+			}
 		}
 
-		_updateHistoryEntry( theHistoryEntry, inNotification);
+		if (_updateHistoryEntry( theHistoryEntry, inNotification))
+		{
+			s_Logger.trace("UPDATE: " + inNotification + " ... (" + size() + " entries)");
+		}
 
 		return addedEntry;
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	private void _updateHistoryEntry( final MutableFeedHistoryEntryIF ioHistoryEntry,
-					  final FeedCheckerNotificationIF inNewNotification)
+	public FeedHistoryEntryIF getForURL( final String inURL)
+	{
+		synchronized (m_Map)
+		{
+			return m_Map.get(inURL);
+		}
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public int size()
+	{
+		synchronized (m_Map)
+		{
+			return m_Map.size();
+		}
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	@Override public String toString()
+	{
+		StringBuilder	sb = new StringBuilder();
+
+		synchronized (m_Map)
+		{
+			sb.append("[DefaultFeedHistory: ").append(m_Map).append("]");
+		}
+
+		return sb.toString();
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	private boolean _updateHistoryEntry( final MutableFeedHistoryEntryIF ioHistoryEntry,
+						final FeedCheckerNotificationIF inNewNotification)
 	{
 		if (inNewNotification.wasSuccess())
 		{
 			if (_isMoreRecent( inNewNotification, ioHistoryEntry.getLastSuccess()))
 			{
 				ioHistoryEntry.setLastSuccess(inNewNotification);
+				return true;
 			}
 		}
 		else if (inNewNotification.wasFailure())
@@ -74,6 +105,7 @@ public class DefaultFeedHistory implements FeedHistoryIF
 			if (_isMoreRecent( inNewNotification, ioHistoryEntry.getLastFailure()))
 			{
 				ioHistoryEntry.setLastFailure(inNewNotification);
+				return true;
 			}
 		}
 		else if (inNewNotification.wasTimeout())
@@ -81,12 +113,15 @@ public class DefaultFeedHistory implements FeedHistoryIF
 			if (_isMoreRecent( inNewNotification, ioHistoryEntry.getLastTimeout()))
 			{
 				ioHistoryEntry.setLastTimeout(inNewNotification);
+				return true;
 			}
 		}
 		else
 		{
 			throw new RuntimeException("Unknown Notification state: " + inNewNotification);
 		}
+
+		return false;
 	}
 
 	/*******************************************************************************
@@ -94,20 +129,6 @@ public class DefaultFeedHistory implements FeedHistoryIF
 	private boolean _isMoreRecent( final FeedCheckerNotificationIF inNewNotification, final FeedCheckerNotificationIF inExistingNotification)
 	{
 		return ( inExistingNotification == null || ( inNewNotification.getTaskFinishTime() >= inExistingNotification.getTaskFinishTime()));	// heard from it since then...
-	}
-
-	/*******************************************************************************
-	*******************************************************************************/
-	public FeedHistoryEntryIF getForURL( final String inURL)
-	{
-		return m_Map.get(inURL);
-	}
-
-	/*******************************************************************************
-	*******************************************************************************/
-	public int size()
-	{
-		return m_Map.size();
 	}
 
 	/*******************************************************************************
