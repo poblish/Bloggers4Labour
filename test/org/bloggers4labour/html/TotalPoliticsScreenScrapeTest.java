@@ -32,7 +32,7 @@ public class TotalPoliticsScreenScrapeTest
 {
 	/*******************************************************************************
 	*******************************************************************************/
-	public void testLabourBlogScrape()
+	@Test public void testLabourBlogScrape()
 	{
 		testPoliticalPartyScrape( 2, false);
 	}
@@ -99,7 +99,12 @@ public class TotalPoliticsScreenScrapeTest
 
 		////////////////////////////////////////////////////////////////
 
-		System.out.println(theColl);
+		for ( BlogEntry each : theColl)
+		{
+			System.out.println( each.name + " | " + each.siteURL);
+		}
+
+		////////////////////////////////////////////////////////////////
 
 		if (inTryToSubmitToB4L)
 		{
