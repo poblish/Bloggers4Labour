@@ -32,7 +32,21 @@ public class TotalPoliticsScreenScrapeTest
 {
 	/*******************************************************************************
 	*******************************************************************************/
-	@Test public void testDates()
+	public void testLabourBlogScrape()
+	{
+		testPoliticalPartyScrape( 2, false);
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	@Test public void testToryBlogScrape()
+	{
+		testPoliticalPartyScrape( 1, false);
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	private void testPoliticalPartyScrape( int inPartyId, boolean inTryToSubmitToB4L)
 	{
 		NodeFilter		theFilter = new AndFilter( new TagNameFilter("A"), new HasParentFilter( new TagNameFilter("DIV") ));
 		Collection<BlogEntry>	theColl = new ArrayList<BlogEntry>();
@@ -42,7 +56,7 @@ public class TotalPoliticsScreenScrapeTest
 		{
 			try
 			{
-				String		theURL = "http://www.totalpolitics.com/politicalblogs/blogs.php?party_id=2&start=" + startIndex;
+				String		theURL = "http://www.totalpolitics.com/politicalblogs/blogs.php?party_id=" + inPartyId + "&start=" + startIndex;
 
 				System.out.println("Requesting: " + theURL + " (count = " + theColl.size() + ")");
 
@@ -87,17 +101,20 @@ public class TotalPoliticsScreenScrapeTest
 
 		System.out.println(theColl);
 
-		for ( BlogEntry each : theColl)
+		if (inTryToSubmitToB4L)
 		{
-			try
+			for ( BlogEntry each : theColl)
 			{
-				String	theURL = each.toURL();
+				try
+				{
+					String	theURL = each.toURL();
 
-				_requestURL(theURL);
-			}
-			catch (UnsupportedEncodingException e)
-			{
-				// e.printStackTrace();
+					_requestURL(theURL);
+				}
+				catch (UnsupportedEncodingException e)
+				{
+					// e.printStackTrace();
+				}
 			}
 		}
 	}
