@@ -16,9 +16,9 @@ import org.bloggers4labour.feed.check.FeedCheckerNotificationIF;
  */
 public class DefaultFeedHistory implements FeedHistoryIF
 {
-	private final Map<String,MutableFeedHistoryEntryIF>	m_Map = new HashMap<String,MutableFeedHistoryEntryIF>();
+	private final Map<String,FeedHistoryEntryIF>	m_Map = new HashMap<String,FeedHistoryEntryIF>();
 
-	private static Logger					s_Logger = Logger.getLogger( DefaultFeedHistory.class );
+	private static Logger				s_Logger = Logger.getLogger( DefaultFeedHistory.class );
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -35,7 +35,7 @@ public class DefaultFeedHistory implements FeedHistoryIF
 
 		synchronized (m_Map)
 		{
-			theHistoryEntry = m_Map.get( inNotification.getAffectedURL() );
+			theHistoryEntry = (MutableFeedHistoryEntryIF) m_Map.get( inNotification.getAffectedURL() );
 
 			if ( theHistoryEntry == null)
 			{
@@ -60,6 +60,16 @@ public class DefaultFeedHistory implements FeedHistoryIF
 		synchronized (m_Map)
 		{
 			return m_Map.get(inURL);
+		}
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public Iterable<FeedHistoryEntryIF> entries()
+	{
+		synchronized (m_Map)
+		{
+			return m_Map.values();
 		}
 	}
 

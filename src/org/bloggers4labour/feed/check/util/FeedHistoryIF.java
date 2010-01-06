@@ -15,5 +15,7 @@ public interface FeedHistoryIF extends FeedCheckerListenerIF
 {
 	FeedHistoryEntryIF getForURL( final String inURL);
 
+	Iterable<FeedHistoryEntryIF> entries();
+
 	int size();
 }
