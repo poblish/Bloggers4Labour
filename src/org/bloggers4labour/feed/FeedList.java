@@ -34,6 +34,7 @@ import org.bloggers4labour.favicon.FaviconManager;
 import org.bloggers4labour.jmx.Stats;
 import org.bloggers4labour.opml.OPMLGenerator;
 import org.bloggers4labour.opml.OPMLGeneratorIF;
+import org.bloggers4labour.opml.OPMLHandlerIF;
 import org.bloggers4labour.options.Options;
 import org.bloggers4labour.options.TaskOptionsBeanIF;
 import org.bloggers4labour.polling.DefaultPollerAllocator;
@@ -58,8 +59,7 @@ public class FeedList implements FeedListIF
 	private ScheduledExecutorService	m_STPE = null;
 	private UpdaterTask			m_UpdateTask;
 
-	private OPMLGeneratorIF			m_OPMLGenerator;				// (AGR) 15 April 2005
-	private String				m_OPML_OutputStr;				// (AGR) 15 April 2005
+	private OPMLHandlerIF			m_OPMLHandler;					// (AGR) 11 January 2010
 	private int				m_PostFeedsCount;				// (AGR) 31 March 2005
 	private Stats				m_Stats;					// (AGR) 1 June 2005. 3 Feb 2007: removed transient
 
@@ -149,9 +149,9 @@ public class FeedList implements FeedListIF
 			s_FL_Logger.info( prefix + "FeedList: left in m_STPE: " + l2);
 		}
 
-		if ( m_OPMLGenerator != null)
+		if ( m_OPMLHandler != null)
 		{
-			m_OPMLGenerator = null;
+			m_OPMLHandler.disconnect();
 		}
 
 		/////////////////////////////////  (AGR) 5 June 2005
@@ -162,22 +162,6 @@ public class FeedList implements FeedListIF
 		m_CommentsFeedSitesList.clear();
 
 		m_LastFeedURLsList = null;
-		m_OPML_OutputStr = null;
-	}
-
-	/*******************************************************************************
-		(AGR) 9 June 2005 - confusion/race conditions could conspire so that
-		we had a NULL generator when we fully expected to have a good one, e.g.
-		when 'generateOPML()' was seen to get called before 'connect()'
-		finished. Hopefully this 'lazy' instantiation will help.
-	*******************************************************************************/
-	public synchronized void obtainOPMLGenerator()
-	{
-		if ( m_OPMLGenerator == null)
-		{
-			m_OPMLGenerator = new OPMLGenerator();
-			s_FL_Logger.info( m_Install.getLogPrefix() + "created " + m_OPMLGenerator);
-		}
 	}
 
 	/*******************************************************************************
@@ -394,22 +378,23 @@ public class FeedList implements FeedListIF
 
 	/*******************************************************************************
 	*******************************************************************************/
+	public void setOPMLHandler( final OPMLHandlerIF inHandler)
+	{
+		m_OPMLHandler = inHandler;
+	}
+
+	/*******************************************************************************
+		(AGR) 9 June 2005 - confusion/race conditions could conspire so that
+		we had a NULL generator when we fully expected to have a good one, e.g.
+		when 'generateOPML()' was seen to get called before 'connect()'
+		finished. Hopefully this 'lazy' instantiation will help.
+	*******************************************************************************/
 	public void generateOPML()
 	{
-			obtainOPMLGenerator();    // (AGR) 9 June 2005. Lazy instantiation...
-
-			try
-			{
-			m_OPML_OutputStr = m_OPMLGenerator.generate( getArrayToTraverse() );
-
-				// s_FL_Logger.info( m_Install.getLogPrefix() + "OPML_OutputStr = " + m_OPML_OutputStr);
-			}
-			catch (IOException e)
-			{
-				s_FL_Logger.info( m_Install.getLogPrefix() + "OPML serialization failed", e);
-			}
-
-		// s_FL_Logger.info( m_Install.getLogPrefix() + "generateOPML() DONE");
+		if ( m_OPMLHandler != null)
+		{
+			m_OPMLHandler.generate( getArrayToTraverse() );
+		}
 	}
 
 	/*******************************************************************************
@@ -417,7 +402,7 @@ public class FeedList implements FeedListIF
 	*******************************************************************************/
 	public String getOPMLOutputStr()
 	{
-		return m_OPML_OutputStr;
+		return ( m_OPMLHandler != null) ? m_OPMLHandler.getOPMLString() : "";
 	}
 
 	/*******************************************************************************
@@ -773,7 +758,10 @@ public class FeedList implements FeedListIF
 
 			try
 			{
-				m_OPML_OutputStr = null;	// (AGR) 15 April 2005
+				if ( m_OPMLHandler != null)
+				{
+					m_OPMLHandler.clear();
+				}
 
 				m_PostFeedSitesList.clear();
 				m_CommentsFeedSitesList.clear();

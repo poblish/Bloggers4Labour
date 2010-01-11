@@ -35,6 +35,7 @@ import org.bloggers4labour.installation.tasks.InstallationTaskIF;
 import org.bloggers4labour.jmx.Management;
 import org.bloggers4labour.mail.DigestSender;
 import org.bloggers4labour.mail.DigestSenderIF;
+import org.bloggers4labour.opml.DefaultOPMLHandler;
 import org.bloggers4labour.polling.PollerIF;
 import org.bloggers4labour.sql.QueryBuilder;
 import org.bloggers4labour.sql.QueryBuilderIF;
@@ -89,6 +90,7 @@ public class Installation implements InstallationIF
 		m_MaxItemAgeMSecs = inMaxItemAgeMSecs;
 
 		m_FeedList = new FeedList(this);
+		m_FeedList.setOPMLHandler( new DefaultOPMLHandler(this) );
 
 		m_LastPostTable = new LastPostTable( m_FeedList, m_Name.equals("b4l"));		// (AGR) 9 Sep 2006
 

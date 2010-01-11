@@ -7,8 +7,8 @@ package org.bloggers4labour.feed;
 
 import java.util.List;
 import java.util.Observer;
-import org.bloggers4labour.Site;
 import org.bloggers4labour.bridge.channel.ChannelIF;
+import org.bloggers4labour.opml.OPMLHandlerIF;
 import org.bloggers4labour.site.SiteIF;
 
 /**
@@ -19,6 +19,7 @@ public interface FeedListIF
 {
 	public void addObserver( Observer inObs);
 
+	void setOPMLHandler( final OPMLHandlerIF inHandler);
 	public void generateOPML();
 
 	public int countReferencedItems();
