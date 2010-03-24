@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.bridge.channel.ChannelIF;
 import org.bloggers4labour.bridge.channel.DefaultChannelBridgeFactory;
+import org.bloggers4labour.feed.api.FeedChannelIF;
 import org.bloggers4labour.feed.check.DefaultFeedCheckerNotification;
 import org.bloggers4labour.feed.check.FeedCheckException;
 import org.bloggers4labour.feed.check.FeedCheckInterrupted;
@@ -34,14 +35,14 @@ import static org.bloggers4labour.Constants.*;
  *
  * @author andrewre
  */
-public class FeedChannels implements FeedChannelsIF
+public class FeedChannels implements MutableFeedChannelsIF
 {
 	private final InstallationIF		m_Install;
 
-	private List<FeedChannel>		m_List = new CopyOnWriteArrayList<FeedChannel>();  // (AGR) 21 June 2005
+	private final List<FeedChannelIF>	m_List = new CopyOnWriteArrayList<FeedChannelIF>();  // (AGR) 21 June 2005
 
-	private static ChannelBuilderIF		s_CBuilder = new MyLimitedChannelBuilder();
-	private static Logger			s_FC_Logger = Logger.getLogger( FeedChannels.class );
+	private final static ChannelBuilderIF	s_CBuilder = new MyLimitedChannelBuilder();
+	private final static Logger		s_FC_Logger = Logger.getLogger( FeedChannels.class );
 
 	/*******************************************************************************
 		(AGR) 21 June 2005. Changes... generally the list of Channels will
@@ -58,7 +59,14 @@ public class FeedChannels implements FeedChannelsIF
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public ChannelIF findURL( String inURL)
+	public Iterable<FeedChannelIF> getChannels()
+	{
+		return m_List;
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public ChannelIF findURL( final String inURL)
 	{
 		// s_FC_Logger.info("findURL(): url = " + inURL + ", this = " + this);
 
@@ -69,11 +77,11 @@ public class FeedChannels implements FeedChannelsIF
 
 		///////////////////////////////////////////////////////////////  Post-21 June 2005
 
-		for ( FeedChannel fc : m_List)
+		for ( FeedChannelIF fc : m_List)
 		{
-			if (( fc.m_URL != null) && fc.m_URL.equalsIgnoreCase(inURL))
+			if ( fc.getURL() != null && fc.getURL().equalsIgnoreCase(inURL))
 			{
-				return fc.m_Channel;
+				return fc.getChannel();
 			}
 		}
 
@@ -271,29 +279,6 @@ public class FeedChannels implements FeedChannelsIF
 	}
 
 	/*******************************************************************************
-	*******************************************************************************/
-	private static class FeedChannel
-	{
-		public String		m_URL;
-		public ChannelIF	m_Channel;
-
-		/*******************************************************************************
-		*******************************************************************************/
-		public FeedChannel( String a, ChannelIF b)
-		{
-			m_URL = a;
-			m_Channel = b;
-		}
-
-		/*******************************************************************************
-		*******************************************************************************/
-		@Override public String toString()
-		{
-			return "[url=\"" + m_URL + "\",Channel=" + m_Channel + "]";
-		}
-	}
-
-	/*******************************************************************************
 		(AGR) 30 Nov 2005
 	*******************************************************************************/
 	private static class ParserThreadStorage
@@ -306,7 +291,7 @@ public class FeedChannels implements FeedChannelsIF
 	/*******************************************************************************
 		(AGR) 30 Nov 2005
 	*******************************************************************************/
-	private static class ParserThread extends Thread
+	private static class ParserThread extends Thread	// NOPMD
 	{
 		private int			m_ThreadID;
 		private String			m_URL;
@@ -314,7 +299,7 @@ public class FeedChannels implements FeedChannelsIF
 
 		/*******************************************************************************
 		*******************************************************************************/
-		public ParserThread( int inThreadID, String inURL, ParserThreadStorage inStorage)
+		public ParserThread( final int inThreadID, final String inURL, final ParserThreadStorage inStorage)
 		{
 			m_ThreadID = inThreadID;
 			m_URL = inURL;
@@ -332,12 +317,12 @@ public class FeedChannels implements FeedChannelsIF
 				m_Storage.channel = new DefaultChannelBridgeFactory().getInstance().bridge( FeedParser.parse( s_CBuilder, m_URL) );
 				m_Storage.completed = true;
 			}
-			catch (NullPointerException ex)    // (AGR) 7 October 2005. Improve error handling
+			catch (NullPointerException ex)    // (AGR) 7 October 2005. Improve error handling. NOPMD
 			{
 				if ( s_FC_Logger != null)
 				{
 					ex.printStackTrace();
-				s_FC_Logger.error("connectTo() #" + m_ThreadID + ": NPE doing: " + m_URL);
+					s_FC_Logger.error("connectTo() #" + m_ThreadID + ": NPE doing: " + m_URL);
 				}
 			}
 			catch (Exception e)

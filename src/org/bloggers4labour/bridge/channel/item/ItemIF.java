@@ -13,6 +13,10 @@ import org.bloggers4labour.bridge.channel.ChannelIF;
  */
 public interface ItemIF extends Cloneable, de.nava.informa.core.ItemIF
 {
+	String	DUMMY_ITEM_CONTENT = "*DUMMY*";
+
+	///////////////////////////////////////
+
 	ItemIF clone();
 
 	ChannelIF getOurChannel();

@@ -85,7 +85,7 @@ public class DefaultPollerAllocator implements PollerAllocatorIF
 			return;
 		}
 
-		s_Logger.debug("SUCCESS '"  + inFeedURL + "' -> " + m_Map.get(inFeedURL));
+		s_Logger.trace("SUCCESS '"  + inFeedURL + "' -> " + m_Map.get(inFeedURL));
 	}
 
 	/*******************************************************************************

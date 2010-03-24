@@ -17,13 +17,13 @@ import org.jdom.Element;
  */
 public class MyLimitedChannelBuilder extends ChannelBuilder
 {
-	public final static int	MAX_POSTS_PER_CHANNEL = 10;
+	public final static int	MAX_POSTS_PER_CHANNEL = 30;
 
 	/*******************************************************************************
 	*******************************************************************************/
-	@Override public ItemIF createItem( Element itemElement, final ChannelIF inChannel, String inTitle, String description, URL link)
+	@Override public ItemIF createItem( final Element itemElement, final ChannelIF inChannel, final String inTitle, final String description, final URL link)
 	{
-		ItemIF item = new Item( itemElement, inChannel, inTitle, description, link);
+		final ItemIF item = new Item( itemElement, inChannel, inTitle, description, link);
 
 		if ( inChannel != null && inChannel.getItems().size() < MAX_POSTS_PER_CHANNEL)
 		{

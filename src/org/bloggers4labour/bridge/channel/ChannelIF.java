@@ -22,6 +22,6 @@ public interface ChannelIF extends de.nava.informa.core.ChannelIF
 	String getDescription();
 	String getFormatString();
 
-	// boolean addItem( ItemIF inItem);
+	boolean addItemWithResult( final de.nava.informa.core.ItemIF inItem);
 	// boolean removeItem( ItemIF inItem);
 }

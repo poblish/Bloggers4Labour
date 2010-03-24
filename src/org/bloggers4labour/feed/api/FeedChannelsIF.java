@@ -3,9 +3,8 @@
  * and open the template in the editor.
  */
 
-package org.bloggers4labour.feed;
+package org.bloggers4labour.feed.api;
 
-import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.bridge.channel.ChannelIF;
 import org.bloggers4labour.feed.check.FeedCheckerAgentIF;
 
@@ -15,7 +14,7 @@ import org.bloggers4labour.feed.check.FeedCheckerAgentIF;
  */
 public interface FeedChannelsIF extends FeedCheckerAgentIF
 {
-	public ChannelIF findURL( String inURL);
-	public ConnectResult connectTo( final InstallationIF inInstall, int inThreadID, String inURL);
-	public void clear();
+	Iterable<FeedChannelIF> getChannels();
+
+	ChannelIF findURL( String inURL);
 }

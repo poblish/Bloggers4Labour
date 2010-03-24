@@ -9,7 +9,6 @@ package org.bloggers4labour.feed;
 import com.hiatus.sql.ResultSetList;
 import com.hiatus.sql.USQL_Utils;
 import com.hiatus.text.UText;
-import java.io.IOException;
 import java.net.URL;
 import java.sql.Statement;
 import java.sql.SQLException;
@@ -31,9 +30,8 @@ import org.bloggers4labour.Site;
 import org.bloggers4labour.bridge.channel.ChannelIF;
 import org.bloggers4labour.bridge.channel.item.ItemIF;
 import org.bloggers4labour.favicon.FaviconManager;
+import org.bloggers4labour.feed.api.FeedChannelsIF;
 import org.bloggers4labour.jmx.Stats;
-import org.bloggers4labour.opml.OPMLGenerator;
-import org.bloggers4labour.opml.OPMLGeneratorIF;
 import org.bloggers4labour.opml.OPMLHandlerIF;
 import org.bloggers4labour.options.Options;
 import org.bloggers4labour.options.TaskOptionsBeanIF;
@@ -54,7 +52,7 @@ public class FeedList implements FeedListIF
 
 	private ArrayList<SiteIF>		m_LastFeedURLsList;
 
-	private final FeedChannelsIF		m_FeedChannels;
+	private final MutableFeedChannelsIF	m_FeedChannels;
 	private ScheduledExecutorService	m_USTPE = null;
 	private ScheduledExecutorService	m_STPE = null;
 	private UpdaterTask			m_UpdateTask;
@@ -74,13 +72,20 @@ public class FeedList implements FeedListIF
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public FeedList( InstallationIF inInstall)
+	public FeedList( final InstallationIF inInstall)
 	{
 		m_Install = inInstall;
 
 		m_FeedChannels = new FeedChannels(inInstall);
 
 		m_Stats = m_Install.getManagement().getStats();    // (AGR) 1 June 2005. Store a reference to this
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public FeedChannelsIF getFeedChannels()
+	{
+		return m_FeedChannels;
 	}
 
 	/*******************************************************************************

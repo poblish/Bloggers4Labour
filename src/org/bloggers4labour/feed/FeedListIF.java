@@ -8,6 +8,7 @@ package org.bloggers4labour.feed;
 import java.util.List;
 import java.util.Observer;
 import org.bloggers4labour.bridge.channel.ChannelIF;
+import org.bloggers4labour.feed.api.FeedChannelsIF;
 import org.bloggers4labour.opml.OPMLHandlerIF;
 import org.bloggers4labour.site.SiteIF;
 
@@ -31,4 +32,6 @@ public interface FeedListIF
 	public SiteIF lookupChannel( ChannelIF inChannel);
 	public SiteIF lookupSiteURL( String inChannelSiteURL);
 	public SiteIF lookupPostsChannel( ChannelIF inChannel);
+
+	FeedChannelsIF getFeedChannels();
 }

@@ -28,6 +28,7 @@ import org.bloggers4labour.feed.check.FeedCheckerNotificationIF;
 import org.bloggers4labour.headlines.HeadlineFilter;
 import org.bloggers4labour.headlines.HeadlinesIF;
 import org.bloggers4labour.site.SiteIF;
+import static org.bloggers4labour.bridge.channel.item.ItemIF.*;
 
 /**
  *
@@ -42,13 +43,13 @@ public abstract class Poller implements PollerIF, FeedCheckerAgentIF
 
 	private static ItemIF[]		s_EmptyItemsArray = new ItemIF[0];
 
-	private final static int	MAX_COMMENTS_PER_POST	= 50;	// (AGR) 29 Nov 2005
+	private final static int	MAX_COMMENTS_PER_POST = 50;	// (AGR) 29 Nov 2005
 
 	final static boolean		ITEMS_PREPEND_INSTALL_NAME = false;	// (AGR) 2 March 2006
 
 	/*******************************************************************************
 	*******************************************************************************/
-	protected Poller( String inName)
+	protected Poller( final String inName)
 	{
 		m_Name = inName;
 	}
@@ -75,7 +76,7 @@ public abstract class Poller implements PollerIF, FeedCheckerAgentIF
 
 		/////////////////////////////////////////////////////////////////////////
 
-		ItemIF[]	theItemsArray = _getChannelItemsArray(inChannel);
+		final ItemIF[]		theItemsArray = _getChannelItemsArray(inChannel);
 
 		if ( theItemsArray.length > 0)
 		{
@@ -90,14 +91,14 @@ public abstract class Poller implements PollerIF, FeedCheckerAgentIF
 
 			for ( int i = 0; i < theItemsArray.length; i++)
 			{
-				Date		itemDate = FeedUtils.getItemDate( theItemsArray[i] );
-				AgeResult	theAgeResult = Util.getItemAgeMsecs( m_Installation, theItemsArray[i], itemDate, inCurrentTimeMSecs);
+				final Date		itemDate = FeedUtils.getItemDate( theItemsArray[i] );
+				final AgeResult		theAgeResult = Util.getItemAgeMsecs( m_Installation, theItemsArray[i], itemDate, inCurrentTimeMSecs);
 
 				//////////////////////////////////////////////////////////////////  (AGR) 26 Feb 2006, 9 Sep 2006
 
 				if ( itemDate != null)	// (AGR) 25 Feb 2007. Don't bother trying to work out most recent, if we never found a valid post date!
 				{
-					long	adjustedPostMSecs = inCurrentTimeMSecs - theAgeResult.getAgeMSecs();
+					final long	adjustedPostMSecs = inCurrentTimeMSecs - theAgeResult.getAgeMSecs();
 
 					if ( adjustedPostMSecs > mostRecentPostAgeMsecs)
 					{
@@ -130,21 +131,12 @@ public abstract class Poller implements PollerIF, FeedCheckerAgentIF
 
 				//////////////////////////////////////////////////////////////////
 
-				int	hIndex = 0;
-
 				for ( HeadlinesIF h : theHMgr.getHeadlinesList())
 				{
 					if (!h.allowsPosts())	// (AGR) 29 Nov 2005
 					{
 						continue;
 					}
-
-					///////////////////////////////////////////////////////
-
-				/*	if ( hCountArray[hIndex] > MAX_POSTS_PER_BLOG)
-					{
-						continue;
-					} */
 
 					//////////////////////////////////////////////////////////////////  (AGR) 21 March 2006
 
@@ -156,22 +148,18 @@ public abstract class Poller implements PollerIF, FeedCheckerAgentIF
 
 					///////////////////////////////////////////////////////
 
-				//	AddResult	theResult;
-
 					if ( itemDate == null)
 					{
 						datelessPostCount++;
-
-						// theResult = AddResult.FAILED_NO_DATE;
 					}
 					else
 					{
 						Util.processItem( h, theItemsArray[i], inSite, theAgeResult.getAgeMSecs(), ItemContext.SNAPSHOT);
+
+						// s_Poll_Logger.debug("DUMMifing " + theItemsArray[i]);
+
+						theItemsArray[i].setDescription(DUMMY_ITEM_CONTENT);	// (AGR) 24 March 2010. Don't need full content any more, so clear it!
 					}
-
-					///////////////////////////////////////////////////////
-
-					hIndex++;
 				}
 			}
 
@@ -219,8 +207,8 @@ public abstract class Poller implements PollerIF, FeedCheckerAgentIF
 
 		for ( int i = 0; i < theItemsArray.length; i++)
 		{
-			Date		itemDate = FeedUtils.getItemDate( theItemsArray[i] );
-			AgeResult	theAgeResult = Util.getItemAgeMsecs( m_Installation, theItemsArray[i], itemDate, inCurrentTimeMSecs);
+			final Date		itemDate = FeedUtils.getItemDate( theItemsArray[i] );
+			final AgeResult		theAgeResult = Util.getItemAgeMsecs( m_Installation, theItemsArray[i], itemDate, inCurrentTimeMSecs);
 
 			if (!theAgeResult.isAllowable())	// (AGR) 14 Jan 2006
 			{

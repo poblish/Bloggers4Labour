@@ -124,7 +124,7 @@ public class DefaultItemImpl implements ItemIF
 
 	/*******************************************************************************
 	*******************************************************************************/
-	@Override public boolean equals(Object o)
+	@Override public boolean equals( final Object o)
 	{
 		if (this == o)
 		{
@@ -132,6 +132,7 @@ public class DefaultItemImpl implements ItemIF
 		}
 		if (!(o instanceof ItemIF))
 		{
+	//		s_Logger.error("NOT an ItemIF!");
 			return false;
 		}
 
@@ -139,17 +140,26 @@ public class DefaultItemImpl implements ItemIF
 
 		if (!matchesTitleAndLink(item))
 		{
+	//		s_Logger.info("==>  US: " + m_Title + " / " + m_Link);
+	//		s_Logger.info("==> THEM " + item.getTitle() + " / " + item.getLink());
+
 			return false;
 		}
 
-		final String itemDescription = item.getDescription();
-		if ( m_Description != null ? !m_Description.equals(itemDescription) : itemDescription != null)
+		final String ourDesc = ( m_Description == null || m_Description.equals(DUMMY_ITEM_CONTENT)) ? null : m_Description;
+		final String theirDesc = ( item.getDescription() == null || item.getDescription().equals(DUMMY_ITEM_CONTENT)) ? null : item.getDescription();
+
+		if ( ourDesc != null ? !ourDesc.equals(theirDesc) : theirDesc != null)
 		{
-			// s_Logger.info("==>   Our desc '" + m_Description + "'");
-			// s_Logger.info("==> THEIR desc '" + item.getDescription() + "'");
+	//		s_Logger.info("DESC is different!");
+
+		//	s_Logger.info("==>   Our desc '" + m_Description + "'");
+		//	s_Logger.info("==> THEIR desc '" + item.getDescription() + "'");
 
 			return false;
 		}
+
+	//	s_Logger.info("SAME: " + this + " == " + item);
 
 		return true;
 	}
@@ -158,17 +168,17 @@ public class DefaultItemImpl implements ItemIF
 	*******************************************************************************/
 	@Override public int hashCode()
 	{
-		StringBuilder sb = new StringBuilder(64);
-		sb.append(m_Title).append(m_Description).append(m_Link);
-		return sb.toString().hashCode();
+		int hash = 5;
+		hash = 97 * hash + m_Title.hashCode();
+		hash = 97 * hash + m_Link.toString().hashCode();
+		return hash;
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
 	@Override public String toString()
 	{
-		return "[Item (" + m_Id + "): '" + m_Title + "' @ " + m_Link + "]";
-//		return "[Item (" + m_Id + "): '" + m_Title + "']";
+		return "[Item '" + m_Title + "' @ " + m_Link + "]";
 	}
 
 	/*******************************************************************************

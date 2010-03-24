@@ -23,10 +23,10 @@ import org.bloggers4labour.bridge.channel.DefaultChannelBridgeFactory;
  */
 public class StandardPoller extends org.bloggers4labour.polling.Poller
 {
-	private PollerObserverIF				m_Observer;
+	protected PollerObserverIF				m_Observer;
 
-	private static de.nava.informa.utils.poller.Poller	s_InformaPoller;
-	private static Logger					s_Logger = Logger.getLogger( StandardPoller.class );
+	protected static de.nava.informa.utils.poller.Poller	s_InformaPoller;
+	protected static Logger					s_Logger = Logger.getLogger( StandardPoller.class );
 
 	/*******************************************************************************
 		(AGR) 28 October 2006

@@ -45,11 +45,11 @@ import org.bloggers4labour.site.SiteIF;
 *******************************************************************************/
 public class MyObserver implements PollerObserverIF, FeedCheckerAgentIF
 {
-	private InstallationIF	m_Installation;
-	private String		m_LogPrefix;
-	private HeadlinesMgr	m_HMgr;
+	protected InstallationIF	m_Installation;
+	protected String		m_LogPrefix;
+	private HeadlinesMgr		m_HMgr;
 
-	private static Logger		s_Poll_Logger = Logger.getLogger( MyObserver.class );
+	protected static Logger		s_Poll_Logger = Logger.getLogger( MyObserver.class );
 	private final static byte[]	s_itemFound_locker = new byte[0];	// (AGR) 21 October 2006
 
 	/*******************************************************************************
@@ -211,7 +211,23 @@ public class MyObserver implements PollerObserverIF, FeedCheckerAgentIF
 
 		// s_Poll_Logger.info("... found \"" + FeedUtils.adjustTitle(inItem) + "\" for \"" + FeedUtils.channelToString(ioChannel) + "\" - add it");
 
-		inChannel.addItem(inItem);
+	//	s_Poll_Logger.info("Channel: " + inChannel + " (" + inChannel.getClass() + ")");
+
+		if ( inChannel instanceof ChannelIF)
+		{
+			if (!((ChannelIF) inChannel).addItemWithResult(inItem))
+			{
+				// s_Poll_Logger.info("NO CHANGE for " + inChannel + " - SKIP!");
+
+				return;		// a bit crap, I know...
+			}
+		}
+		else
+		{
+			inChannel.addItem(inItem);
+		}
+
+		// s_Poll_Logger.debug("Still here with " + inChannel + " / " + theBridgedItem);
 
 		//////////////////////////////////////////////////////////////////  (AGR) 19 May 2005
 
@@ -255,7 +271,7 @@ public class MyObserver implements PollerObserverIF, FeedCheckerAgentIF
 
 		//////////////////////////////////////////////////////////////////
 
-		HeadlineFilter	theFilter = new HeadlineFilter( m_Installation, theBridgedChannel);
+		final HeadlineFilter	theFilter = new HeadlineFilter( m_Installation, theBridgedChannel);
 
 		for ( HeadlinesIF h : m_HMgr.getHeadlinesList())
 		{
@@ -283,6 +299,8 @@ public class MyObserver implements PollerObserverIF, FeedCheckerAgentIF
 			}
 			else
 			{
+				// s_Poll_Logger.debug("Passing on... " + theBridgedItem + ", desc = " + theBridgedItem.getDescription().length() + " chars");
+
 				itemResult = Util.processItem( h, theBridgedItem, thisChannelsSite, theAgeResult.getAgeMSecs(), ItemContext.UPDATE);
 			}
 

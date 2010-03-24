@@ -27,21 +27,44 @@ import org.bloggers4labour.bridge.channel.item.ItemIF;
  */
 public class DefaultChannelImpl implements ChannelIF
 {
-	private long			m_Id;
-	private String			m_Title;
-	private String			m_Description;
-	private URL			m_Location;
-	private URL			m_Site;
-	private ChannelFormat		m_Format;
-	private LinkedMap		m_Coll = new LinkedMap();		// <Long,ItemIF>();
-	private Collection<CategoryIF>	m_Categories = Collections.emptyList();
+	private long				m_Id;
+	private String				m_Title;
+	private String				m_Description;
+	private URL				m_Location;
+	private URL				m_Site;
+	private ChannelFormat			m_Format;
+	protected LinkedMap			m_Coll;
+	private Collection<CategoryIF>		m_Categories = Collections.emptyList();
 
-	private final static ItemBridgeIF	s_Bridge = new DefaultItemBridgeFactory().getInstance();
+	protected final static ItemBridgeIF	s_Bridge = new DefaultItemBridgeFactory().getInstance();
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public DefaultChannelImpl()
+	{
+	}
 
 	/*******************************************************************************
 	*******************************************************************************/
 	@SuppressWarnings("unchecked")
 	public DefaultChannelImpl( final de.nava.informa.core.ChannelIF inOriginal)
+	{
+		m_Coll = new LinkedMap();		// <Long,ItemIF>();
+
+		init(inOriginal);
+
+		@SuppressWarnings("unchecked")
+		Collection<de.nava.informa.core.ItemIF>		c = (Collection<de.nava.informa.core.ItemIF>) inOriginal.getItems();
+
+		for ( de.nava.informa.core.ItemIF each : c)
+		{
+			addItem(each);	// NOPMD
+		}
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	protected void init( final de.nava.informa.core.ChannelIF inOriginal)
 	{
 		m_Id = inOriginal.getId();
 		m_Title = inOriginal.getTitle();
@@ -49,14 +72,6 @@ public class DefaultChannelImpl implements ChannelIF
 		m_Location = inOriginal.getLocation();
 		m_Site = inOriginal.getSite();
 		m_Format = inOriginal.getFormat();
-
-		@SuppressWarnings("unchecked")
-		Collection<de.nava.informa.core.ItemIF>		c = (Collection<de.nava.informa.core.ItemIF>) inOriginal.getItems();
-
-		for ( de.nava.informa.core.ItemIF each : c)
-		{
-			m_Coll.put( each.getId(), s_Bridge.bridge( each, this));
-		}
 
 		////////////////////////////////////////////////////////////////
 
@@ -176,6 +191,15 @@ public class DefaultChannelImpl implements ChannelIF
 		// return ( m_Coll.put( inItem.getId(), inItem) != null);
 
 		m_Coll.put( inItem.getId(), s_Bridge.bridge( inItem, this));
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public boolean addItemWithResult( final de.nava.informa.core.ItemIF inItem)
+	{
+		// return ( m_Coll.put( inItem.getId(), inItem) != null);
+
+		return ( m_Coll.put( inItem.getId(), s_Bridge.bridge( inItem, this)) != null);
 	}
 
 	/*******************************************************************************
