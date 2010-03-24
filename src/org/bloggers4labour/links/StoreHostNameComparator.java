@@ -19,6 +19,8 @@ import java.util.Comparator;
  */
 public class StoreHostNameComparator implements Comparator, /* (AGR) 3 Feb 2007. FindBugs recommended this */ Serializable
 {
+	private static final long serialVersionUID = 1L;
+
 	/*******************************************************************************
 	*******************************************************************************/
 	public int compare( Object a, Object b)

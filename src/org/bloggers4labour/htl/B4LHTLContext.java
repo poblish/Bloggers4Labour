@@ -9,8 +9,7 @@
 
 package org.bloggers4labour.htl;
 
-import com.biomates.*;
-import com.hiatus.htl.*;
+import com.hiatus.htl.HTLAbstractContext;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -25,6 +24,8 @@ import java.util.ResourceBundle;
 public class B4LHTLContext extends HTLAbstractContext
 {
 	private static ResourceBundle	s_Bundle;
+
+	private static final long	serialVersionUID = 1L;
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -57,7 +58,6 @@ public class B4LHTLContext extends HTLAbstractContext
 	}
 
 	/*******************************************************************************
-		8 May 2002
 	*******************************************************************************/
 	public Object putString( Object inKey, String inStringKey)
 	{
@@ -69,12 +69,11 @@ public class B4LHTLContext extends HTLAbstractContext
 	*******************************************************************************/
 	public String handleExtraParsingFeatures( String inSourceStr, int inStartPos, int inEndPos)
 	{
-		if (inSourceStr.regionMatches( inStartPos, "ls:", 0, 3))	// does it start with "ls:" ??
+/*		if (inSourceStr.regionMatches( inStartPos, "ls:", 0, 3))	// does it start with "ls:" ??
 		{
 			return s_Bundle.getString( inSourceStr.substring( inStartPos + 3, inEndPos) );
-//			return s_Bundle.getString( inSourceStr.substring( inStartPos + 3, inEndPos), m_Locale);
 		}
-
+*/
 		return null;
 	}
 
