@@ -45,7 +45,7 @@ import org.bloggers4labour.sql.DataSourceConnection;
  *
  * @author andrewre
  */
-public class FeedList implements FeedListIF
+public class FeedList implements MutableFeedListIF
 {
 	private ArrayList<SiteIF>		m_PostFeedSitesList = new ArrayList<SiteIF>(150);
 	private ArrayList<SiteIF>		m_CommentsFeedSitesList = new ArrayList<SiteIF>(30);	// (AGR) 30 Nov 2005
