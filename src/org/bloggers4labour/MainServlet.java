@@ -1690,9 +1690,9 @@ public class MainServlet extends HttpServlet
 
 		_addXMLCDataElement( ioS, "displayTitle", UText.isValidString( inObj.getDispTitle() ) ? inObj.getDispTitle() : "<i>Untitled</i>");
 		_addXMLCDataElement( ioS, "desc", inObj.getDescription());
-		_addXMLElement( ioS, "iconURL", UText.isValidString( inObj.getIconURL() ) ? inObj.getIconURL() : "");
+		_addXMLElement( ioS, "iconURL", UText.isValidString( inObj.getIconURL(null) ) ? inObj.getIconURL(null) : "");
 
-			_addXMLElement( ioS, "votes", Integer.toString(inReccCount));    // (AGR) 1 October 2006
+		_addXMLElement( ioS, "votes", Integer.toString(inReccCount));    // (AGR) 1 October 2006
 
 		return ioS;
 	}

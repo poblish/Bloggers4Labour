@@ -103,11 +103,11 @@ public final class Site implements SiteIF, Comparable<Site>	// (AGR) 6 June 2005
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public String getFaviconLocation()
+	public String getFaviconLocation( final InstallationIF inInstall)
 	{
-		if ( m_FaviconLocation == null)
+		if ( m_FaviconLocation == null && inInstall.getFaviconManager() != null)
 		{
-			m_FaviconLocation = FaviconManager.getInstance().findURL(this);
+			m_FaviconLocation = inInstall.getFaviconManager().findURL(this);
 		}
 
 		return m_FaviconLocation;

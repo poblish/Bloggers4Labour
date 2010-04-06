@@ -15,13 +15,13 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import org.bloggers4labour.Site;
+import org.bloggers4labour.site.SiteIF;
 
 /**
  *
  * @author andrewre
  */
-public class FaviconManager
+public class FaviconManager implements FaviconManagerIF
 {
 	private List<FeedsRec>		m_List = new CopyOnWriteArrayList<FeedsRec>();
 
@@ -29,13 +29,7 @@ public class FaviconManager
 
 	/*******************************************************************************
 	*******************************************************************************/
-	private FaviconManager()
-	{
-	}
-
-	/*******************************************************************************
-	*******************************************************************************/
-	public String findURL( Site inSiteObj)
+	public String findURL( SiteIF inSiteObj)
 	{
 		String	result = _lookUpURL( inSiteObj.getSiteURL() );
 
@@ -53,7 +47,7 @@ public class FaviconManager
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public void rememberFavicon( Site inSiteObj)
+	public void rememberFavicon( SiteIF inSiteObj)
 	{
 		String	theSiteURL = inSiteObj.getSiteURL();
 		String	theDBFeedURL = inSiteObj.getDatabaseFeedURL();
@@ -210,22 +204,6 @@ public class FaviconManager
 //		int	contentLen = theConn.getContentLength();	// bit dodgy, but assume -1 (unknown) means there's a > 0 % chance!
 
 		return theConn.getContentType();
-	}
-
-	/*******************************************************************************
-	*******************************************************************************/
-	public static FaviconManager getInstance()
-	{
-		return LazyHolder.s_Mgr;
-	}
-
-	/*******************************************************************************
-		(AGR) 5 June 2005. See:
-		    <http://www-106.ibm.com/developerworks/java/library/j-jtp03304/>
-	*******************************************************************************/
-	private static class LazyHolder
-	{
-		private static FaviconManager	s_Mgr = new FaviconManager();
 	}
 
 	/*******************************************************************************

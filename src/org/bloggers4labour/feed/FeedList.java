@@ -29,7 +29,7 @@ import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.Site;
 import org.bloggers4labour.bridge.channel.ChannelIF;
 import org.bloggers4labour.bridge.channel.item.ItemIF;
-import org.bloggers4labour.favicon.FaviconManager;
+import org.bloggers4labour.favicon.FaviconManagerIF;
 import org.bloggers4labour.feed.api.FeedChannelsIF;
 import org.bloggers4labour.jmx.Stats;
 import org.bloggers4labour.opml.OPMLHandlerIF;
@@ -441,20 +441,22 @@ public class FeedList implements MutableFeedListIF
 	*******************************************************************************/
 	class SiteHandlerTask implements Callable<Object>
 	{
-		private UpdaterTask	m_Task;
-		private int		m_ID;
-		private List		m_RowsList;
-		private Map		m_CurrentRow;
-		private long		m_CurrTimeMSecs;
+		private UpdaterTask		m_Task;
+		private int			m_ID;
+		private List			m_RowsList;
+		private Map			m_CurrentRow;
+		private long			m_CurrTimeMSecs;
+		private FaviconManagerIF	m_FaviconManager;
 
 		/*******************************************************************************
 		*******************************************************************************/
-		public SiteHandlerTask( final UpdaterTask inTask, int inID, long inCurrTimeMSecs, List inList)
+		public SiteHandlerTask( final UpdaterTask inTask, final InstallationIF inInstall, final int inID, final long inCurrTimeMSecs, final List inList)
 		{
 			m_Task = inTask;
 			m_ID = inID;
 			m_RowsList = inList;
 			m_CurrTimeMSecs = inCurrTimeMSecs;
+			m_FaviconManager = inInstall.getFaviconManager();
 		}
 
 		/*******************************************************************************
@@ -660,7 +662,10 @@ public class FeedList implements MutableFeedListIF
 							(String) m_CurrentRow.get("cat"),
 							(String) m_CurrentRow.get("favicon_url"));
 
-			FaviconManager.getInstance().rememberFavicon(theSiteObj);	// (AGR) 25 Feb 2006
+			if ( m_FaviconManager != null)
+			{
+				m_FaviconManager.rememberFavicon(theSiteObj);	// (AGR) 25 Feb 2006
+			}
 
 			theSiteObj.addCreator(theFirstCreatorsType);
 		//	theSiteObj.findFavicon();
@@ -785,13 +790,15 @@ public class FeedList implements MutableFeedListIF
 				{
 					theRowsList = theRS.getRowsList();
 
+					Collections.shuffle(theRowsList);	// (AGR) 6 April 2010
+
 					/////////////////////////////////////////////////////////////////////////////////////  (AGR) 12 Nov 2009
 
 					Collection<Callable<Object>>	theCollWrapper = new ArrayList<Callable<Object>>();
 
 					for ( int i = 1; i <= Options.getOptions().getNumSiteHandlerThreads(); i++)
 					{
-						SiteHandlerTask		theSHT = new SiteHandlerTask( this, i, inCurrTimeMSecs, theRowsList);
+						SiteHandlerTask		theSHT = new SiteHandlerTask( this, m_Install, i, inCurrTimeMSecs, theRowsList);
 
 						m_SHTs.add(theSHT);
 

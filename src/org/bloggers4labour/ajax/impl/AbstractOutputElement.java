@@ -69,7 +69,7 @@ public abstract class AbstractOutputElement implements OutputElementIF
 
 		addCDataElement( "displayTitle", UText.isValidString( inObj.getDispTitle() ) ? inObj.getDispTitle() : "<i>Untitled</i>");
 		addCDataElement( "desc", inObj.getDescription());
-		addElement( "iconURL", UText.isValidString( inObj.getIconURL() ) ? inObj.getIconURL() : "");
+		addElement( "iconURL", UText.isValidString( inObj.getIconURL(null) ) ? inObj.getIconURL(null) : "");
 
 		addElement( "votes", Integer.toString(inReccCount));    // (AGR) 1 October 2006
 	}

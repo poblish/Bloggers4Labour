@@ -11,6 +11,7 @@
 package org.bloggers4labour.jsp;
 
 import java.net.URL;
+import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.ItemType;
 import org.bloggers4labour.site.SiteIF;
 
@@ -26,7 +27,7 @@ public interface Displayable
 	public String getDateString();
 	public String getSiteURL();
 	public String getDescriptionStyle();
-	public String getIconURL();
+	public String getIconURL( InstallationIF inInstall);
 	public String getCreatorsStr();
 	public String getEncodedTitle();
 	public String getDispTitle();

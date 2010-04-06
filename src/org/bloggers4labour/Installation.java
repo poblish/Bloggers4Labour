@@ -26,6 +26,8 @@ import org.bloggers4labour.activity.LastPostTable;
 import org.bloggers4labour.activity.LastPostTableIF;
 import org.bloggers4labour.cats.CategoriesTable;
 import org.bloggers4labour.cats.CategoriesTableIF;
+import org.bloggers4labour.favicon.FaviconManager;
+import org.bloggers4labour.favicon.FaviconManagerIF;
 import org.bloggers4labour.feed.*;
 import org.bloggers4labour.feed.check.FeedCheckerNotificationIF;
 import org.bloggers4labour.feed.check.consume.FeedCheckerListenerIF;
@@ -70,7 +72,9 @@ public class Installation implements InstallationIF
 
 	private Collection<FeedCheckerListenerIF>	m_FeedCheckerListeners = new ArrayList<FeedCheckerListenerIF>();	// (AGR) 23 Dec 2009
 
-	private static Logger		s_Install_Logger = Logger.getLogger( Installation.class );
+	private final static FaviconManagerIF		s_FaviconManager = new FaviconManager();
+
+	private static Logger				s_Install_Logger = Logger.getLogger( Installation.class );
 
 	/*******************************************************************************
 		(AGR) 19 Feb 2006
@@ -398,5 +402,12 @@ public class Installation implements InstallationIF
 				return m_Tasks.iterator();
 			}
 		};
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public FaviconManagerIF getFaviconManager()
+	{
+		return s_FaviconManager;
 	}
 }

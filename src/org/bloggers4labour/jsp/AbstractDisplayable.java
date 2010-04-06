@@ -10,6 +10,8 @@
 
 package org.bloggers4labour.jsp;
 
+import org.bloggers4labour.InstallationIF;
+
 /**
  *
  * @author andrewre
@@ -63,11 +65,11 @@ public abstract class AbstractDisplayable implements Displayable
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public String getIconURL()
+	public String getIconURL( final InstallationIF inInstall)
 	{
 		if ( getSite() != null)
 		{
-			return getSite().getFaviconLocation();
+			return getSite().getFaviconLocation(inInstall);
 		}
 
 		return null;

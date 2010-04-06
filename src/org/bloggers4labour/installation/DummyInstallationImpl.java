@@ -15,6 +15,7 @@ import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.InstallationStatus;
 import org.bloggers4labour.activity.LastPostTableIF;
 import org.bloggers4labour.cats.CategoriesTableIF;
+import org.bloggers4labour.favicon.FaviconManagerIF;
 import org.bloggers4labour.feed.FeedList;
 import org.bloggers4labour.feed.FeedListIF;
 import org.bloggers4labour.feed.check.FeedCheckerNotificationIF;
@@ -189,5 +190,10 @@ public class DummyInstallationImpl implements InstallationIF
 	public void removeFeedCheckListener(FeedCheckerListenerIF inListener)
 	{
 		// NOOP
+	}
+
+	public FaviconManagerIF getFaviconManager()
+	{
+		return null;
 	}
 }

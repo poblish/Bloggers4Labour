@@ -15,6 +15,7 @@ import java.util.ResourceBundle;
 import javax.sql.DataSource;
 import org.bloggers4labour.activity.LastPostTableIF;
 import org.bloggers4labour.cats.CategoriesTableIF;
+import org.bloggers4labour.favicon.FaviconManagerIF;
 import org.bloggers4labour.feed.FeedListIF;
 import org.bloggers4labour.feed.check.consume.FeedCheckerConsumerDelegateIF;
 import org.bloggers4labour.feed.check.consume.FeedCheckerListenerIF;
@@ -39,6 +40,7 @@ public interface InstallationIF extends FeedCheckerConsumerDelegateIF
 	public Management getManagement();
 	public FeedListIF getFeedList();
 	public IndexMgrIF getIndexMgr();
+	public FaviconManagerIF getFaviconManager();
 
 	public boolean hasPollers();
 	public Iterable<PollerIF> getPollers();
