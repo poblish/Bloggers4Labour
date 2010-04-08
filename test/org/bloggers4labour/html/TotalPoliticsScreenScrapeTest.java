@@ -32,21 +32,53 @@ public class TotalPoliticsScreenScrapeTest
 {
 	/*******************************************************************************
 	*******************************************************************************/
-	@Test public void testLabourBlogScrape()
+//	@Test
+	public void testLabourBlogScrape()
 	{
 		testPoliticalPartyScrape( 2, false);
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	@Test public void testToryBlogScrape()
+//	@Test
+	public void testToryBlogScrape()
 	{
 		testPoliticalPartyScrape( 1, false);
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
+	@Test
+	public void testLibDemBlogScrape()
+	{
+		testPoliticalPartyScrape( 3, false);
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+//	@Test
+	public void testNorthernIrishBlogScrape()
+	{
+		testBlogCountryOfOriginScrape( 4, false);
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
 	private void testPoliticalPartyScrape( int inPartyId, boolean inTryToSubmitToB4L)
+	{
+		testBlogsPageScrape( "party_id=" + inPartyId, inTryToSubmitToB4L);
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	private void testBlogCountryOfOriginScrape( int inCountryId, boolean inTryToSubmitToB4L)
+	{
+		testBlogsPageScrape( "country_id=" + inCountryId, inTryToSubmitToB4L);
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	private void testBlogsPageScrape( final String inPrefix, boolean inTryToSubmitToB4L)
 	{
 		NodeFilter		theFilter = new AndFilter( new TagNameFilter("A"), new HasParentFilter( new TagNameFilter("DIV") ));
 		Collection<BlogEntry>	theColl = new ArrayList<BlogEntry>();
@@ -56,7 +88,7 @@ public class TotalPoliticsScreenScrapeTest
 		{
 			try
 			{
-				String		theURL = "http://www.totalpolitics.com/politicalblogs/blogs.php?party_id=" + inPartyId + "&start=" + startIndex;
+				String		theURL = "http://www.totalpolitics.com/politicalblogs/blogs.php?" + inPrefix + "&start=" + startIndex;
 
 				System.out.println("Requesting: " + theURL + " (count = " + theColl.size() + ")");
 
@@ -73,6 +105,13 @@ public class TotalPoliticsScreenScrapeTest
 						String	theLinkURL = theLink.getLink();
 
 						if (theLinkURL.equals("http://www.thumbshots.net"))
+						{
+							continue;
+						}
+
+						String	theTrimmedURL = theLink.getLinkText().trim();
+
+						if (theTrimmedURL.isEmpty())
 						{
 							continue;
 						}
