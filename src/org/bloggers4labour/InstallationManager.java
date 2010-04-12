@@ -285,19 +285,26 @@ public class InstallationManager implements InstallationManagerIF
 
 					PollerConfig	thePollerConfigToUse = thePollerIdsMap.get(thePollerId);
 
-					s_Installations_Logger.debug("thePollerConfigToUse = " + thePollerConfigToUse);
-
-					try
+					if ( thePollerConfigToUse != null)
 					{
-						Poller	theNewPoller = thePollerConfigToUse.newInstance();
+						s_Installations_Logger.debug("thePollerConfigToUse = " + thePollerConfigToUse);
 
-						s_Installations_Logger.debug("Adding theNewPoller = " + theNewPoller);
+						try
+						{
+							Poller	theNewPoller = thePollerConfigToUse.newInstance();
 
-						thePollers.add(theNewPoller);
+							s_Installations_Logger.debug("Adding theNewPoller = " + theNewPoller);
+
+							thePollers.add(theNewPoller);
+						}
+						catch (Exception e)
+						{
+							s_Installations_Logger.error("Poller creation failed", e);
+						}
 					}
-					catch (Exception e)
+					else
 					{
-						s_Installations_Logger.error("Poller creation failed", e);
+						s_Installations_Logger.error("Poller creation failed: no Poller created for Id");
 					}
 				}
 
