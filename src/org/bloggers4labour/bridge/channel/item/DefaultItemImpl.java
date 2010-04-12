@@ -124,6 +124,16 @@ public class DefaultItemImpl implements ItemIF
 
 	/*******************************************************************************
 	*******************************************************************************/
+	public boolean matchesDescription( final ItemIF inOther)
+	{
+		final String ourDesc = ( m_Description == null || m_Description.equals(DUMMY_ITEM_CONTENT)) ? null : m_Description;
+		final String theirDesc = ( inOther.getDescription() == null || inOther.getDescription().equals(DUMMY_ITEM_CONTENT)) ? null : inOther.getDescription();
+
+		return ( ourDesc != null ? ourDesc.equals(theirDesc) : theirDesc == null);
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
 	@Override public boolean equals( final Object o)
 	{
 		if (this == o)
@@ -146,10 +156,7 @@ public class DefaultItemImpl implements ItemIF
 			return false;
 		}
 
-		final String ourDesc = ( m_Description == null || m_Description.equals(DUMMY_ITEM_CONTENT)) ? null : m_Description;
-		final String theirDesc = ( item.getDescription() == null || item.getDescription().equals(DUMMY_ITEM_CONTENT)) ? null : item.getDescription();
-
-		if ( ourDesc != null ? !ourDesc.equals(theirDesc) : theirDesc != null)
+		if (!matchesDescription(item))
 		{
 	//		s_Logger.info("DESC is different!");
 
