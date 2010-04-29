@@ -670,6 +670,8 @@ public class FeedList implements MutableFeedListIF
 			theSiteObj.addCreator(theFirstCreatorsType);
 		//	theSiteObj.findFavicon();
 
+			s_FL_Logger.info(">>> SHT #" + m_ID + " Adding: " + theSiteObj);
+
 			m_PostFeedSitesList.add(theSiteObj);
 
 			if (specifiedACommentsFeed)	// (AGR) 30 Nov 2005. Keep track of how many there are...
