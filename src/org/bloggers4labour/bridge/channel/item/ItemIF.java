@@ -24,18 +24,5 @@ public interface ItemIF extends Cloneable, de.nava.informa.core.ItemIF
 	String getAuthorName();
 
 	boolean matchesTitleAndLink( final ItemIF inOther);
-
-/*	long getId();
-
-	String getElementValue( String inName);
-	String getSubject();
-	String getDescription();
-	ArrayList getCategories();
-	URL getLink();
-
-	String getTitle();
-	void setTitle( String inTitle);
-
-	Date getDate();
-	void setDate( Date inDate); */
+	boolean matchesDescription( final ItemIF inOther);
 }
