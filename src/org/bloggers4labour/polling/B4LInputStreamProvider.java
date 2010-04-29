@@ -5,6 +5,7 @@
 
 package org.bloggers4labour.polling;
 
+import com.hiatus.dates.UDates;
 import de.nava.informa.core.ChannelIF;
 import de.nava.informa.utils.poller.InputStreamProviderIF;
 import java.io.BufferedInputStream;
@@ -12,8 +13,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.concurrent.TimeUnit;
 import org.apache.log4j.Logger;
-import static org.bloggers4labour.Constants.*;
 
 /**
  *
@@ -21,7 +22,10 @@ import static org.bloggers4labour.Constants.*;
  */
 public class B4LInputStreamProvider implements InputStreamProviderIF
 {
-	private static Logger	s_Logger = Logger.getLogger( B4LInputStreamProvider.class );
+	private final static Logger	s_Logger = Logger.getLogger( B4LInputStreamProvider.class );
+
+	private final static TimeUnit	s_PollerTimeoutUnit = TimeUnit.SECONDS;
+	private final static long	s_PollerTimeoutPeriod = 30;
 
 	/*******************************************************************************
 	*******************************************************************************/
@@ -32,9 +36,23 @@ public class B4LInputStreamProvider implements InputStreamProviderIF
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public InputStream getInputStreamFor( final ChannelIF inChannel, String inActivity) throws IOException
+	public static long getTimeoutMSecs()
 	{
-		URL	theURL = inChannel.getLocation();
+		return TimeUnit.MILLISECONDS.convert( s_PollerTimeoutPeriod, s_PollerTimeoutUnit);
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public static CharSequence getTimeoutValueString()
+	{
+		return UDates.getFormattedTimeDiff( B4LInputStreamProvider.getTimeoutMSecs() );
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public InputStream getInputStreamFor( final ChannelIF inChannel, final String inActivity) throws IOException
+	{
+		final URL	theURL = inChannel.getLocation();
 
 		if ( theURL == null)
 		{
@@ -43,10 +61,11 @@ public class B4LInputStreamProvider implements InputStreamProviderIF
 			// s_Logger.info(">> Opening... " + theURL);
 		}
 
-		URLConnection	theConn = theURL.openConnection();
+		final URLConnection	theConn = theURL.openConnection();
+		final int		theTimeoutMSecs = (int) getTimeoutMSecs();
 
-		theConn.setConnectTimeout( 20 * (int) ONE_SECOND_MSECS);
-		theConn.setReadTimeout( 20 * (int) ONE_SECOND_MSECS);
+		theConn.setConnectTimeout(theTimeoutMSecs);
+		theConn.setReadTimeout(theTimeoutMSecs);
 
 /*		if ( "" != null && theConn instanceof HttpURLConnection)
 		{
