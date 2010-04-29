@@ -243,6 +243,24 @@ public class FeedChannels implements MutableFeedChannelsIF
 
 				s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": " + theErrorMsg);
 			}
+			else if ( e.getMessage().contains("HTTP response code: 403"))	// (AGR) 26 April 2010
+			{
+				theErrorMsg = "Access FORBIDDEN (403) for: " + inURL;
+
+				s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": " + theErrorMsg);
+			}
+			else if ( e.getMessage().contains("HTTP response code: 502"))	// (AGR) 26 April 2010
+			{
+				theErrorMsg = "Access got BAD GATEWAY (502) for: " + inURL;
+
+				s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": " + theErrorMsg);
+			}
+			else if ( e.getMessage().contains("HTTP response code: 400"))	// (AGR) 26 April 2010
+			{
+				theErrorMsg = "BAD REQUEST for: " + inURL;
+
+				s_FC_Logger.error( prefix + "connectTo() #" + inThreadID + ": " + theErrorMsg);
+			}
 			else
 			{
 				theErrorMsg = "IOException for: " + inURL;

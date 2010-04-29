@@ -92,7 +92,7 @@ public class MyObserver implements PollerObserverIF, FeedCheckerAgentIF
 
 			notifyFeedCheckListeners( new DefaultFeedCheckerNotification( this, inChannel, new FeedCheckException( theErrorMsg, inE), System.currentTimeMillis()) );
 
-			s_Poll_Logger.warn( m_LogPrefix + "... " + theErrorMsg + "!");
+			s_Poll_Logger.warn( m_LogPrefix + "... " + theErrorMsg + " after " + B4LInputStreamProvider.getTimeoutValueString() + "!");
 			return;
 		}
 
