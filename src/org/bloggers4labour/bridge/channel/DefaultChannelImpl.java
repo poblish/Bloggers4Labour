@@ -64,6 +64,7 @@ public class DefaultChannelImpl implements ChannelIF
 
 	/*******************************************************************************
 	*******************************************************************************/
+	@SuppressWarnings("unchecked")
 	protected void init( final de.nava.informa.core.ChannelIF inOriginal)
 	{
 		m_Id = inOriginal.getId();
@@ -143,20 +144,21 @@ public class DefaultChannelImpl implements ChannelIF
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public URL getSite()
+	@Override public URL getSite()
 	{
 		return m_Site;
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public URL getLocation()
+	@Override public URL getLocation()
 	{
 		return m_Location;
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
+	@Override
 	@SuppressWarnings("unchecked")
 	public Collection<ItemIF> getItems()
 	{
@@ -165,28 +167,28 @@ public class DefaultChannelImpl implements ChannelIF
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public String getTitle()
+	@Override public String getTitle()
 	{
 		return m_Title;
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public String getDescription()
+	@Override public String getDescription()
 	{
 		return m_Description;
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public String getFormatString()
+	@Override public String getFormatString()
 	{
 		return m_Format.toString();
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public void addItem( final de.nava.informa.core.ItemIF inItem)
+	@Override public void addItem( final de.nava.informa.core.ItemIF inItem)
 	{
 		// return ( m_Coll.put( inItem.getId(), inItem) != null);
 
@@ -195,7 +197,7 @@ public class DefaultChannelImpl implements ChannelIF
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public boolean addItemWithResult( final de.nava.informa.core.ItemIF inItem)
+	@Override public boolean addItemWithResult( final de.nava.informa.core.ItemIF inItem)
 	{
 		// return ( m_Coll.put( inItem.getId(), inItem) != null);
 
@@ -204,7 +206,7 @@ public class DefaultChannelImpl implements ChannelIF
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public void removeItem( final de.nava.informa.core.ItemIF inItem)
+	@Override public void removeItem( final de.nava.informa.core.ItemIF inItem)
 	{
 		// return ( m_Coll.remove( inItem.getId() ) != null);
 
@@ -213,270 +215,271 @@ public class DefaultChannelImpl implements ChannelIF
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public ChannelFormat getFormat()
+	@Override public ChannelFormat getFormat()
 	{
 		return m_Format;
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public long getId()
+	@Override public long getId()
 	{
 		return m_Id;
 	}
 
-	public String getLanguage()
+	@Override public String getLanguage()
 	{
 		return null;
 	}
 
-	public void setLanguage(String language)
+	@Override public void setLanguage(String language)
 	{
 		// NOOP
 	}
 
-	public String getPublisher()
+	@Override public String getPublisher()
 	{
 		return null;
 	}
 
-	public void setPublisher(String publisher)
+	@Override public void setPublisher(String publisher)
 	{
 		// NOOP
 	}
 
-	public String getRating()
+	@Override public String getRating()
 	{
 		return null;
 	}
 
-	public void setRating(String rating)
+	@Override public void setRating(String rating)
 	{
 		// NOOP
 	}
 
-	public String getGenerator()
+	@Override public String getGenerator()
 	{
 		return null;
 	}
 
-	public void setGenerator(String generator)
+	@Override public void setGenerator(String generator)
 	{
 		// NOOP
 	}
 
-	public String getDocs()
+	@Override public String getDocs()
 	{
 		return null;
 	}
 
-	public void setDocs(String docs)
+	@Override public void setDocs(String docs)
 	{
 		// NOOP
 	}
 
-	public int getTtl()
+	@Override public int getTtl()
 	{
 		return 0;
 	}
 
-	public void setTtl(int ttl)
+	@Override public void setTtl(int ttl)
 	{
 		// NOOP
 	}
 
-	public void setFormat(ChannelFormat x)
+	@Override public void setFormat(ChannelFormat x)
 	{
 		m_Format = x;
 	}
 
-	public de.nava.informa.core.ItemIF getItem(long id)
+	@Override public de.nava.informa.core.ItemIF getItem(long id)
 	{
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
 
-	public ImageIF getImage()
+	@Override public ImageIF getImage()
 	{
 		return null;
 	}
 
-	public void setImage(ImageIF image)
+	@Override public void setImage(ImageIF image)
 	{
 		// NOOP
 	}
 
-	public TextInputIF getTextInput()
+	@Override public TextInputIF getTextInput()
 	{
 		return null;
 	}
 
-	public void setTextInput(TextInputIF textInput)
+	@Override public void setTextInput(TextInputIF textInput)
 	{
 		// NOOP
 	}
 
-	public Date getLastUpdated()
+	@Override public Date getLastUpdated()
 	{
 		return null;
 	}
 
-	public void setLastUpdated(Date lastUpdated)
+	@Override public void setLastUpdated(Date lastUpdated)
 	{
 		// NOOP
 	}
 
-	public Date getLastBuildDate()
+	@Override public Date getLastBuildDate()
 	{
 		return null;
 	}
 
-	public void setLastBuildDate(Date lastBuild)
+	@Override public void setLastBuildDate(Date lastBuild)
 	{
 		// NOOP
 	}
 
-	public Date getPubDate()
+	@Override public Date getPubDate()
 	{
 		return null;
 	}
 
-	public void setPubDate(Date pubDate)
+	@Override public void setPubDate(Date pubDate)
 	{
 		// NOOP
 	}
 
-	public CloudIF getCloud()
+	@Override public CloudIF getCloud()
 	{
 		return null;
 	}
 
-	public void setCloud(CloudIF cloud)
+	@Override public void setCloud(CloudIF cloud)
 	{
 		// NOOP
 	}
 
-	public String getUpdatePeriod()
+	@Override public String getUpdatePeriod()
 	{
 		return null;
 	}
 
-	public void setUpdatePeriod(String updatePeriod)
+	@Override public void setUpdatePeriod(String updatePeriod)
 	{
 		// NOOP
 	}
 
-	public int getUpdateFrequency()
+	@Override public int getUpdateFrequency()
 	{
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
 
-	public void setUpdateFrequency(int updateFrequency)
+	@Override public void setUpdateFrequency(int updateFrequency)
 	{
 		// NOOP
 	}
 
-	public Date getUpdateBase()
+	@Override public Date getUpdateBase()
 	{
 		return null;
 	}
 
-	public void setUpdateBase(Date updateBase)
+	@Override public void setUpdateBase(Date updateBase)
 	{
 		// NOOP
 	}
 
-	public void setId(long id)
+	@Override public void setId(long id)
 	{
 		m_Id = id;
 	}
 
-	public void setTitle(String title)
+	@Override public void setTitle(String title)
 	{
 		m_Title = title;
 	}
 
-	public String getElementValue(String path)
+	@Override public String getElementValue(String path)
 	{
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
 
-	public String[] getElementValues(String path, String[] elements)
+	@Override public String[] getElementValues(String path, String[] elements)
 	{
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
 
-	public String getAttributeValue(String path, String attribute)
+	@Override public String getAttributeValue(String path, String attribute)
 	{
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
 
-	public String[] getAttributeValues(String path, String[] attributes)
+	@Override public String[] getAttributeValues(String path, String[] attributes)
 	{
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
 
-	public void setLocation(URL location)
+	@Override public void setLocation(URL location)
 	{
 		m_Location = location;
 	}
 
-	public String getCreator()
+	@Override public String getCreator()
 	{
 		return null;
 	}
 
-	public void setCreator(String creator)
+	@Override public void setCreator(String creator)
 	{
 		// NOOP
 	}
 
-	public Collection getCategories()
+	@Override public Collection getCategories()
 	{
 		return m_Categories;
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
 	public void setCategories(Collection categories)
 	{
 		m_Categories = categories;
 	}
 
-	public void addCategory(CategoryIF category)
+	@Override public void addCategory(CategoryIF category)
 	{
 		// NOOP: Never used.
 	}
 
-	public void removeCategory(CategoryIF category)
+	@Override public void removeCategory(CategoryIF category)
 	{
 		// NOOP: Never used.
 	}
 
-	public void setDescription(String description)
+	@Override public void setDescription(String description)
 	{
 		m_Description = description;
 	}
 
-	public void setSite(URL site)
+	@Override public void setSite(URL site)
 	{
 		m_Site = site;
 	}
 
-	public String getCopyright()
+	@Override public String getCopyright()
 	{
 		return null;
 	}
 
-	public void setCopyright(String copyright)
+	@Override public void setCopyright(String copyright)
 	{
 		// NOOP
 	}
 
-	public void addObserver(ChannelObserverIF o)
+	@Override public void addObserver(ChannelObserverIF o)
 	{
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
 
-	public void removeObserver(ChannelObserverIF o)
+	@Override public void removeObserver(ChannelObserverIF o)
 	{
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
