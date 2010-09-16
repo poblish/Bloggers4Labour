@@ -65,6 +65,8 @@ public class FeedList implements MutableFeedListIF
 
 	private ProcessingObservable		m_DoneObservable = new ProcessingObservable();  // (AGR) 21 June 2005. 3 Feb 2007: removed transient
 
+	private final static byte[]		_m_PostFeedSitesListArrayLocker = new byte[0];	// (AGR) 16 September 2010
+
 	private static Logger			s_FL_Logger = Logger.getLogger( FeedList.class );
 
 	private final static long		UPDATER_TIMEOUT_PERIOD = 12;
@@ -195,7 +197,7 @@ public class FeedList implements MutableFeedListIF
 	{
 //		System.out.println( "--> " + Thread.currentThread() );
 
-//		synchronized (_m_FUListLocker)
+		synchronized (_m_PostFeedSitesListArrayLocker)	// (AGR) 16 September 2010. Prevent ArrayIndexOutOfBoundsException occuring in toArray() code under heavy concurrency
 		{
 			return m_PostFeedSitesList.toArray( new Site[ m_PostFeedSitesList.size() ] );
 		}
@@ -281,7 +283,9 @@ public class FeedList implements MutableFeedListIF
 
 		for ( int i = 0; i < sitesArray.length; i++)
 		{
-			if (inChannel.equals( sitesArray[i].getChannel() ))
+			final ChannelIF	theC = sitesArray[i].getChannel();
+
+			if ( theC != null && inChannel.equals(theC))	// (AGR) 16 September 2010. Yuk! Have seen NPE here, hence check. Can't be sure if it was symptom of different problem, but safety first.
 			{
 				return sitesArray[i];
 			}
