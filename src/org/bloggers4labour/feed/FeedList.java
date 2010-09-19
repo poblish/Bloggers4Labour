@@ -283,9 +283,14 @@ public class FeedList implements MutableFeedListIF
 
 		for ( int i = 0; i < sitesArray.length; i++)
 		{
-			final ChannelIF	theC = sitesArray[i].getChannel();
+			if ( sitesArray[i] == null)	// (AGR) 19 September 2010. Yuk! Have seen NPE here. Can't be sure if it was symptom of different problem, but safety first.
+			{
+				continue;
+			}
 
-			if ( theC != null && inChannel.equals(theC))	// (AGR) 16 September 2010. Yuk! Have seen NPE here, hence check. Can't be sure if it was symptom of different problem, but safety first.
+			////////////////////////////////////////////////////////
+
+			if (inChannel.equals( sitesArray[i].getChannel() ))
 			{
 				return sitesArray[i];
 			}
