@@ -65,7 +65,7 @@ public class FeedList implements MutableFeedListIF
 
 	private ProcessingObservable		m_DoneObservable = new ProcessingObservable();  // (AGR) 21 June 2005. 3 Feb 2007: removed transient
 
-	private final static byte[]		_m_PostFeedSitesListArrayLocker = new byte[0];	// (AGR) 16 September 2010
+	private final static byte[]		_m_PostFeedSitesMutatorLocker = new byte[0];	// (AGR) 16 September 2010
 
 	private static Logger			s_FL_Logger = Logger.getLogger( FeedList.class );
 
@@ -165,7 +165,11 @@ public class FeedList implements MutableFeedListIF
 
 		m_FeedChannels.clear();		// ensure we go and get a new snapshot next time
 
-		m_PostFeedSitesList.clear();
+		synchronized (_m_PostFeedSitesMutatorLocker)	// (AGR) 20 September 2010
+		{
+			m_PostFeedSitesList.clear();
+		}
+
 		m_CommentsFeedSitesList.clear();
 
 		m_LastFeedURLsList = null;
@@ -197,7 +201,7 @@ public class FeedList implements MutableFeedListIF
 	{
 //		System.out.println( "--> " + Thread.currentThread() );
 
-		synchronized (_m_PostFeedSitesListArrayLocker)	// (AGR) 16 September 2010. Prevent ArrayIndexOutOfBoundsException occuring in toArray() code under heavy concurrency
+		synchronized (_m_PostFeedSitesMutatorLocker)	// (AGR) 16-20 September 2010. Prevent ArrayIndexOutOfBoundsException occuring in toArray() code under heavy concurrency
 		{
 			return m_PostFeedSitesList.toArray( new Site[ m_PostFeedSitesList.size() ] );
 		}
@@ -679,9 +683,12 @@ public class FeedList implements MutableFeedListIF
 			theSiteObj.addCreator(theFirstCreatorsType);
 		//	theSiteObj.findFavicon();
 
-			s_FL_Logger.info(">>> SHT #" + m_ID + " Adding: " + theSiteObj);
+			synchronized (_m_PostFeedSitesMutatorLocker)	// (AGR) 20 September 2010
+			{
+				s_FL_Logger.info(">>> SHT #" + m_ID + " Adding: " + theSiteObj);
 
-			m_PostFeedSitesList.add(theSiteObj);
+				m_PostFeedSitesList.add(theSiteObj);
+			}
 
 			if (specifiedACommentsFeed)	// (AGR) 30 Nov 2005. Keep track of how many there are...
 			{
@@ -784,7 +791,11 @@ public class FeedList implements MutableFeedListIF
 					m_OPMLHandler.clear();
 				}
 
-				m_PostFeedSitesList.clear();
+				synchronized (_m_PostFeedSitesMutatorLocker)	// (AGR) 20 September 2010
+				{
+					m_PostFeedSitesList.clear();
+				}
+
 				m_CommentsFeedSitesList.clear();
 
 				////////////////////////////////////////////  (AGR) 7 October 2005, 29 Nov 2005
