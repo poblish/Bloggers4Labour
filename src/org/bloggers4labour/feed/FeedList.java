@@ -685,7 +685,10 @@ public class FeedList implements MutableFeedListIF
 
 			synchronized (_m_PostFeedSitesMutatorLocker)	// (AGR) 20 September 2010
 			{
-				s_FL_Logger.info(">>> SHT #" + m_ID + " Adding: " + theSiteObj);
+				if (s_FL_Logger.isTraceEnabled())
+				{
+					s_FL_Logger.trace(">>> SHT #" + m_ID + " Adding: " + theSiteObj);
+				}
 
 				m_PostFeedSitesList.add(theSiteObj);
 			}
