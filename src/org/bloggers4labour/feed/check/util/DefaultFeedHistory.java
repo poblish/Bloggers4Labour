@@ -5,7 +5,7 @@
 
 package org.bloggers4labour.feed.check.util;
 
-import java.util.HashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.util.Map;
 import org.apache.log4j.Logger;
 import org.bloggers4labour.feed.check.FeedCheckerNotificationIF;
@@ -16,7 +16,7 @@ import org.bloggers4labour.feed.check.FeedCheckerNotificationIF;
  */
 public class DefaultFeedHistory implements FeedHistoryIF
 {
-	private final Map<String,FeedHistoryEntryIF>	m_Map = new HashMap<String,FeedHistoryEntryIF>();
+	private final Map<String,FeedHistoryEntryIF>	m_Map = new Object2ObjectOpenHashMap<String,FeedHistoryEntryIF>();
 
 	private static Logger				s_Logger = Logger.getLogger( DefaultFeedHistory.class );
 

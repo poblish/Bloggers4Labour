@@ -54,8 +54,10 @@
 
 package org.bloggers4labour.html;
 
-import java.util.HashMap;
-import java.util.Map;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.apache.log4j.Logger;
 
 /**
@@ -393,8 +395,9 @@ public class Encoding	// Formerly com.purpletech.util.Purple_Utils
 		{"raquo", Integer.valueOf(187)},	// right angle quote
 		{"iquest", Integer.valueOf(191)},	// inverted question mark
     };
-    static Map<String,Integer> e2i = new HashMap<String,Integer>();
-    static Map<Integer,String> i2e = new HashMap<Integer,String>();
+ 
+    final static Object2IntMap<String> e2i = new Object2IntOpenHashMap<String>();
+    final static Int2ObjectMap<String> i2e = new Int2ObjectOpenHashMap<String>();
 
     static {
 	for (int i=0; i<entities.length; ++i) {
@@ -415,7 +418,7 @@ public class Encoding	// Formerly com.purpletech.util.Purple_Utils
 
 	public static String htmlescape(String s1, boolean inConvertAmp)
 	{
-		StringBuffer	buf = new StringBuffer();
+		StringBuilder	buf = new StringBuilder();
 		int		i, theLength = s1.length();
 
 		for ( i = 0; i < theLength; ++i)
@@ -428,7 +431,7 @@ public class Encoding	// Formerly com.purpletech.util.Purple_Utils
 			}
 			else
 			{
-				String entity = (String)i2e.get( Integer.valueOf((int)ch) );	    
+				String entity = i2e.get((int) ch);
 
 				// debug("char = '" + ch + "', int = " + (int)ch + ", entity = \"" + entity + "\"");
 
@@ -518,7 +521,7 @@ public class Encoding	// Formerly com.purpletech.util.Purple_Utils
 					}
 					else
 					{
-						Integer	iso = (Integer) e2i.get(theEntity);
+						Integer	iso = e2i.get(theEntity);
 
 						// println("unenscapedLength: iso = " + iso);
 
@@ -577,14 +580,14 @@ public class Encoding	// Formerly com.purpletech.util.Purple_Utils
 				}
 				else
 				{
-					iso = (Integer)e2i.get(entity);
+					iso = e2i.get(entity);
 				}
 
 				////////////////////////////////////////////////
 
 				if ( iso == null)
 				{
-					buf.append("&" + entity + ";");
+					buf.append("&").append(entity).append(";");
 				}
 				else
 				{

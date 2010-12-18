@@ -9,6 +9,7 @@
 
 package org.bloggers4labour.activity;
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectRBTreeMap;
 import com.hiatus.htl.HTL;
 import com.hiatus.htl.HTLTemplate;
 import com.hiatus.text.UText;
@@ -34,8 +35,8 @@ import static org.bloggers4labour.Constants.*;
  */
 public class LastPostTable implements LastPostTableIF
 {
-	private Map<String,Long>		m_ChannelData = new TreeMap<String,Long>();
-	private Map<Long,Date>			m_SiteData = new TreeMap<Long,Date>();
+	private final Map<String,Long>		m_ChannelData = new TreeMap<String,Long>();
+	private final Map<Long,Date>		m_SiteData = new Long2ObjectRBTreeMap<Date>();
 	private FeedList			m_FL;
 
 	private int[]				m_Stats = new int[11];
@@ -43,7 +44,7 @@ public class LastPostTable implements LastPostTableIF
 
 	private final byte[]			m_CompletionLocker = new byte[0];	// (AGR) 29 Jan 2007. Removed pointless 'transient'
 
-	private static Map<Long,Date>		s_LegacySiteData = new TreeMap<Long,Date>();
+	private final static Map<Long,Date>	s_LegacySiteData = new Long2ObjectRBTreeMap<Date>();
 	private static Logger			s_Logger = Logger.getLogger( LastPostTable.class );
 
 	private final static int		PERC_BAR_WIDTH = 200;

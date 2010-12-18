@@ -10,11 +10,11 @@
 
 package org.bloggers4labour.mapping;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Map;
-import java.util.TreeMap;
 import javax.xml.parsers.*;
 import org.apache.log4j.Logger;
 import org.bloggers4labour.conf.Configuration;
@@ -28,7 +28,7 @@ import org.xml.sax.SAXException;
  */
 public class URLToName
 {
-	private Map<String,String>	m_Mappings = new TreeMap<String,String>( new HostComparator() );
+	private Map<String,String>	m_Mappings = new Object2ObjectRBTreeMap<String,String>( new HostComparator() );
 
 	private static Logger		s_Logger = Logger.getLogger("Main");
 

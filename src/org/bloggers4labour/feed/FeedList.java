@@ -9,6 +9,7 @@ package org.bloggers4labour.feed;
 import com.hiatus.sql.ResultSetList;
 import com.hiatus.sql.USQL_Utils;
 import com.hiatus.text.UText;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import java.net.URL;
 import java.sql.Statement;
 import java.sql.SQLException;
@@ -454,12 +455,13 @@ public class FeedList implements MutableFeedListIF
 	*******************************************************************************/
 	class SiteHandlerTask implements Callable<Object>
 	{
-		private UpdaterTask		m_Task;
-		private int			m_ID;
-		private List			m_RowsList;
+		private final UpdaterTask	m_Task;
+		private final int		m_ID;
+		private final List		m_RowsList;
+		private final long		m_CurrTimeMSecs;
+		private final FaviconManagerIF	m_FaviconManager;
+
 		private Map			m_CurrentRow;
-		private long			m_CurrTimeMSecs;
-		private FaviconManagerIF	m_FaviconManager;
 
 		/*******************************************************************************
 		*******************************************************************************/
@@ -547,7 +549,7 @@ public class FeedList implements MutableFeedListIF
 
 			////////////////////////////////////////////////////////
 
-			Number	theSiteRecno = (Number) m_CurrentRow.get("site_recno");
+			final Long	theSiteRecno = (Long) m_CurrentRow.get("site_recno");
 
 			synchronized (m_Task._m_LastRecnoLocker)
 			{
@@ -759,8 +761,8 @@ public class FeedList implements MutableFeedListIF
 	*******************************************************************************/
 	class UpdaterTask implements Runnable
 	{
-		protected List<SiteHandlerTask>		m_SHTs = new ArrayList<SiteHandlerTask>(6);
-		protected List<Number>			m_SiteRecnosUsed = new ArrayList<Number>(100);
+		protected List<SiteHandlerTask>		m_SHTs = new ArrayList<SiteHandlerTask>(20);
+		protected Collection<Long>		m_SiteRecnosUsed = new LongOpenHashSet(4000);		// (AGR) 16 Dec 2010
 
 		protected final List<String>		m_FailedPostFeeds = new ArrayList<String>();		// (AGR) 7 October 2005
 		protected final List<String>		m_TimedOutPostFeeds = new ArrayList<String>();		// (AGR) 30 Nov 2005

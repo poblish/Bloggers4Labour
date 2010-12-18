@@ -11,11 +11,11 @@
 package org.bloggers4labour.cats;
 
 import de.nava.informa.core.CategoryIF;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Observable;
@@ -37,7 +37,8 @@ import org.bloggers4labour.options.TaskOptionsBeanIF;
  */
 public class CategoriesTable implements CategoriesTableIF
 {
-	private Map<String,Collection<ItemIF> >	m_Map;
+	private final Map<String,Collection<ItemIF>>	m_Map = new Object2ObjectOpenHashMap<String,Collection<ItemIF>>();
+
 	private final byte[]			_m_Map_Locker = new byte[0];
 
 	private int				m_EntriesCount;
@@ -55,8 +56,6 @@ public class CategoriesTable implements CategoriesTableIF
 	*******************************************************************************/
 	public CategoriesTable( final InstallationIF inInstall)
 	{
-		m_Map = new HashMap<String,Collection<ItemIF> >();
-
 		m_LogPrefix = inInstall.getLogPrefix();
 
 		inInstall.getFeedList().addObserver( new CountEvent(this) );    // (AGR) 22 June 2005
@@ -365,23 +364,23 @@ public class CategoriesTable implements CategoriesTableIF
 
 		synchronized (_m_Map_Locker)
 		{
-		sb.append("Entries: " + m_EntriesCount + "\n");
+			sb.append("Entries: " + m_EntriesCount + "\n");
 
-		for ( String theKey : m_Map.keySet())
-		{
+			for ( String theKey : m_Map.keySet())
+			{
 				Collection<ItemIF>	theEntries = m_Map.get(theKey);
 				boolean			gotOne = false;
 
-			for ( ItemIF theItem : theEntries)
-			{
-				if (!gotOne)
+				for ( ItemIF theItem : theEntries)
 				{
-					sb.append( theKey + " (" + theEntries.size() + ") : " + theItem + "\n");
-					gotOne = true;
-				}
-				else
-				{
-					sb.append("                 " + theItem + "\n");
+					if (!gotOne)
+					{
+						sb.append( theKey + " (" + theEntries.size() + ") : " + theItem + "\n");
+						gotOne = true;
+					}
+					else
+					{
+						sb.append("                 " + theItem + "\n");
 					}
 				}
 			}
