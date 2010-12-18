@@ -11,12 +11,14 @@ import de.nava.informa.core.ChannelObserverIF;
 import de.nava.informa.core.CloudIF;
 import de.nava.informa.core.ImageIF;
 import de.nava.informa.core.TextInputIF;
+import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import org.apache.commons.collections.map.LinkedMap;
 import org.bloggers4labour.bridge.channel.item.DefaultItemBridgeFactory;
 import org.bloggers4labour.bridge.channel.item.ItemBridgeIF;
 import org.bloggers4labour.bridge.channel.item.ItemIF;
@@ -33,7 +35,10 @@ public class DefaultChannelImpl implements ChannelIF
 	private URL				m_Location;
 	private URL				m_Site;
 	private ChannelFormat			m_Format;
-	protected LinkedMap			m_Coll;
+
+	@SuppressWarnings("unchecked")
+	protected Long2ObjectMap<ItemIF>	m_Coll = Long2ObjectMaps.EMPTY_MAP;	// (AGR) 18 Dec 2010. Use new fastutils impl.
+
 	private Collection<CategoryIF>		m_Categories = Collections.emptyList();
 
 	protected final static ItemBridgeIF	s_Bridge = new DefaultItemBridgeFactory().getInstance();
@@ -49,7 +54,7 @@ public class DefaultChannelImpl implements ChannelIF
 	@SuppressWarnings("unchecked")
 	public DefaultChannelImpl( final de.nava.informa.core.ChannelIF inOriginal)
 	{
-		m_Coll = new LinkedMap();		// <Long,ItemIF>();
+		m_Coll = new Long2ObjectLinkedOpenHashMap<ItemIF>();
 
 		init(inOriginal);
 
@@ -65,7 +70,7 @@ public class DefaultChannelImpl implements ChannelIF
 	/*******************************************************************************
 	*******************************************************************************/
 	@SuppressWarnings("unchecked")
-	protected void init( final de.nava.informa.core.ChannelIF inOriginal)
+	protected final void init( final de.nava.informa.core.ChannelIF inOriginal)
 	{
 		m_Id = inOriginal.getId();
 		m_Title = inOriginal.getTitle();
@@ -190,8 +195,6 @@ public class DefaultChannelImpl implements ChannelIF
 	*******************************************************************************/
 	@Override public void addItem( final de.nava.informa.core.ItemIF inItem)
 	{
-		// return ( m_Coll.put( inItem.getId(), inItem) != null);
-
 		m_Coll.put( inItem.getId(), s_Bridge.bridge( inItem, this));
 	}
 
@@ -199,8 +202,6 @@ public class DefaultChannelImpl implements ChannelIF
 	*******************************************************************************/
 	@Override public boolean addItemWithResult( final de.nava.informa.core.ItemIF inItem)
 	{
-		// return ( m_Coll.put( inItem.getId(), inItem) != null);
-
 		return ( m_Coll.put( inItem.getId(), s_Bridge.bridge( inItem, this)) != null);
 	}
 
@@ -208,8 +209,6 @@ public class DefaultChannelImpl implements ChannelIF
 	*******************************************************************************/
 	@Override public void removeItem( final de.nava.informa.core.ItemIF inItem)
 	{
-		// return ( m_Coll.remove( inItem.getId() ) != null);
-
 		m_Coll.remove( inItem.getId() );
 	}
 
