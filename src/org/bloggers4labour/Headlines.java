@@ -8,6 +8,8 @@ package org.bloggers4labour;
 
 import com.hiatus.dates.UDates;
 import com.hiatus.text.UText;
+import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap;
+import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.ArrayList;
@@ -22,8 +24,6 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.Timer;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.log4j.Logger;
 import org.bloggers4labour.bridge.channel.ChannelIF;
@@ -48,7 +48,7 @@ import org.bloggers4labour.tag.Link;
  */
 public class Headlines implements HeadlinesIF, Iterable<ItemIF>
 {
-	private TreeMap<ItemIF,ItemIF>	m_Coll = new TreeMap<ItemIF,ItemIF>( new ItemsComparator() );
+	private Map<ItemIF,ItemIF>	m_Coll = new Object2ObjectRBTreeMap<ItemIF,ItemIF>( new ItemsComparator() );
 	private Timer			m_CleanTimer;
 	private CleanerTask		m_CleanerTask;
 	private String			m_HeadlinesXMLString;	// (AGR) 19 April 2005
@@ -160,12 +160,12 @@ public class Headlines implements HeadlinesIF, Iterable<ItemIF>
 
 		synchronized (this)	// (AGR) 3 Feb 2007. FindBugs said m_Coll wasn't sync-protected. Looks to be right, too, hence change.
 		{
-		if ( m_Coll != null)
-		{
-			m_Coll.clear();
-			m_Coll = null;
+			if ( m_Coll != null)
+			{
+				m_Coll.clear();
+				m_Coll = null;
+			}
 		}
-	}
 	}
 
 	/*******************************************************************************
@@ -226,11 +226,11 @@ public class Headlines implements HeadlinesIF, Iterable<ItemIF>
 		{
 			Object	theSite = eachItem.getChannel().getSite();
 
-				if ( theSite != null)
-				{
-					theSet.add( theSite.toString() );
-				}
+			if ( theSite != null)
+			{
+				theSet.add( theSite.toString() );
 			}
+		}
 
 		return theSet;
 	}
@@ -270,7 +270,7 @@ public class Headlines implements HeadlinesIF, Iterable<ItemIF>
 
 		if ( maxNumberItemsPerSite != Integer.MAX_VALUE)
 		{
-			allItemsForThisSite = new TreeMap<ItemIF,ItemIF>( new ItemsComparator() );
+			allItemsForThisSite = new Object2ObjectRBTreeMap<ItemIF,ItemIF>( new ItemsComparator() );
 			allItemsForThisSite.put( inNewItem, inNewItem);
 		}
 		else
@@ -514,7 +514,7 @@ public class Headlines implements HeadlinesIF, Iterable<ItemIF>
 	*******************************************************************************/
 	public Collection<ItemIF> createSortedCollection()
 	{
-		return new TreeSet<ItemIF>( new ItemsComparator() );
+		return new ObjectRBTreeSet<ItemIF>( new ItemsComparator() );
 	}
 	
 	/*******************************************************************************
