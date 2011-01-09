@@ -7,6 +7,7 @@ package org.bloggers4labour.polling;
 
 import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.bridge.channel.ChannelIF;
+import org.bloggers4labour.polling.api.PollerFeedApproverIF;
 import org.bloggers4labour.site.SiteIF;
 
 /**
@@ -15,15 +16,17 @@ import org.bloggers4labour.site.SiteIF;
  */
 public interface PollerIF
 {
-	public void setInstallation( final InstallationIF inInstallation);
+	void setInstallation( final InstallationIF inInstallation);
 
-	public boolean registerChannelWithInforma( final ChannelIF inChannel);
-	public void unregisterChannelWithInforma( final ChannelIF inChannel);
+	boolean registerChannelWithInforma( final ChannelIF inChannel);
+	void unregisterChannelWithInforma( final ChannelIF inChannel);
 
-	public boolean registerChannel( SiteIF inSite, ChannelIF inChannel, long inCurrentTimeMSecs);
-	public boolean registerCommentsChannel( SiteIF inSite, ChannelIF inChannel, long inCurrentTimeMSecs);
-	public boolean unregisterChannel( ChannelIF inChannel);
+	boolean registerChannel( SiteIF inSite, ChannelIF inChannel, long inCurrentTimeMSecs);
+	boolean registerCommentsChannel( SiteIF inSite, ChannelIF inChannel, long inCurrentTimeMSecs);
+	boolean unregisterChannel( ChannelIF inChannel);
 
-	public void startPolling();
-	public void cancelPolling();
+	void startPolling();
+	void cancelPolling();
+
+	PollerFeedApproverIF getFeedApprover();
 }

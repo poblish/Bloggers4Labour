@@ -6,6 +6,7 @@
 
 package org.bloggers4labour;
 
+import java.util.concurrent.TimeUnit;
 import com.hiatus.dates.UDates;
 import com.hiatus.html.UHTML;
 import com.hiatus.text.UText;
@@ -52,6 +53,8 @@ public final class FeedUtils
 	private static final String	TT_STRIPPER = "<tt>|<tt +[^>]*>|</tt>";						// (AGR) 9 November 2005
 	private static final String	INTERNAL_LINK_STRIPPER = "<a[^>]*name=\"[^>]*\"[^>]+/>|<a id=\"[^>=]*\"></a>";	// (AGR) 14 Jan 2006
 	private static final String	STRONG_STRIPPER = "<strong>|</strong>|<strong */>";				// (AGR) 16 Jan 2006
+
+	private static final long	s_SlowFeedInterval = TimeUnit.MILLISECONDS.convert( 60, TimeUnit.DAYS);		// (AGR) 7 Jan 2011
 
 	private static Pattern		s_CommentAuthorVisPattern = Pattern.compile(" \\[Visitor\\]");			// (AGR) 30 Nov 2005
 	private static Pattern		s_CommentAuthorMemPattern = Pattern.compile(" \\[Member\\]");			// (AGR) 30 Nov 2005
@@ -647,5 +650,80 @@ public final class FeedUtils
 		}
 
 		return theSitesBuf.toString();
+	}
+
+	/*******************************************************************************
+		(AGR) 7 Jan 2010
+
+		This is a bit crap, because we only ever get an Item's publication date,
+		not its updated date, which is really what we want. But hey...
+	*******************************************************************************/
+	public static Date getLastPubDate( final ChannelIF inChannel)
+	{
+		Date	thePubDate = inChannel.getLastUpdated();
+
+		if ( thePubDate != null)
+		{
+			return thePubDate;
+		}
+
+		if (inChannel.getItems().isEmpty())
+		{
+			return null;
+		}
+
+		////////////////////////////////////////////////////////////////
+
+	//	final List<ItemIF>	theItemsList = Lists.newArrayList( inChannel.getItems() );	// we want a List for reverse iteration (oldest first!)
+		long			theOldestMS = Long.MAX_VALUE;
+
+		for ( final ItemIF eachItem : inChannel.getItems())	// Lists.reverse(theItemsList))
+		{
+			final long	theAgeMS = eachItem.getDate().getTime();
+
+			if ( theAgeMS < theOldestMS)
+			{
+				theOldestMS = theAgeMS;
+			}
+		}
+
+		return new Date(theOldestMS);
+	}
+
+	/*******************************************************************************
+		(AGR) 7 Jan 2010
+
+		This is a bit crap, because we only ever get an Item's publication date,
+		not its updated date, which is really what we want. But hey...
+	*******************************************************************************/
+	public static boolean isSlowFeed( final ChannelIF inChannel)
+	{
+		Date	thePubDate = inChannel.getLastUpdated();
+
+		if ( thePubDate != null)
+		{
+			return (( System.currentTimeMillis() - thePubDate.getTime()) >= s_SlowFeedInterval);
+		}
+
+		if (inChannel.getItems().isEmpty())
+		{
+			return true;
+		}
+
+		////////////////////////////////////////////////////////////////
+
+		final long	theCurrTimeMS = System.currentTimeMillis();
+
+		for ( final ItemIF eachItem : inChannel.getItems())
+		{
+			final long	theAgeMS = eachItem.getDate().getTime();
+
+			if (( theCurrTimeMS - theAgeMS) < s_SlowFeedInterval)	// If this Item *isn't* too old, then we're fundamentally OK, so return 'not slow'
+			{
+				return false;
+			}
+		}
+
+		return true;
 	}
 }

@@ -19,11 +19,11 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.bloggers4labour.InstallationManager;
 import org.bloggers4labour.ItemType;
 import org.bloggers4labour.feed.Feed;
 import org.bloggers4labour.feed.FeedType;
 import org.bloggers4labour.sql.DataSourceConnection;
-import org.bloggers4labour.sql.QueryBuilder;
 import org.htmlparser.Node;
 import org.htmlparser.Parser;
 import org.htmlparser.filters.TagNameFilter;
@@ -193,7 +193,7 @@ public class HTMLParserTest
 				try
 				{
 					theS = theConnectionObject.createStatement();
-					rs = theS.executeQuery( QueryBuilder.getAllBlogFeeds() );
+					rs = theS.executeQuery( InstallationManager.getDefaultInstallation().getQueryBuilder().getAllBlogFeeds() );
 					while (rs.next())
 					{
 						try

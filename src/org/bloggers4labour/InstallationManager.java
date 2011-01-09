@@ -9,6 +9,8 @@
 
 package org.bloggers4labour;
 
+import org.bloggers4labour.polling.impl.AllFeedsApprover;
+import org.bloggers4labour.polling.api.PollerFeedApproverIF;
 import com.hiatus.envt.IncludeFileLocator;
 import com.hiatus.envt.impl.DefaultFileLocator;
 import com.hiatus.htl.HTL;
@@ -143,6 +145,7 @@ public class InstallationManager implements InstallationManagerIF
 
 			XPathExpression			thePollersExpr = theXPathObj.compile("installations/pollers/poller");
 			XPathExpression			thePollerClassExpr = theXPathObj.compile("class[1]/text()");
+			XPathExpression			theApproverImplClassExpr = theXPathObj.compile("approverImpl[1]/text()");	// (AGR) 3 Jan 2011
 			XPathExpression			thePollerFreqExpr = theXPathObj.compile("frequency_ms[1]/text()");
 			NodeList			thePollersNodes = (NodeList) thePollersExpr.evaluate( theDocument, XPathConstants.NODESET);
 			Map<String,PollerConfig>	thePollerIdsMap = new HashMap<String,PollerConfig>();
@@ -153,6 +156,7 @@ public class InstallationManager implements InstallationManagerIF
 
 				String		theId = theElement.getAttributes().getNamedItem("id").getTextContent();
 				String		theClassStr = (String) thePollerClassExpr.evaluate( theElement, XPathConstants.STRING);
+				String		theApproverImplClassStr = (String) theApproverImplClassExpr.evaluate( theElement, XPathConstants.STRING);
 
 				long	thePollerFreqMS = 5 * ONE_MINUTE_MSECS;
 
@@ -169,13 +173,42 @@ public class InstallationManager implements InstallationManagerIF
 					// NOOP
 				}
 
+				/////////////////////////////////////////////////////////////////////////////  (AGR) 3 Jan 2011
+
+				PollerFeedApproverIF	theApprover = new AllFeedsApprover();
+
+				if ( theApproverImplClassStr != null)
+				{
+					try
+					{
+						Class<? extends PollerFeedApproverIF>	theClazz = (Class<? extends PollerFeedApproverIF>) Class.forName(theApproverImplClassStr);
+
+						theApprover = theClazz.newInstance();
+					//	Constructor<?>				ctor = theClazz.getConstructors()[0];
+
+						// thePollerIdsMap.put( theId, new PollerConfig( ctor, theId, thePollerFreqMS));
+					}
+					catch (IllegalAccessException e)
+					{
+						s_Installations_Logger.error("Failure when creating Approver \"" + theApproverImplClassStr + "\".", e);
+					}
+					catch (InstantiationException e)
+					{
+						s_Installations_Logger.error("Failure when creating Approver \"" + theApproverImplClassStr + "\".", e);
+					}
+					catch (ClassNotFoundException e)
+					{
+						s_Installations_Logger.error("Failure when creating Approver \"" + theApproverImplClassStr + "\".", e);
+					}
+				}
+
 				/////////////////////////////////////////////////////////////////////////////
 
 				try
 				{
 					Constructor	ctor = Class.forName(theClassStr).getConstructors()[0];
 
-					thePollerIdsMap.put( theId, new PollerConfig( ctor, theId, thePollerFreqMS));
+					thePollerIdsMap.put( theId, new PollerConfig( ctor, theId, thePollerFreqMS, theApprover));
 				}
 				catch (ClassNotFoundException e)
 				{
@@ -247,11 +280,11 @@ public class InstallationManager implements InstallationManagerIF
 				{
 					String		theDSNStr = (String) theDSNExpr.evaluate( theElement, XPathConstants.STRING);
 
-					s_Installations_Logger.info("[IMgr] Looking up: " + theDSNStr);
+					s_Installations_Logger.info("[IMgr] Looking up DSN: '" + theDSNStr + "'");
 
 					theSource = lookupDataSource(theDSNStr);	// (AGR) 28 April 2007
 
-					s_Installations_Logger.info("[IMgr] Obtained: " + theSource);
+					s_Installations_Logger.info("[IMgr] Obtained DataSource: " + theSource);
 				}
 				catch (Exception e)
 				{

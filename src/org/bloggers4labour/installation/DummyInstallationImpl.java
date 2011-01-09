@@ -87,7 +87,7 @@ public class DummyInstallationImpl implements InstallationIF
 		return false;
 	}
 
-	public Iterable<PollerIF> getPollers()
+	public Collection<PollerIF> getPollers()
 	{
 		throw new UnsupportedOperationException("Not supported yet.");
 	}

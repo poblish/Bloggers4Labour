@@ -42,8 +42,8 @@ public interface InstallationIF extends FeedCheckerConsumerDelegateIF
 	public IndexMgrIF getIndexMgr();
 	public FaviconManagerIF getFaviconManager();
 
-	public boolean hasPollers();
-	public Iterable<PollerIF> getPollers();
+	boolean hasPollers();
+	Collection<PollerIF> getPollers();
 
 	public ResourceBundle getBundle();
 	public ResourceBundle getBundle( Locale inLocale);

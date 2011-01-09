@@ -48,8 +48,8 @@ import org.bloggers4labour.sql.DataSourceConnection;
  */
 public class FeedList implements MutableFeedListIF
 {
-	private ArrayList<SiteIF>		m_PostFeedSitesList = new ArrayList<SiteIF>(150);
-	private ArrayList<SiteIF>		m_CommentsFeedSitesList = new ArrayList<SiteIF>(30);	// (AGR) 30 Nov 2005
+	private ArrayList<SiteIF>		m_PostFeedSitesList = new ArrayList<SiteIF>(4000);	// (AGR) 9 Jan 2011: 150 -> 4000
+	private ArrayList<SiteIF>		m_CommentsFeedSitesList = new ArrayList<SiteIF>(0);	// (AGR) 9 Jan 2011: 30 -> 0; (AGR) 30 Nov 2005
 
 	private ArrayList<SiteIF>		m_LastFeedURLsList;
 

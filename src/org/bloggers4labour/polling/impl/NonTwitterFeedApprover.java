@@ -5,6 +5,7 @@
 
 package org.bloggers4labour.polling.impl;
 
+import org.bloggers4labour.FeedUtils;
 import org.bloggers4labour.bridge.channel.ChannelIF;
 import org.bloggers4labour.polling.api.PollerFeedApproverIF;
 
@@ -18,7 +19,7 @@ public class NonTwitterFeedApprover implements PollerFeedApproverIF
 	*******************************************************************************/
 	public boolean accept( final String inFeedURL, final ChannelIF inChannel)
 	{
-		return !inFeedURL.startsWith("http://twitter.com/");
+		return !inFeedURL.startsWith("http://twitter.com/") && !FeedUtils.isSlowFeed(inChannel);
 	}
 
 	/*******************************************************************************

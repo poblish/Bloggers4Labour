@@ -296,15 +296,9 @@ public class Installation implements InstallationIF
 
 	/*******************************************************************************
 	*******************************************************************************/
-	public Iterable<PollerIF> getPollers()
+	public Collection<PollerIF> getPollers()
 	{
-		return new Iterable<PollerIF>() {
-
-			public Iterator<PollerIF> iterator()
-			{
-				return m_Pollers.iterator();
-			}
-		};
+		return m_Pollers;
 	}
 
 	/*******************************************************************************

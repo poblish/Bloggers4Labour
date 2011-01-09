@@ -18,6 +18,8 @@ import org.apache.log4j.Logger;
 import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.bridge.channel.ChannelIF;
 import org.bloggers4labour.bridge.channel.DefaultChannelBridgeFactory;
+import org.bloggers4labour.polling.api.PollerFeedApproverIF;
+import org.bloggers4labour.polling.impl.AllFeedsApprover;
 
 /**
  *
@@ -110,5 +112,12 @@ public class SlowPoller extends org.bloggers4labour.polling.Poller implements Ob
 	public void update( Observable o, Object arg)
 	{
 		m_InitialFeedListRunCompleted = true;
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public PollerFeedApproverIF getFeedApprover()
+	{
+		return new AllFeedsApprover();	// FIXME
 	}
 }

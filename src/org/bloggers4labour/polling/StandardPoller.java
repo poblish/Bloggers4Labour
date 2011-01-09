@@ -16,6 +16,7 @@ import org.apache.log4j.Logger;
 import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.bridge.channel.ChannelIF;
 import org.bloggers4labour.bridge.channel.DefaultChannelBridgeFactory;
+import org.bloggers4labour.polling.api.PollerFeedApproverIF;
 
 /**
  *
@@ -25,19 +26,24 @@ public class StandardPoller extends org.bloggers4labour.polling.Poller
 {
 	protected PollerObserverIF				m_Observer;
 
-	protected static de.nava.informa.utils.poller.Poller	s_InformaPoller;
+	private final PollerFeedApproverIF			m_Approver;
+
+	protected de.nava.informa.utils.poller.Poller		m_InformaPoller;
+//	protected static de.nava.informa.utils.poller.Poller	s_InformaPoller;
 	protected static Logger					s_Logger = Logger.getLogger( StandardPoller.class );
 
 	/*******************************************************************************
 		(AGR) 28 October 2006
 	*******************************************************************************/
-	public StandardPoller( String inName, long inPollerFrequencyMS)
+	public StandardPoller( String inName, long inPollerFrequencyMS, final PollerFeedApproverIF inApprover)
 	{
 		super(inName);
 
-		synchronized (this)
+		m_Approver = inApprover;
+
+	//	synchronized (this)
 		{
-			if ( s_InformaPoller == null)
+	//		if ( s_InformaPoller == null)
 			{
 				///////////////////////////////////////////////////////////////////////  (AGR) 25 October 2008
 
@@ -47,11 +53,11 @@ public class StandardPoller extends org.bloggers4labour.polling.Poller
 
 				///////////////////////////////////////////////////////////////////////
 
-				s_InformaPoller = new de.nava.informa.utils.poller.Poller( 5 /* worker threads */,
+				m_InformaPoller = new de.nava.informa.utils.poller.Poller( 5 /* worker threads */,
 							de.nava.informa.utils.poller.Poller.POLICY_SCAN_ALL,
 							null, null, new B4LInputStreamProvider(), theApprover);
 
-				s_InformaPoller.setPeriod( inPollerFrequencyMS );
+				m_InformaPoller.setPeriod( inPollerFrequencyMS );
 
 				s_Logger.info( getLogPrefix() + "Created Informa Poller, freq = " + UDates.getFormattedTimeDiff( inPollerFrequencyMS ));
 			}
@@ -73,7 +79,7 @@ public class StandardPoller extends org.bloggers4labour.polling.Poller
 		{
 			m_Observer = new MyObserver( m_Installation );
 
-			s_InformaPoller.addObserver(m_Observer);
+			m_InformaPoller.addObserver(m_Observer);
 
 			// s_Logger.info("Poller: add Observer: " + m_Observer);
 		}
@@ -85,7 +91,7 @@ public class StandardPoller extends org.bloggers4labour.polling.Poller
 	{
 		s_Logger.debug( getLogPrefix() + "Registering: " + inChannel);
 
-		s_InformaPoller.registerChannel( new DefaultChannelBridgeFactory().getInstance().bridge(inChannel) );
+		m_InformaPoller.registerChannel( new DefaultChannelBridgeFactory().getInstance().bridge(inChannel) );
 
 		return true;
 	}
@@ -94,6 +100,20 @@ public class StandardPoller extends org.bloggers4labour.polling.Poller
 	*******************************************************************************/
 	public void unregisterChannelWithInforma( final ChannelIF inChannel)
 	{
-		s_InformaPoller.unregisterChannel( new DefaultChannelBridgeFactory().getInstance().bridge(inChannel) );
+		m_InformaPoller.unregisterChannel( new DefaultChannelBridgeFactory().getInstance().bridge(inChannel) );
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public PollerFeedApproverIF getFeedApprover()
+	{
+		return m_Approver;
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public String toString()
+	{
+		return "[StandardPoller@" + Integer.toHexString(hashCode()) + ", using " + getFeedApprover() + "]";
 	}
 }

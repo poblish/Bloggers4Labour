@@ -5,6 +5,7 @@
 
 package org.bloggers4labour.polling.impl;
 
+import org.apache.log4j.Logger;
 import org.bloggers4labour.FeedUtils;
 import org.bloggers4labour.bridge.channel.ChannelIF;
 import org.bloggers4labour.polling.api.PollerFeedApproverIF;
@@ -13,19 +14,27 @@ import org.bloggers4labour.polling.api.PollerFeedApproverIF;
  *
  * @author andrewregan
  */
-public class TwitterFeedApprover implements PollerFeedApproverIF
+public class SlowFeedApprover implements PollerFeedApproverIF
 {
+	private static Logger		s_Logger = Logger.getLogger( SlowFeedApprover.class );
+
 	/*******************************************************************************
 	*******************************************************************************/
 	public boolean accept( final String inFeedURL, final ChannelIF inChannel)
 	{
-		return inFeedURL.startsWith("http://twitter.com/") && !FeedUtils.isSlowFeed(inChannel);
+		if (!inFeedURL.startsWith("http://twitter.com/") && FeedUtils.isSlowFeed(inChannel))
+		{
+			s_Logger.debug( "::: Slow feed: " + inChannel + ", last updated @ " + FeedUtils.getLastPubDate(inChannel));
+			return true;
+		}
+
+		return false;
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
 	public String toString()
 	{
-		return "TwitterFeedApprover@" + Integer.toHexString(hashCode());
+		return "SlowFeedApprover@" + Integer.toHexString(hashCode());
 	}
 }

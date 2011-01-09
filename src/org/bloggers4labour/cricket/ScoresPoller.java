@@ -16,6 +16,8 @@ import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.bridge.channel.ChannelIF;
 import org.bloggers4labour.bridge.channel.DefaultChannelBridgeFactory;
 import org.bloggers4labour.polling.MyObserver;
+import org.bloggers4labour.polling.api.PollerFeedApproverIF;
+import org.bloggers4labour.polling.impl.AllFeedsApprover;
 
 /**
  *
@@ -80,5 +82,12 @@ public class ScoresPoller extends org.bloggers4labour.polling.Poller
 	public void unregisterChannelWithInforma( final ChannelIF inChannel)
 	{
 		m_InformaPoller.unregisterChannel( new DefaultChannelBridgeFactory().getInstance().bridge(inChannel) );
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public PollerFeedApproverIF getFeedApprover()
+	{
+		return new AllFeedsApprover();	// FIXME
 	}
 }

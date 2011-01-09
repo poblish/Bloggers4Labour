@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Logger;
 import org.bloggers4labour.InstallationIF;
@@ -21,8 +22,8 @@ import org.bloggers4labour.bridge.channel.ChannelIF;
 public class DefaultPollerAllocator implements PollerAllocatorIF
 {
 	private InstallationIF				m_Install;
-	private Collection<PollerIF>			m_StandardPollers = new ArrayList<PollerIF>();
-	private PollerIF				m_SlowPoller;
+
+	private final List<PollerIF>			m_TempPollersList = new ArrayList<PollerIF>();
 
 	private Map<String,Collection<PollerIF>>	m_Map = new HashMap<String,Collection<PollerIF>>();
 
@@ -34,17 +35,9 @@ public class DefaultPollerAllocator implements PollerAllocatorIF
 	{
 		m_Install = inInstall;
 
-		for ( PollerIF eachPoller : m_Install.getPollers())
-		{
-			if ( eachPoller instanceof SlowPoller)
-			{
-				m_SlowPoller = eachPoller;
-			}
-			else
-			{
-				m_StandardPollers.add(eachPoller);
-			}
-		}
+		m_TempPollersList.addAll( m_Install.getPollers() );
+
+		s_Logger.info("CREATED " + this + ", using Pollers: " + m_TempPollersList);
 	}
 
 	/*******************************************************************************
@@ -67,52 +60,28 @@ public class DefaultPollerAllocator implements PollerAllocatorIF
 	*******************************************************************************/
 	public void success( final String inFeedURL, ChannelIF inChannel)
 	{
-		Collection<PollerIF>	theCurrPollers = m_Map.get(inFeedURL);
+		for ( PollerIF eachPoller : m_TempPollersList)
+		{
+			if (eachPoller.getFeedApprover().accept( inFeedURL, inChannel))
+			{
+				m_Map.put( inFeedURL, Collections.singletonList(eachPoller));
 
-		if ( theCurrPollers == null)
-		{
-			m_Map.put( inFeedURL, m_StandardPollers);
-		}
-		else if (theCurrPollers.contains(m_SlowPoller))
-		{
-			m_Map.clear();
-			m_Map.put( inFeedURL, m_StandardPollers);
+				s_Logger.trace("SUCCESS '"  + inFeedURL + "'");
 
-			// FIXME. Now have to handle the registration!!! Or should we leave that to allocate()? NO!!! Because that's only called once...?
-		}
-		else
-		{
-			return;
+				// FIXME. Now have to handle the registration!!! Or should we leave that to allocate()? NO!!! Because that's only called once...?
+
+				return;
+			}
 		}
 
-		s_Logger.trace("SUCCESS '"  + inFeedURL + "' -> " + m_Map.get(inFeedURL));
+		s_Logger.warn("FAILED TO ALLOCATE '"  + inFeedURL + "', among " + m_TempPollersList);
 	}
 
 	/*******************************************************************************
 	*******************************************************************************/
 	public void failed( final String inFeedURL)
 	{
-		Collection<PollerIF>	theCurrPollers = m_Map.get(inFeedURL);
-
-		if ( theCurrPollers == null)
-		{
-			m_Map.put( inFeedURL, Collections.singletonList(m_SlowPoller));
-		}
-		else if (!theCurrPollers.contains(m_SlowPoller))
-		{
-			m_Map.clear();
-			m_Map.put( inFeedURL, Collections.singletonList(m_SlowPoller));
-
-			// FIXME. Now have to handle the DE-registration!!!
-
-			// m_SlowPoller.unregisterChannel(theFailedChannel);
-		}
-		else
-		{
-			return;
-		}
-
-		s_Logger.debug("FAILED '"  + inFeedURL + "' -> " + m_Map.get(inFeedURL));
+		// NOOP
 	}
 
 	/*******************************************************************************
