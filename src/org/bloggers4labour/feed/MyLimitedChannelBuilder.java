@@ -9,7 +9,6 @@ import de.nava.informa.core.ItemIF;
 import de.nava.informa.impl.basic.ChannelBuilder;
 import de.nava.informa.impl.basic.Item;
 import java.net.URL;
-import org.apache.log4j.Logger;
 import org.jdom.Element;
 
 /**
@@ -18,26 +17,26 @@ import org.jdom.Element;
  */
 public class MyLimitedChannelBuilder extends ChannelBuilder
 {
-	public final static int	MAX_POSTS_PER_CHANNEL = 30;
+	public final static int	MAX_POSTS_PER_CHANNEL = 30;	// (AGR) 9 Jan 2011. Raised this to 50, but then restored to 30. Waste of resources.
 
-	private static Logger	s_Logger = Logger.getLogger( MyLimitedChannelBuilder.class );
+//	private static Logger	s_Logger = Logger.getLogger( MyLimitedChannelBuilder.class );
 
 	/*******************************************************************************
 	*******************************************************************************/
-	@Override public ItemIF createItem( final Element itemElement, final ChannelIF inChannel, final String inTitle, final String description, final URL link)
+	@Override public ItemIF createItem( final Element itemElement, final ChannelIF inChannel, final String inTitle, final String description, final URL inLink)
 	{
-		final ItemIF item = new Item( itemElement, inChannel, inTitle, description, link);
+		final ItemIF item = new Item( itemElement, inChannel, inTitle, description, inLink);
 
 		if ( inChannel != null)
 		{
-			if ( inChannel.getItems().size() < MAX_POSTS_PER_CHANNEL)
+			if ( inChannel.getItems().size() <= MAX_POSTS_PER_CHANNEL)
 			{
 				inChannel.addItem(item);
 			}
-			else
+		/*	else
 			{
-				s_Logger.warn("Too many articles (" + inChannel.getItems().size() + ") for " + inChannel);
-			}
+				s_Logger.warn("Too many articles (" + inChannel.getItems().size() + ") for " + inChannel.getSite() + ". Skip: " + inLink);
+			} */
 		}
 
 		return item;
