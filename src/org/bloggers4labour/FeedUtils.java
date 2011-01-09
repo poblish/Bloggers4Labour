@@ -679,6 +679,13 @@ public final class FeedUtils
 
 		for ( final ItemIF eachItem : inChannel.getItems())	// Lists.reverse(theItemsList))
 		{
+			if ( eachItem.getDate() == null)	// Yuk!
+			{
+				continue;
+			}
+
+			////////////////////////////////////////////////////////////////
+
 			final long	theAgeMS = eachItem.getDate().getTime();
 
 			if ( theAgeMS < theOldestMS)
@@ -716,6 +723,13 @@ public final class FeedUtils
 
 		for ( final ItemIF eachItem : inChannel.getItems())
 		{
+			if ( eachItem.getDate() == null)
+			{
+				return true;	// (AGR) 9 Jan 2011. Punish feeds with null dates by putting them in the slow lane
+			}
+
+			////////////////////////////////////////////////////////////////
+
 			final long	theAgeMS = eachItem.getDate().getTime();
 
 			if (( theCurrTimeMS - theAgeMS) < s_SlowFeedInterval)	// If this Item *isn't* too old, then we're fundamentally OK, so return 'not slow'
