@@ -6,6 +6,7 @@
 package org.bloggers4labour.bridge.cats;
 
 import de.nava.informa.core.CategoryIF;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -13,8 +14,10 @@ import java.util.Collections;
  *
  * @author andrewregan
  */
-public class DefaultCategoryImpl implements CategoryIF
+public class DefaultCategoryImpl implements CategoryIF, Serializable
 {
+	private static final long	serialVersionUID = 1L;
+
 	private long		m_Id;
 	private String		m_Title;
 
