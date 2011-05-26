@@ -1,0 +1,1378 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<BugCollection version="1.1.3" sequence="0" timestamp="-1" analysisTimestamp="1172066202471" release="">
+  <Project filename="findBugsProject">
+    <Jar>/Users/andrewre/Development/java/Bloggers4Labour/dist/Bloggers4Labour.jar</Jar>
+    <SrcDir>/Users/andrewre/Development/java/Bloggers4Labour/src</SrcDir>
+  </Project>
+  <BugInstance type="BC_BAD_CAST_TO_CONCRETE_COLLECTION" priority="2" abbrev="BC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.FeedUtils">
+      <SourceLine classname="org.bloggers4labour.FeedUtils" sourcefile="FeedUtils.java" sourcepath="org/bloggers4labour/FeedUtils.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.FeedUtils" name="cloneItem" signature="(Lde/nava/informa/core/ChannelIF;Lde/nava/informa/core/ItemIF;Z)Lde/nava/informa/core/ItemIF;" isStatic="true">
+      <SourceLine classname="org.bloggers4labour.FeedUtils" start="615" end="632" startBytecode="0" endBytecode="35" sourcefile="FeedUtils.java" sourcepath="org/bloggers4labour/FeedUtils.java"/>
+    </Method>
+    <Type descriptor="Ljava/util/Collection;"/>
+    <Type descriptor="Ljava/util/ArrayList;"/>
+    <SourceLine classname="org.bloggers4labour.FeedUtils" start="623" end="623" startBytecode="55" endBytecode="55" sourcefile="FeedUtils.java" sourcepath="org/bloggers4labour/FeedUtils.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.FeedUtils">
+      <SourceLine classname="org.bloggers4labour.FeedUtils" sourcefile="FeedUtils.java" sourcepath="org/bloggers4labour/FeedUtils.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.FeedUtils" name="getItemDate" signature="(Lde/nava/informa/core/ItemIF;)Ljava/util/Date;" isStatic="true">
+      <SourceLine classname="org.bloggers4labour.FeedUtils" start="386" end="449" startBytecode="0" endBytecode="125" sourcefile="FeedUtils.java" sourcepath="org/bloggers4labour/FeedUtils.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.FeedUtils" start="423" end="423" startBytecode="106" endBytecode="106" sourcefile="FeedUtils.java" sourcepath="org/bloggers4labour/FeedUtils.java"/>
+  </BugInstance>
+  <BugInstance type="UUF_UNUSED_FIELD" priority="2" abbrev="UuF" category="PERFORMANCE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.FeedUtils">
+      <SourceLine classname="org.bloggers4labour.FeedUtils" sourcefile="FeedUtils.java" sourcepath="org/bloggers4labour/FeedUtils.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.FeedUtils" name="s_QuotePattern" signature="Ljava/util/regex/Pattern;" isStatic="true">
+      <SourceLine classname="org.bloggers4labour.FeedUtils" sourcefile="FeedUtils.java" sourcepath="org/bloggers4labour/FeedUtils.java"/>
+    </Field>
+  </BugInstance>
+  <BugInstance type="DMI_BLOCKING_METHODS_ON_URL" priority="1" abbrev="Dm" category="PERFORMANCE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.Headlines">
+      <SourceLine classname="org.bloggers4labour.Headlines" sourcefile="Headlines.java" sourcepath="org/bloggers4labour/Headlines.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.Headlines" name="put" signature="(Lde/nava/informa/core/ItemIF;Lorg/bloggers4labour/ItemContext;)Lorg/bloggers4labour/AddResult;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.Headlines" start="272" end="344" startBytecode="0" endBytecode="313" sourcefile="Headlines.java" sourcepath="org/bloggers4labour/Headlines.java"/>
+    </Method>
+    <Method classname="java.net.URL" name="equals" signature="(Ljava/lang/Object;)Z" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.net.URL" start="836" end="840" startBytecode="0" endBytecode="59" sourcefile="URL.java" sourcepath="java/net/URL.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.Headlines" start="298" end="298" startBytecode="168" endBytecode="168" sourcefile="Headlines.java" sourcepath="org/bloggers4labour/Headlines.java"/>
+  </BugInstance>
+  <BugInstance type="EI_EXPOSE_REP" priority="2" abbrev="EI" category="MALICIOUS_CODE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.Headlines">
+      <SourceLine classname="org.bloggers4labour.Headlines" sourcefile="Headlines.java" sourcepath="org/bloggers4labour/Headlines.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.Headlines" name="toArray" signature="()[Lde/nava/informa/core/ItemIF;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.Headlines" start="185" end="188" startBytecode="0" endBytecode="32" sourcefile="Headlines.java" sourcepath="org/bloggers4labour/Headlines.java"/>
+    </Method>
+    <Field classname="org.bloggers4labour.Headlines" name="s_TempArray" signature="[Lde/nava/informa/core/ItemIF;" isStatic="true">
+      <SourceLine classname="org.bloggers4labour.Headlines" sourcefile="Headlines.java" sourcepath="org/bloggers4labour/Headlines.java"/>
+    </Field>
+    <SourceLine classname="org.bloggers4labour.Headlines" start="186" end="186" startBytecode="10" endBytecode="10" sourcefile="Headlines.java" sourcepath="org/bloggers4labour/Headlines.java"/>
+  </BugInstance>
+  <BugInstance type="IS2_INCONSISTENT_SYNC" priority="2" abbrev="IS" category="MT_CORRECTNESS">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.Headlines">
+      <SourceLine classname="org.bloggers4labour.Headlines" sourcefile="Headlines.java" sourcepath="org/bloggers4labour/Headlines.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.Headlines" name="m_Coll" signature="Ljava/util/TreeMap;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.Headlines" sourcefile="Headlines.java" sourcepath="org/bloggers4labour/Headlines.java"/>
+    </Field>
+    <Int value="93" role="INT_SYNC_PERCENT"/>
+    <SourceLine classname="org.bloggers4labour.Headlines$CleanerTask" start="524" end="524" startBytecode="18" endBytecode="18" sourcefile="Headlines.java" sourcepath="org/bloggers4labour/Headlines.java" role="SOURCE_LINE_UNSYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.Headlines" start="438" end="438" startBytecode="11" endBytecode="11" sourcefile="Headlines.java" sourcepath="org/bloggers4labour/Headlines.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.Headlines" start="458" end="458" startBytecode="3" endBytecode="3" sourcefile="Headlines.java" sourcepath="org/bloggers4labour/Headlines.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.Headlines" start="363" end="363" startBytecode="1" endBytecode="1" sourcefile="Headlines.java" sourcepath="org/bloggers4labour/Headlines.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.Headlines" start="227" end="227" startBytecode="13" endBytecode="13" sourcefile="Headlines.java" sourcepath="org/bloggers4labour/Headlines.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.Headlines" start="185" end="185" startBytecode="1" endBytecode="1" sourcefile="Headlines.java" sourcepath="org/bloggers4labour/Headlines.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.Headlines" start="188" end="188" startBytecode="12" endBytecode="12" sourcefile="Headlines.java" sourcepath="org/bloggers4labour/Headlines.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.Headlines" start="178" end="178" startBytecode="1" endBytecode="1" sourcefile="Headlines.java" sourcepath="org/bloggers4labour/Headlines.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.Headlines" start="166" end="166" startBytecode="67" endBytecode="67" sourcefile="Headlines.java" sourcepath="org/bloggers4labour/Headlines.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.Headlines" start="168" end="168" startBytecode="74" endBytecode="74" sourcefile="Headlines.java" sourcepath="org/bloggers4labour/Headlines.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.Headlines" start="169" end="169" startBytecode="82" endBytecode="82" sourcefile="Headlines.java" sourcepath="org/bloggers4labour/Headlines.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.Headlines" start="284" end="284" startBytecode="24" endBytecode="24" sourcefile="Headlines.java" sourcepath="org/bloggers4labour/Headlines.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.Headlines" start="288" end="288" startBytecode="125" endBytecode="125" sourcefile="Headlines.java" sourcepath="org/bloggers4labour/Headlines.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.Headlines" start="356" end="356" startBytecode="1" endBytecode="1" sourcefile="Headlines.java" sourcepath="org/bloggers4labour/Headlines.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.Headlines" start="213" end="213" startBytecode="5" endBytecode="5" sourcefile="Headlines.java" sourcepath="org/bloggers4labour/Headlines.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="2" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.HeadlinesMgr">
+      <SourceLine classname="org.bloggers4labour.HeadlinesMgr" sourcefile="HeadlinesMgr.java" sourcepath="org/bloggers4labour/HeadlinesMgr.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.HeadlinesMgr" name="&lt;init&gt;" signature="(Lorg/w3c/dom/Element;Lorg/bloggers4labour/Installation;)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.HeadlinesMgr" start="65" end="264" startBytecode="0" endBytecode="822" sourcefile="HeadlinesMgr.java" sourcepath="org/bloggers4labour/HeadlinesMgr.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.HeadlinesMgr" start="256" end="256" startBytecode="790" endBytecode="790" sourcefile="HeadlinesMgr.java" sourcepath="org/bloggers4labour/HeadlinesMgr.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.HeadlinesMgr">
+      <SourceLine classname="org.bloggers4labour.HeadlinesMgr" sourcefile="HeadlinesMgr.java" sourcepath="org/bloggers4labour/HeadlinesMgr.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.HeadlinesMgr" name="&lt;init&gt;" signature="(Lorg/w3c/dom/Element;Lorg/bloggers4labour/Installation;)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.HeadlinesMgr" start="65" end="264" startBytecode="0" endBytecode="822" sourcefile="HeadlinesMgr.java" sourcepath="org/bloggers4labour/HeadlinesMgr.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.HeadlinesMgr" start="206" end="206" startBytecode="606" endBytecode="606" sourcefile="HeadlinesMgr.java" sourcepath="org/bloggers4labour/HeadlinesMgr.java"/>
+  </BugInstance>
+  <BugInstance type="UUF_UNUSED_FIELD" priority="2" abbrev="UuF" category="PERFORMANCE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.Installation">
+      <SourceLine classname="org.bloggers4labour.Installation" sourcefile="Installation.java" sourcepath="org/bloggers4labour/Installation.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.Installation" name="m_PollerFrequencyMS" signature="J" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.Installation" sourcefile="Installation.java" sourcepath="org/bloggers4labour/Installation.java"/>
+    </Field>
+  </BugInstance>
+  <BugInstance type="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR" priority="3" abbrev="UwF" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.Installation">
+      <SourceLine classname="org.bloggers4labour.Installation" sourcefile="Installation.java" sourcepath="org/bloggers4labour/Installation.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.Installation" name="m_Categories" signature="Lorg/bloggers4labour/cats/CategoriesTable;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.Installation" sourcefile="Installation.java" sourcepath="org/bloggers4labour/Installation.java"/>
+    </Field>
+  </BugInstance>
+  <BugInstance type="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR" priority="3" abbrev="UwF" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.Installation">
+      <SourceLine classname="org.bloggers4labour.Installation" sourcefile="Installation.java" sourcepath="org/bloggers4labour/Installation.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.Installation" name="m_HeadlinesMgr" signature="Lorg/bloggers4labour/HeadlinesMgr;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.Installation" sourcefile="Installation.java" sourcepath="org/bloggers4labour/Installation.java"/>
+    </Field>
+  </BugInstance>
+  <BugInstance type="DE_MIGHT_IGNORE" priority="3" abbrev="DE" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.InstallationManager">
+      <SourceLine classname="org.bloggers4labour.InstallationManager" sourcefile="InstallationManager.java" sourcepath="org/bloggers4labour/InstallationManager.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.InstallationManager" name="&lt;init&gt;" signature="()V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.InstallationManager" start="51" end="190" startBytecode="0" endBytecode="749" sourcefile="InstallationManager.java" sourcepath="org/bloggers4labour/InstallationManager.java"/>
+    </Method>
+    <Class classname="java.lang.Exception" role="CLASS_EXCEPTION">
+      <SourceLine classname="java.lang.Exception" sourcefile="Exception.java" sourcepath="java/lang/Exception.java"/>
+    </Class>
+    <SourceLine classname="org.bloggers4labour.InstallationManager" start="84" end="84" startBytecode="204" endBytecode="204" sourcefile="InstallationManager.java" sourcepath="org/bloggers4labour/InstallationManager.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="2" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.InstallationManager">
+      <SourceLine classname="org.bloggers4labour.InstallationManager" sourcefile="InstallationManager.java" sourcepath="org/bloggers4labour/InstallationManager.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.InstallationManager" name="&lt;init&gt;" signature="()V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.InstallationManager" start="51" end="190" startBytecode="0" endBytecode="749" sourcefile="InstallationManager.java" sourcepath="org/bloggers4labour/InstallationManager.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.InstallationManager" start="97" end="97" startBytecode="242" endBytecode="242" sourcefile="InstallationManager.java" sourcepath="org/bloggers4labour/InstallationManager.java"/>
+    <SourceLine classname="org.bloggers4labour.InstallationManager" start="186" end="186" startBytecode="737" endBytecode="737" sourcefile="InstallationManager.java" sourcepath="org/bloggers4labour/InstallationManager.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.InstallationManager">
+      <SourceLine classname="org.bloggers4labour.InstallationManager" sourcefile="InstallationManager.java" sourcepath="org/bloggers4labour/InstallationManager.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.InstallationManager" name="&lt;init&gt;" signature="()V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.InstallationManager" start="51" end="190" startBytecode="0" endBytecode="749" sourcefile="InstallationManager.java" sourcepath="org/bloggers4labour/InstallationManager.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.InstallationManager" start="163" end="163" startBytecode="628" endBytecode="628" sourcefile="InstallationManager.java" sourcepath="org/bloggers4labour/InstallationManager.java"/>
+  </BugInstance>
+  <BugInstance type="SE_NO_SERIALVERSIONID" priority="3" abbrev="SnVI" category="BAD_PRACTICE">
+    <Class classname="org.bloggers4labour.ItemsComparator">
+      <SourceLine classname="org.bloggers4labour.ItemsComparator" sourcefile="ItemsComparator.java" sourcepath="org/bloggers4labour/ItemsComparator.java"/>
+    </Class>
+  </BugInstance>
+  <BugInstance type="DE_MIGHT_IGNORE" priority="3" abbrev="DE" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.MainServlet">
+      <SourceLine classname="org.bloggers4labour.MainServlet" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.MainServlet" name="_handleDSW" signature="(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Locale;Ljava/sql/Statement;Ljava/lang/StringBuilder;)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.MainServlet" start="858" end="1133" startBytecode="0" endBytecode="1337" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    </Method>
+    <Class classname="java.lang.Exception" role="CLASS_EXCEPTION">
+      <SourceLine classname="java.lang.Exception" sourcefile="Exception.java" sourcepath="java/lang/Exception.java"/>
+    </Class>
+    <SourceLine classname="org.bloggers4labour.MainServlet" start="862" end="862" startBytecode="20" endBytecode="20" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+  </BugInstance>
+  <BugInstance type="DE_MIGHT_IGNORE" priority="3" abbrev="DE" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.MainServlet">
+      <SourceLine classname="org.bloggers4labour.MainServlet" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.MainServlet" name="doGet" signature="(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.MainServlet" start="113" end="488" startBytecode="0" endBytecode="1582" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    </Method>
+    <Class classname="java.lang.Exception" role="CLASS_EXCEPTION">
+      <SourceLine classname="java.lang.Exception" sourcefile="Exception.java" sourcepath="java/lang/Exception.java"/>
+    </Class>
+    <SourceLine classname="org.bloggers4labour.MainServlet" start="271" end="271" startBytecode="690" endBytecode="690" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+  </BugInstance>
+  <BugInstance type="NM_METHOD_NAMING_CONVENTION" priority="2" abbrev="Nm" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.MainServlet">
+      <SourceLine classname="org.bloggers4labour.MainServlet" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.MainServlet" name="GetClientLocale" signature="(Ljavax/servlet/http/HttpServletRequest;)Ljava/util/Locale;" isStatic="true">
+      <SourceLine classname="org.bloggers4labour.MainServlet" start="1395" end="1412" startBytecode="0" endBytecode="14" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    </Method>
+  </BugInstance>
+  <BugInstance type="NM_METHOD_NAMING_CONVENTION" priority="3" abbrev="Nm" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.MainServlet">
+      <SourceLine classname="org.bloggers4labour.MainServlet" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.MainServlet" name="Finish" signature="(Ljavax/servlet/http/HttpServletResponse;)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.MainServlet" start="1422" end="1437" startBytecode="0" endBytecode="43" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    </Method>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="2" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.MainServlet">
+      <SourceLine classname="org.bloggers4labour.MainServlet" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.MainServlet" name="doGet" signature="(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.MainServlet" start="113" end="488" startBytecode="0" endBytecode="1582" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.MainServlet" start="388" end="388" startBytecode="1159" endBytecode="1159" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    <SourceLine classname="org.bloggers4labour.MainServlet" start="479" end="479" startBytecode="1538" endBytecode="1538" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.MainServlet">
+      <SourceLine classname="org.bloggers4labour.MainServlet" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.MainServlet" name="doGet" signature="(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.MainServlet" start="113" end="488" startBytecode="0" endBytecode="1582" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.MainServlet" start="328" end="328" startBytecode="939" endBytecode="939" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.MainServlet">
+      <SourceLine classname="org.bloggers4labour.MainServlet" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.MainServlet" name="handleDSW" signature="(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)Ljava/lang/CharSequence;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.MainServlet" start="766" end="848" startBytecode="0" endBytecode="341" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.MainServlet" start="835" end="835" startBytecode="292" endBytecode="292" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.MainServlet">
+      <SourceLine classname="org.bloggers4labour.MainServlet" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.MainServlet" name="handleRecommendations" signature="(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)Ljava/lang/CharSequence;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.MainServlet" start="1140" end="1238" startBytecode="0" endBytecode="369" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.MainServlet" start="1216" end="1216" startBytecode="282" endBytecode="282" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.MainServlet">
+      <SourceLine classname="org.bloggers4labour.MainServlet" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.MainServlet" name="handleSearch" signature="(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)Ljava/lang/String;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.MainServlet" start="543" end="758" startBytecode="0" endBytecode="850" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.MainServlet" start="668" end="668" startBytecode="494" endBytecode="494" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="2" abbrev="SQL" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.MainServlet">
+      <SourceLine classname="org.bloggers4labour.MainServlet" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.MainServlet" name="_handleDSW" signature="(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Locale;Ljava/sql/Statement;Ljava/lang/StringBuilder;)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.MainServlet" start="858" end="1133" startBytecode="0" endBytecode="560" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.MainServlet" start="963" end="963" startBytecode="493" endBytecode="493" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="2" abbrev="SQL" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.MainServlet">
+      <SourceLine classname="org.bloggers4labour.MainServlet" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.MainServlet" name="_handleRecommendations" signature="(Lorg/bloggers4labour/InstallationIF;Ljava/lang/String;Ljava/lang/String;ILjava/sql/Statement;Ljava/lang/StringBuilder;)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.MainServlet" start="1248" end="1315" startBytecode="0" endBytecode="118" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.MainServlet" start="1249" end="1249" startBytecode="37" endBytecode="37" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="3" abbrev="SQL" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.MainServlet">
+      <SourceLine classname="org.bloggers4labour.MainServlet" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.MainServlet" name="handleSearch" signature="(Ljavax/servlet/http/HttpServletRequest;Ljavax/servlet/http/HttpServletResponse;)Ljava/lang/String;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.MainServlet" start="543" end="758" startBytecode="0" endBytecode="370" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.MainServlet" start="652" end="652" startBytecode="418" endBytecode="418" sourcefile="MainServlet.java" sourcepath="org/bloggers4labour/MainServlet.java"/>
+  </BugInstance>
+  <BugInstance type="BC_EQUALS_METHOD_SHOULD_WORK_FOR_ALL_OBJECTS" priority="2" abbrev="BC" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.Site">
+      <SourceLine classname="org.bloggers4labour.Site" sourcefile="Site.java" sourcepath="org/bloggers4labour/Site.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.Site" name="equals" signature="(Ljava/lang/Object;)Z" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.Site" start="121" end="130" startBytecode="0" endBytecode="22" sourcefile="Site.java" sourcepath="org/bloggers4labour/Site.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.Site" start="128" end="128" startBytecode="7" endBytecode="7" sourcefile="Site.java" sourcepath="org/bloggers4labour/Site.java"/>
+  </BugInstance>
+  <BugInstance type="SE_NO_SERIALVERSIONID" priority="2" abbrev="SnVI" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.Site">
+      <SourceLine classname="org.bloggers4labour.Site" sourcefile="Site.java" sourcepath="org/bloggers4labour/Site.java"/>
+    </Class>
+  </BugInstance>
+  <BugInstance type="SE_TRANSIENT_FIELD_NOT_RESTORED" priority="3" abbrev="Se" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.Site">
+      <SourceLine classname="org.bloggers4labour.Site" sourcefile="Site.java" sourcepath="org/bloggers4labour/Site.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.Site" name="m_Channel" signature="Lde/nava/informa/core/ChannelIF;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.Site" sourcefile="Site.java" sourcepath="org/bloggers4labour/Site.java"/>
+    </Field>
+  </BugInstance>
+  <BugInstance type="SE_TRANSIENT_FIELD_NOT_RESTORED" priority="3" abbrev="Se" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.Site">
+      <SourceLine classname="org.bloggers4labour.Site" sourcefile="Site.java" sourcepath="org/bloggers4labour/Site.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.Site" name="m_CommentsChannel" signature="Lde/nava/informa/core/ChannelIF;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.Site" sourcefile="Site.java" sourcepath="org/bloggers4labour/Site.java"/>
+    </Field>
+  </BugInstance>
+  <BugInstance type="SE_TRANSIENT_FIELD_NOT_RESTORED" priority="3" abbrev="Se" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.Site">
+      <SourceLine classname="org.bloggers4labour.Site" sourcefile="Site.java" sourcepath="org/bloggers4labour/Site.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.Site" name="m_DB_FaviconLocation" signature="Ljava/lang/String;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.Site" sourcefile="Site.java" sourcepath="org/bloggers4labour/Site.java"/>
+    </Field>
+  </BugInstance>
+  <BugInstance type="SE_TRANSIENT_FIELD_NOT_RESTORED" priority="3" abbrev="Se" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.Site">
+      <SourceLine classname="org.bloggers4labour.Site" sourcefile="Site.java" sourcepath="org/bloggers4labour/Site.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.Site" name="m_FaviconLocation" signature="Ljava/lang/String;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.Site" sourcefile="Site.java" sourcepath="org/bloggers4labour/Site.java"/>
+    </Field>
+  </BugInstance>
+  <BugInstance type="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR" priority="3" abbrev="UwF" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.Site">
+      <SourceLine classname="org.bloggers4labour.Site" sourcefile="Site.java" sourcepath="org/bloggers4labour/Site.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.Site" name="m_Creators" signature="Ljava/util/List;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.Site" sourcefile="Site.java" sourcepath="org/bloggers4labour/Site.java"/>
+    </Field>
+  </BugInstance>
+  <BugInstance type="BC_UNCONFIRMED_CAST" priority="3" abbrev="BC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.TextCleaner">
+      <SourceLine classname="org.bloggers4labour.TextCleaner" sourcefile="TextCleaner.java" sourcepath="org/bloggers4labour/TextCleaner.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.TextCleaner" name="collectLinks" signature="(Ljava/lang/String;Ljava/net/URL;Ljava/util/EnumSet;)Ljava/util/List;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.TextCleaner" start="189" end="213" startBytecode="0" endBytecode="47" sourcefile="TextCleaner.java" sourcepath="org/bloggers4labour/TextCleaner.java"/>
+    </Method>
+    <Type descriptor="Lorg/bloggers4labour/tag/Tag;"/>
+    <Type descriptor="Lorg/bloggers4labour/tag/Link;"/>
+    <SourceLine classname="org.bloggers4labour.TextCleaner" start="205" end="205" startBytecode="85" endBytecode="85" sourcefile="TextCleaner.java" sourcepath="org/bloggers4labour/TextCleaner.java"/>
+  </BugInstance>
+  <BugInstance type="DLS_DEAD_LOCAL_STORE" priority="3" abbrev="DLS" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.TextCleaner">
+      <SourceLine classname="org.bloggers4labour.TextCleaner" sourcefile="TextCleaner.java" sourcepath="org/bloggers4labour/TextCleaner.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.TextCleaner" name="process" signature="(Ljava/lang/String;Ljava/util/List;IZ)Ljava/lang/CharSequence;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.TextCleaner" start="518" end="635" startBytecode="0" endBytecode="244" sourcefile="TextCleaner.java" sourcepath="org/bloggers4labour/TextCleaner.java"/>
+    </Method>
+    <LocalVariable name="spaceLeft" register="8" pc="465" role="LOCAL_VARIABLE_NAMED"/>
+    <SourceLine classname="org.bloggers4labour.TextCleaner" start="624" end="624" startBytecode="463" endBytecode="463" sourcefile="TextCleaner.java" sourcepath="org/bloggers4labour/TextCleaner.java"/>
+  </BugInstance>
+  <BugInstance type="BC_UNCONFIRMED_CAST" priority="2" abbrev="BC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.TextCleaner$LinkNameSorter">
+      <SourceLine classname="org.bloggers4labour.TextCleaner$LinkNameSorter" sourcefile="TextCleaner.java" sourcepath="org/bloggers4labour/TextCleaner.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.TextCleaner$LinkNameSorter" name="compare" signature="(Lorg/bloggers4labour/tag/Tag;Lorg/bloggers4labour/tag/Tag;)I" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.TextCleaner$LinkNameSorter" start="756" end="763" startBytecode="0" endBytecode="17" sourcefile="TextCleaner.java" sourcepath="org/bloggers4labour/TextCleaner.java"/>
+    </Method>
+    <Type descriptor="Lorg/bloggers4labour/tag/Tag;"/>
+    <Type descriptor="Lorg/bloggers4labour/tag/Link;"/>
+    <SourceLine classname="org.bloggers4labour.TextCleaner$LinkNameSorter" start="763" end="763" startBytecode="19" endBytecode="19" sourcefile="TextCleaner.java" sourcepath="org/bloggers4labour/TextCleaner.java"/>
+    <SourceLine classname="org.bloggers4labour.TextCleaner$LinkNameSorter" start="763" end="763" startBytecode="26" endBytecode="26" sourcefile="TextCleaner.java" sourcepath="org/bloggers4labour/TextCleaner.java"/>
+  </BugInstance>
+  <BugInstance type="SE_NO_SERIALVERSIONID" priority="3" abbrev="SnVI" category="BAD_PRACTICE">
+    <Class classname="org.bloggers4labour.TextCleaner$LinkNameSorter">
+      <SourceLine classname="org.bloggers4labour.TextCleaner$LinkNameSorter" sourcefile="TextCleaner.java" sourcepath="org/bloggers4labour/TextCleaner.java"/>
+    </Class>
+  </BugInstance>
+  <BugInstance type="BC_UNCONFIRMED_CAST" priority="2" abbrev="BC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.TextCleaner$LinkURLSorter">
+      <SourceLine classname="org.bloggers4labour.TextCleaner$LinkURLSorter" sourcefile="TextCleaner.java" sourcepath="org/bloggers4labour/TextCleaner.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.TextCleaner$LinkURLSorter" name="compare" signature="(Lorg/bloggers4labour/tag/Tag;Lorg/bloggers4labour/tag/Tag;)I" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.TextCleaner$LinkURLSorter" start="776" end="783" startBytecode="0" endBytecode="17" sourcefile="TextCleaner.java" sourcepath="org/bloggers4labour/TextCleaner.java"/>
+    </Method>
+    <Type descriptor="Lorg/bloggers4labour/tag/Tag;"/>
+    <Type descriptor="Lorg/bloggers4labour/tag/Link;"/>
+    <SourceLine classname="org.bloggers4labour.TextCleaner$LinkURLSorter" start="776" end="776" startBytecode="1" endBytecode="1" sourcefile="TextCleaner.java" sourcepath="org/bloggers4labour/TextCleaner.java"/>
+    <SourceLine classname="org.bloggers4labour.TextCleaner$LinkURLSorter" start="776" end="776" startBytecode="8" endBytecode="8" sourcefile="TextCleaner.java" sourcepath="org/bloggers4labour/TextCleaner.java"/>
+  </BugInstance>
+  <BugInstance type="SE_NO_SERIALVERSIONID" priority="3" abbrev="SnVI" category="BAD_PRACTICE">
+    <Class classname="org.bloggers4labour.TextCleaner$LinkURLSorter">
+      <SourceLine classname="org.bloggers4labour.TextCleaner$LinkURLSorter" sourcefile="TextCleaner.java" sourcepath="org/bloggers4labour/TextCleaner.java"/>
+    </Class>
+  </BugInstance>
+  <BugInstance type="EI_EXPOSE_REP" priority="2" abbrev="EI" category="MALICIOUS_CODE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.activity.ActivityTable">
+      <SourceLine classname="org.bloggers4labour.activity.ActivityTable" sourcefile="ActivityTable.java" sourcepath="org/bloggers4labour/activity/ActivityTable.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.activity.ActivityTable" name="getEntries" signature="()[Lorg/bloggers4labour/activity/TimerEntryIF;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.activity.ActivityTable" start="50" end="50" startBytecode="0" endBytecode="4" sourcefile="ActivityTable.java" sourcepath="org/bloggers4labour/activity/ActivityTable.java"/>
+    </Method>
+    <Field classname="org.bloggers4labour.activity.ActivityTable" name="m_Entries" signature="[Lorg/bloggers4labour/activity/TimeEntry;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.activity.ActivityTable" sourcefile="ActivityTable.java" sourcepath="org/bloggers4labour/activity/ActivityTable.java"/>
+    </Field>
+    <SourceLine classname="org.bloggers4labour.activity.ActivityTable" start="50" end="50" startBytecode="4" endBytecode="4" sourcefile="ActivityTable.java" sourcepath="org/bloggers4labour/activity/ActivityTable.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.admin.CreatorAdministration">
+      <SourceLine classname="org.bloggers4labour.admin.CreatorAdministration" sourcefile="CreatorAdministration.java" sourcepath="org/bloggers4labour/admin/CreatorAdministration.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.admin.CreatorAdministration" name="main" signature="([Ljava/lang/String;)V" isStatic="true">
+      <SourceLine classname="org.bloggers4labour.admin.CreatorAdministration" start="40" end="100" startBytecode="0" endBytecode="209" sourcefile="CreatorAdministration.java" sourcepath="org/bloggers4labour/admin/CreatorAdministration.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.admin.CreatorAdministration" start="86" end="86" startBytecode="167" endBytecode="167" sourcefile="CreatorAdministration.java" sourcepath="org/bloggers4labour/admin/CreatorAdministration.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="3" abbrev="SQL" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.admin.CreatorAdministration">
+      <SourceLine classname="org.bloggers4labour.admin.CreatorAdministration" sourcefile="CreatorAdministration.java" sourcepath="org/bloggers4labour/admin/CreatorAdministration.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.admin.CreatorAdministration" name="creatorAdoptSite" signature="(Ljava/sql/Statement;IIZ)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.admin.CreatorAdministration" start="112" end="182" startBytecode="0" endBytecode="170" sourcefile="CreatorAdministration.java" sourcepath="org/bloggers4labour/admin/CreatorAdministration.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.admin.CreatorAdministration" start="112" end="112" startBytecode="20" endBytecode="20" sourcefile="CreatorAdministration.java" sourcepath="org/bloggers4labour/admin/CreatorAdministration.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="3" abbrev="SQL" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.admin.CreatorAdministration">
+      <SourceLine classname="org.bloggers4labour.admin.CreatorAdministration" sourcefile="CreatorAdministration.java" sourcepath="org/bloggers4labour/admin/CreatorAdministration.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.admin.CreatorAdministration" name="creatorAdoptSite" signature="(Ljava/sql/Statement;IIZ)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.admin.CreatorAdministration" start="112" end="182" startBytecode="0" endBytecode="170" sourcefile="CreatorAdministration.java" sourcepath="org/bloggers4labour/admin/CreatorAdministration.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.admin.CreatorAdministration" start="146" end="146" startBytecode="210" endBytecode="210" sourcefile="CreatorAdministration.java" sourcepath="org/bloggers4labour/admin/CreatorAdministration.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="3" abbrev="SQL" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.admin.CreatorAdministration">
+      <SourceLine classname="org.bloggers4labour.admin.CreatorAdministration" sourcefile="CreatorAdministration.java" sourcepath="org/bloggers4labour/admin/CreatorAdministration.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.admin.CreatorAdministration" name="creatorAdoptSite" signature="(Ljava/sql/Statement;IIZ)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.admin.CreatorAdministration" start="112" end="182" startBytecode="0" endBytecode="170" sourcefile="CreatorAdministration.java" sourcepath="org/bloggers4labour/admin/CreatorAdministration.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.admin.CreatorAdministration" start="152" end="152" startBytecode="293" endBytecode="293" sourcefile="CreatorAdministration.java" sourcepath="org/bloggers4labour/admin/CreatorAdministration.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="3" abbrev="SQL" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.admin.CreatorAdministration">
+      <SourceLine classname="org.bloggers4labour.admin.CreatorAdministration" sourcefile="CreatorAdministration.java" sourcepath="org/bloggers4labour/admin/CreatorAdministration.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.admin.CreatorAdministration" name="creatorAdoptSite" signature="(Ljava/sql/Statement;IIZ)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.admin.CreatorAdministration" start="112" end="182" startBytecode="0" endBytecode="170" sourcefile="CreatorAdministration.java" sourcepath="org/bloggers4labour/admin/CreatorAdministration.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.admin.CreatorAdministration" start="161" end="161" startBytecode="334" endBytecode="334" sourcefile="CreatorAdministration.java" sourcepath="org/bloggers4labour/admin/CreatorAdministration.java"/>
+  </BugInstance>
+  <BugInstance type="DLS_DEAD_LOCAL_STORE" priority="1" abbrev="DLS" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.admin.SiteAdministration">
+      <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.admin.SiteAdministration" name="deleteOrphanedGLocRecords" signature="(Ljava/sql/Statement;)Z" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" start="387" end="425" startBytecode="0" endBytecode="71" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+    </Method>
+    <LocalVariable name="theRecnos" register="4" pc="21" role="LOCAL_VARIABLE_NAMED"/>
+    <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" start="389" end="389" startBytecode="19" endBytecode="19" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.admin.SiteAdministration">
+      <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.admin.SiteAdministration" name="main" signature="([Ljava/lang/String;)V" isStatic="true">
+      <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" start="40" end="106" startBytecode="0" endBytecode="201" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" start="92" end="92" startBytecode="159" endBytecode="159" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="2" abbrev="SQL" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.admin.SiteAdministration">
+      <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.admin.SiteAdministration" name="cleanup" signature="(Ljava/sql/Statement;Lorg/bloggers4labour/admin/SiteAdministration$CleanupContext;Z)Z" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" start="212" end="379" startBytecode="0" endBytecode="339" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" start="286" end="286" startBytecode="303" endBytecode="303" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="2" abbrev="SQL" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.admin.SiteAdministration">
+      <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.admin.SiteAdministration" name="cleanup" signature="(Ljava/sql/Statement;Lorg/bloggers4labour/admin/SiteAdministration$CleanupContext;Z)Z" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" start="212" end="379" startBytecode="0" endBytecode="339" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" start="317" end="317" startBytecode="468" endBytecode="468" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="2" abbrev="SQL" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.admin.SiteAdministration">
+      <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.admin.SiteAdministration" name="cleanup" signature="(Ljava/sql/Statement;Lorg/bloggers4labour/admin/SiteAdministration$CleanupContext;Z)Z" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" start="212" end="379" startBytecode="0" endBytecode="339" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" start="360" end="360" startBytecode="727" endBytecode="727" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="2" abbrev="SQL" category="BAD_PRACTICE">
+    <Class classname="org.bloggers4labour.admin.SiteAdministration">
+      <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.admin.SiteAdministration" name="deleteOrphanedGLocRecords" signature="(Ljava/sql/Statement;)Z" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" start="387" end="425" startBytecode="0" endBytecode="71" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" start="414" end="414" startBytecode="109" endBytecode="109" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="3" abbrev="SQL" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.admin.SiteAdministration">
+      <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.admin.SiteAdministration" name="approveSite" signature="(Ljava/sql/Statement;IZ)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" start="127" end="153" startBytecode="0" endBytecode="80" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" start="127" end="127" startBytecode="20" endBytecode="20" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="3" abbrev="SQL" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.admin.SiteAdministration">
+      <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.admin.SiteAdministration" name="approveSite" signature="(Ljava/sql/Statement;IZ)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" start="127" end="153" startBytecode="0" endBytecode="80" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" start="133" end="133" startBytecode="61" endBytecode="61" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="3" abbrev="SQL" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.admin.SiteAdministration">
+      <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.admin.SiteAdministration" name="deleteSite" signature="(Ljava/sql/Statement;IZ)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" start="159" end="190" startBytecode="0" endBytecode="85" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" start="159" end="159" startBytecode="20" endBytecode="20" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="3" abbrev="SQL" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.admin.SiteAdministration">
+      <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.admin.SiteAdministration" name="deleteSite" signature="(Ljava/sql/Statement;IZ)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" start="159" end="190" startBytecode="0" endBytecode="85" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.admin.SiteAdministration" start="165" end="165" startBytecode="61" endBytecode="61" sourcefile="SiteAdministration.java" sourcepath="org/bloggers4labour/admin/SiteAdministration.java"/>
+  </BugInstance>
+  <BugInstance type="SE_NO_SERIALVERSIONID" priority="3" abbrev="SnVI" category="BAD_PRACTICE">
+    <Class classname="org.bloggers4labour.cats.CategoriesTable$CategoryNameSorter">
+      <SourceLine classname="org.bloggers4labour.cats.CategoriesTable$CategoryNameSorter" sourcefile="CategoriesTable.java" sourcepath="org/bloggers4labour/cats/CategoriesTable.java"/>
+    </Class>
+  </BugInstance>
+  <BugInstance type="BC_EQUALS_METHOD_SHOULD_WORK_FOR_ALL_OBJECTS" priority="2" abbrev="BC" category="BAD_PRACTICE">
+    <Class classname="org.bloggers4labour.cats.RankingObject">
+      <SourceLine classname="org.bloggers4labour.cats.RankingObject" sourcefile="RankingObject.java" sourcepath="org/bloggers4labour/cats/RankingObject.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.cats.RankingObject" name="equals" signature="(Ljava/lang/Object;)Z" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.cats.RankingObject" start="64" end="69" startBytecode="0" endBytecode="22" sourcefile="RankingObject.java" sourcepath="org/bloggers4labour/cats/RankingObject.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.cats.RankingObject" start="69" end="69" startBytecode="8" endBytecode="8" sourcefile="RankingObject.java" sourcepath="org/bloggers4labour/cats/RankingObject.java"/>
+  </BugInstance>
+  <BugInstance type="IS2_INCONSISTENT_SYNC" priority="2" abbrev="IS" category="MT_CORRECTNESS">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.cricket.ScoresPoller">
+      <SourceLine classname="org.bloggers4labour.cricket.ScoresPoller" sourcefile="ScoresPoller.java" sourcepath="org/bloggers4labour/cricket/ScoresPoller.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.cricket.ScoresPoller" name="m_Installation" signature="Lorg/bloggers4labour/Installation;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.cricket.ScoresPoller" sourcefile="ScoresPoller.java" sourcepath="org/bloggers4labour/cricket/ScoresPoller.java"/>
+    </Field>
+    <Int value="50" role="INT_SYNC_PERCENT"/>
+    <SourceLine classname="org.bloggers4labour.cricket.ScoresPoller" start="47" end="47" startBytecode="2" endBytecode="2" sourcefile="ScoresPoller.java" sourcepath="org/bloggers4labour/cricket/ScoresPoller.java" role="SOURCE_LINE_UNSYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.cricket.ScoresPoller" start="63" end="63" startBytecode="13" endBytecode="13" sourcefile="ScoresPoller.java" sourcepath="org/bloggers4labour/cricket/ScoresPoller.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+  </BugInstance>
+  <BugInstance type="UUF_UNUSED_FIELD" priority="2" abbrev="UuF" category="PERFORMANCE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.cricket.ScoresPoller">
+      <SourceLine classname="org.bloggers4labour.cricket.ScoresPoller" sourcefile="ScoresPoller.java" sourcepath="org/bloggers4labour/cricket/ScoresPoller.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.cricket.ScoresPoller" name="s_TempVal" signature="J" isStatic="true">
+      <SourceLine classname="org.bloggers4labour.cricket.ScoresPoller" sourcefile="ScoresPoller.java" sourcepath="org/bloggers4labour/cricket/ScoresPoller.java"/>
+    </Field>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.event.UpcomingEvents">
+      <SourceLine classname="org.bloggers4labour.event.UpcomingEvents" sourcefile="UpcomingEvents.java" sourcepath="org/bloggers4labour/event/UpcomingEvents.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.event.UpcomingEvents" name="&lt;init&gt;" signature="(Lorg/bloggers4labour/InstallationIF;I)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.event.UpcomingEvents" start="36" end="77" startBytecode="0" endBytecode="143" sourcefile="UpcomingEvents.java" sourcepath="org/bloggers4labour/event/UpcomingEvents.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.event.UpcomingEvents" start="64" end="64" startBytecode="101" endBytecode="101" sourcefile="UpcomingEvents.java" sourcepath="org/bloggers4labour/event/UpcomingEvents.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="2" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.favicon.FaviconManager">
+      <SourceLine classname="org.bloggers4labour.favicon.FaviconManager" sourcefile="FaviconManager.java" sourcepath="org/bloggers4labour/favicon/FaviconManager.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.favicon.FaviconManager" name="_searchForFavicon" signature="(Ljava/lang/String;)Z" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.favicon.FaviconManager" start="116" end="185" startBytecode="0" endBytecode="210" sourcefile="FaviconManager.java" sourcepath="org/bloggers4labour/favicon/FaviconManager.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.favicon.FaviconManager" start="180" end="180" startBytecode="202" endBytecode="202" sourcefile="FaviconManager.java" sourcepath="org/bloggers4labour/favicon/FaviconManager.java"/>
+  </BugInstance>
+  <BugInstance type="URF_UNREAD_FIELD" priority="3" abbrev="UrF" category="PERFORMANCE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.favicon.FaviconManager">
+      <SourceLine classname="org.bloggers4labour.favicon.FaviconManager" sourcefile="FaviconManager.java" sourcepath="org/bloggers4labour/favicon/FaviconManager.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.favicon.FaviconManager" name="s_OurLogger" signature="Lorg/apache/log4j/Logger;" isStatic="true">
+      <SourceLine classname="org.bloggers4labour.favicon.FaviconManager" sourcefile="FaviconManager.java" sourcepath="org/bloggers4labour/favicon/FaviconManager.java"/>
+    </Field>
+    <SourceLine classname="org.bloggers4labour.favicon.FaviconManager" start="31" end="31" startBytecode="5" endBytecode="5" sourcefile="FaviconManager.java" sourcepath="org/bloggers4labour/favicon/FaviconManager.java"/>
+  </BugInstance>
+  <BugInstance type="BC_EQUALS_METHOD_SHOULD_WORK_FOR_ALL_OBJECTS" priority="2" abbrev="BC" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.favicon.FaviconManager$FeedsRec">
+      <SourceLine classname="org.bloggers4labour.favicon.FaviconManager$FeedsRec" sourcefile="FaviconManager.java" sourcepath="org/bloggers4labour/favicon/FaviconManager.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.favicon.FaviconManager$FeedsRec" name="equals" signature="(Ljava/lang/Object;)Z" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.favicon.FaviconManager$FeedsRec" start="263" end="268" startBytecode="0" endBytecode="20" sourcefile="FaviconManager.java" sourcepath="org/bloggers4labour/favicon/FaviconManager.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.favicon.FaviconManager$FeedsRec" start="268" end="268" startBytecode="11" endBytecode="11" sourcefile="FaviconManager.java" sourcepath="org/bloggers4labour/favicon/FaviconManager.java"/>
+  </BugInstance>
+  <BugInstance type="EQ_COMPARETO_USE_OBJECT_EQUALS" priority="2" abbrev="Eq" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.feed.Feed">
+      <SourceLine classname="org.bloggers4labour.feed.Feed" sourcefile="Feed.java" sourcepath="org/bloggers4labour/feed/Feed.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.feed.Feed" name="compareTo" signature="(Lorg/bloggers4labour/feed/Feed;)I" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.feed.Feed" start="108" end="116" startBytecode="0" endBytecode="36" sourcefile="Feed.java" sourcepath="org/bloggers4labour/feed/Feed.java"/>
+    </Method>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.feed.FeedList">
+      <SourceLine classname="org.bloggers4labour.feed.FeedList" sourcefile="FeedList.java" sourcepath="org/bloggers4labour/feed/FeedList.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.feed.FeedList" name="generateOPML" signature="()V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.feed.FeedList" start="427" end="456" startBytecode="0" endBytecode="126" sourcefile="FeedList.java" sourcepath="org/bloggers4labour/feed/FeedList.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.feed.FeedList" start="450" end="450" startBytecode="93" endBytecode="93" sourcefile="FeedList.java" sourcepath="org/bloggers4labour/feed/FeedList.java"/>
+  </BugInstance>
+  <BugInstance type="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR" priority="3" abbrev="UwF" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.feed.FeedList">
+      <SourceLine classname="org.bloggers4labour.feed.FeedList" sourcefile="FeedList.java" sourcepath="org/bloggers4labour/feed/FeedList.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.feed.FeedList" name="m_STPE" signature="Ljava/util/concurrent/ScheduledExecutorService;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.feed.FeedList" sourcefile="FeedList.java" sourcepath="org/bloggers4labour/feed/FeedList.java"/>
+    </Field>
+  </BugInstance>
+  <BugInstance type="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR" priority="3" abbrev="UwF" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.feed.FeedList">
+      <SourceLine classname="org.bloggers4labour.feed.FeedList" sourcefile="FeedList.java" sourcepath="org/bloggers4labour/feed/FeedList.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.feed.FeedList" name="m_USTPE" signature="Ljava/util/concurrent/ScheduledExecutorService;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.feed.FeedList" sourcefile="FeedList.java" sourcepath="org/bloggers4labour/feed/FeedList.java"/>
+    </Field>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.feed.FeedList$UpdaterTask">
+      <SourceLine classname="org.bloggers4labour.feed.FeedList$UpdaterTask" sourcefile="FeedList.java" sourcepath="org/bloggers4labour/feed/FeedList.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.feed.FeedList$UpdaterTask" name="run" signature="()V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.feed.FeedList$UpdaterTask" start="934" end="981" startBytecode="0" endBytecode="155" sourcefile="FeedList.java" sourcepath="org/bloggers4labour/feed/FeedList.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.feed.FeedList$UpdaterTask" start="967" end="967" startBytecode="113" endBytecode="113" sourcefile="FeedList.java" sourcepath="org/bloggers4labour/feed/FeedList.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="2" abbrev="SQL" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.feed.FeedList$UpdaterTask">
+      <SourceLine classname="org.bloggers4labour.feed.FeedList$UpdaterTask" sourcefile="FeedList.java" sourcepath="org/bloggers4labour/feed/FeedList.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.feed.FeedList$UpdaterTask" name="_handleStatement" signature="(Ljava/sql/Statement;J)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.feed.FeedList$UpdaterTask" start="776" end="926" startBytecode="0" endBytecode="379" sourcefile="FeedList.java" sourcepath="org/bloggers4labour/feed/FeedList.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.feed.FeedList$UpdaterTask" start="776" end="776" startBytecode="8" endBytecode="8" sourcefile="FeedList.java" sourcepath="org/bloggers4labour/feed/FeedList.java"/>
+  </BugInstance>
+  <BugInstance type="DE_MIGHT_IGNORE" priority="3" abbrev="DE" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.feed.Tester">
+      <SourceLine classname="org.bloggers4labour.feed.Tester" sourcefile="Tester.java" sourcepath="org/bloggers4labour/feed/Tester.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.feed.Tester" name="main" signature="([Ljava/lang/String;)V" isStatic="true">
+      <SourceLine classname="org.bloggers4labour.feed.Tester" start="30" end="44" startBytecode="0" endBytecode="22" sourcefile="Tester.java" sourcepath="org/bloggers4labour/feed/Tester.java"/>
+    </Method>
+    <Class classname="java.lang.Exception" role="CLASS_EXCEPTION">
+      <SourceLine classname="java.lang.Exception" sourcefile="Exception.java" sourcepath="java/lang/Exception.java"/>
+    </Class>
+    <SourceLine classname="org.bloggers4labour.feed.Tester" start="40" end="40" startBytecode="21" endBytecode="21" sourcefile="Tester.java" sourcepath="org/bloggers4labour/feed/Tester.java"/>
+  </BugInstance>
+  <BugInstance type="DMI_HARDCODED_ABSOLUTE_FILENAME" priority="2" abbrev="DMI" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.feed.Tester">
+      <SourceLine classname="org.bloggers4labour.feed.Tester" sourcefile="Tester.java" sourcepath="org/bloggers4labour/feed/Tester.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.feed.Tester" name="&lt;init&gt;" signature="()V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.feed.Tester" start="49" end="51" startBytecode="0" endBytecode="13" sourcefile="Tester.java" sourcepath="org/bloggers4labour/feed/Tester.java"/>
+    </Method>
+    <String value="/Users/andrewre/Desktop/b4l_main.xml" role="FILE_NAME"/>
+    <SourceLine classname="org.bloggers4labour.feed.Tester" start="23" end="23" startBytecode="11" endBytecode="11" sourcefile="Tester.java" sourcepath="org/bloggers4labour/feed/Tester.java"/>
+  </BugInstance>
+  <BugInstance type="BC_EQUALS_METHOD_SHOULD_WORK_FOR_ALL_OBJECTS" priority="2" abbrev="BC" category="BAD_PRACTICE">
+    <Class classname="org.bloggers4labour.geocode.Location">
+      <SourceLine classname="org.bloggers4labour.geocode.Location" sourcefile="Location.java" sourcepath="org/bloggers4labour/geocode/Location.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.geocode.Location" name="equals" signature="(Ljava/lang/Object;)Z" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.geocode.Location" start="86" end="91" startBytecode="0" endBytecode="22" sourcefile="Location.java" sourcepath="org/bloggers4labour/geocode/Location.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.geocode.Location" start="91" end="91" startBytecode="8" endBytecode="8" sourcefile="Location.java" sourcepath="org/bloggers4labour/geocode/Location.java"/>
+  </BugInstance>
+  <BugInstance type="SE_NO_SERIALVERSIONID" priority="3" abbrev="SnVI" category="BAD_PRACTICE">
+    <Class classname="org.bloggers4labour.geocode.Location">
+      <SourceLine classname="org.bloggers4labour.geocode.Location" sourcefile="Location.java" sourcepath="org/bloggers4labour/geocode/Location.java"/>
+    </Class>
+  </BugInstance>
+  <BugInstance type="DLS_DEAD_LOCAL_STORE" priority="3" abbrev="DLS" category="STYLE">
+    <Class classname="org.bloggers4labour.geocode.PostCodeGeocoder">
+      <SourceLine classname="org.bloggers4labour.geocode.PostCodeGeocoder" sourcefile="PostCodeGeocoder.java" sourcepath="org/bloggers4labour/geocode/PostCodeGeocoder.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.geocode.PostCodeGeocoder" name="lookupLocation" signature="(Ljava/lang/String;)Lorg/bloggers4labour/geocode/Location;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.geocode.PostCodeGeocoder" start="45" end="153" startBytecode="0" endBytecode="240" sourcefile="PostCodeGeocoder.java" sourcepath="org/bloggers4labour/geocode/PostCodeGeocoder.java"/>
+    </Method>
+    <LocalVariable name="startTimeMSecs" register="2" pc="4" role="LOCAL_VARIABLE_NAMED"/>
+    <SourceLine classname="org.bloggers4labour.geocode.PostCodeGeocoder" start="45" end="45" startBytecode="3" endBytecode="3" sourcefile="PostCodeGeocoder.java" sourcepath="org/bloggers4labour/geocode/PostCodeGeocoder.java"/>
+  </BugInstance>
+  <BugInstance type="DM_CONVERT_CASE" priority="3" abbrev="Dm" category="I18N">
+    <Class classname="org.bloggers4labour.geocode.PostCodeGeocoder">
+      <SourceLine classname="org.bloggers4labour.geocode.PostCodeGeocoder" sourcefile="PostCodeGeocoder.java" sourcepath="org/bloggers4labour/geocode/PostCodeGeocoder.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.geocode.PostCodeGeocoder" name="lookupLocation" signature="(Ljava/lang/String;)Lorg/bloggers4labour/geocode/Location;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.geocode.PostCodeGeocoder" start="45" end="153" startBytecode="0" endBytecode="538" sourcefile="PostCodeGeocoder.java" sourcepath="org/bloggers4labour/geocode/PostCodeGeocoder.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.geocode.PostCodeGeocoder" start="54" end="54" startBytecode="16" endBytecode="16" sourcefile="PostCodeGeocoder.java" sourcepath="org/bloggers4labour/geocode/PostCodeGeocoder.java"/>
+  </BugInstance>
+  <BugInstance type="DMI_HARDCODED_ABSOLUTE_FILENAME" priority="2" abbrev="DMI" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.index.IndexMgr">
+      <SourceLine classname="org.bloggers4labour.index.IndexMgr" sourcefile="IndexMgr.java" sourcepath="org/bloggers4labour/index/IndexMgr.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.index.IndexMgr" name="&lt;clinit&gt;" signature="()V" isStatic="true">
+      <SourceLine classname="org.bloggers4labour.index.IndexMgr" start="53" end="54" startBytecode="0" endBytecode="8" sourcefile="IndexMgr.java" sourcepath="org/bloggers4labour/index/IndexMgr.java"/>
+    </Method>
+    <String value="/Users/andrewre/Development/java/Bloggers4Labour/lucene_index" role="FILE_NAME"/>
+    <SourceLine classname="org.bloggers4labour.index.IndexMgr" start="54" end="54" startBytecode="14" endBytecode="14" sourcefile="IndexMgr.java" sourcepath="org/bloggers4labour/index/IndexMgr.java"/>
+  </BugInstance>
+  <BugInstance type="DE_MIGHT_IGNORE" priority="3" abbrev="DE" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.index.IndexMgr$NewHeadlineHandler">
+      <SourceLine classname="org.bloggers4labour.index.IndexMgr$NewHeadlineHandler" sourcefile="IndexMgr.java" sourcepath="org/bloggers4labour/index/IndexMgr.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.index.IndexMgr$NewHeadlineHandler" name="onAdd" signature="(Lorg/bloggers4labour/Installation;Lorg/bloggers4labour/headlines/HeadlinesIF;Lde/nava/informa/core/ItemIF;Lorg/bloggers4labour/ItemContext;)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.index.IndexMgr$NewHeadlineHandler" start="543" end="600" startBytecode="0" endBytecode="263" sourcefile="IndexMgr.java" sourcepath="org/bloggers4labour/index/IndexMgr.java"/>
+    </Method>
+    <Class classname="java.lang.Exception" role="CLASS_EXCEPTION">
+      <SourceLine classname="java.lang.Exception" sourcefile="Exception.java" sourcepath="java/lang/Exception.java"/>
+    </Class>
+    <SourceLine classname="org.bloggers4labour.index.IndexMgr$NewHeadlineHandler" start="576" end="576" startBytecode="212" endBytecode="212" sourcefile="IndexMgr.java" sourcepath="org/bloggers4labour/index/IndexMgr.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.index.IndexMgr$NewHeadlineHandler">
+      <SourceLine classname="org.bloggers4labour.index.IndexMgr$NewHeadlineHandler" sourcefile="IndexMgr.java" sourcepath="org/bloggers4labour/index/IndexMgr.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.index.IndexMgr$NewHeadlineHandler" name="onAdd" signature="(Lorg/bloggers4labour/Installation;Lorg/bloggers4labour/headlines/HeadlinesIF;Lde/nava/informa/core/ItemIF;Lorg/bloggers4labour/ItemContext;)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.index.IndexMgr$NewHeadlineHandler" start="543" end="600" startBytecode="0" endBytecode="263" sourcefile="IndexMgr.java" sourcepath="org/bloggers4labour/index/IndexMgr.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.index.IndexMgr$NewHeadlineHandler" start="576" end="576" startBytecode="212" endBytecode="212" sourcefile="IndexMgr.java" sourcepath="org/bloggers4labour/index/IndexMgr.java"/>
+  </BugInstance>
+  <BugInstance type="SE_NO_SERIALVERSIONID" priority="3" abbrev="SnVI" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.index.SearchMatch">
+      <SourceLine classname="org.bloggers4labour.index.SearchMatch" sourcefile="SearchMatch.java" sourcepath="org/bloggers4labour/index/SearchMatch.java"/>
+    </Class>
+  </BugInstance>
+  <BugInstance type="EI_EXPOSE_REP" priority="2" abbrev="EI" category="MALICIOUS_CODE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.jmx.Stats">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.jmx.Stats" name="getLastUpdateTime" signature="()Ljava/util/Date;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" start="313" end="313" startBytecode="0" endBytecode="4" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Method>
+    <Field classname="org.bloggers4labour.jmx.Stats" name="m_LastUpdateTime" signature="Ljava/util/Date;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Field>
+    <SourceLine classname="org.bloggers4labour.jmx.Stats" start="313" end="313" startBytecode="4" endBytecode="4" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+  </BugInstance>
+  <BugInstance type="EI_EXPOSE_REP" priority="2" abbrev="EI" category="MALICIOUS_CODE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.jmx.Stats">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.jmx.Stats" name="getRSSFeedCompletionTime" signature="()Ljava/util/Date;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" start="343" end="343" startBytecode="0" endBytecode="4" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Method>
+    <Field classname="org.bloggers4labour.jmx.Stats" name="m_RSSFeed_Completed" signature="Ljava/util/Date;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Field>
+    <SourceLine classname="org.bloggers4labour.jmx.Stats" start="343" end="343" startBytecode="4" endBytecode="4" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+  </BugInstance>
+  <BugInstance type="EI_EXPOSE_REP" priority="2" abbrev="EI" category="MALICIOUS_CODE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.jmx.Stats">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.jmx.Stats" name="getStartupTime" signature="()Ljava/util/Date;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" start="357" end="357" startBytecode="0" endBytecode="4" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Method>
+    <Field classname="org.bloggers4labour.jmx.Stats" name="m_StartupTime" signature="Ljava/util/Date;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Field>
+    <SourceLine classname="org.bloggers4labour.jmx.Stats" start="357" end="357" startBytecode="4" endBytecode="4" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+  </BugInstance>
+  <BugInstance type="EI_EXPOSE_REP2" priority="2" abbrev="EI2" category="MALICIOUS_CODE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.jmx.Stats">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.jmx.Stats" name="setLastUpdateTime" signature="(Ljava/util/Date;)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" start="320" end="321" startBytecode="0" endBytecode="5" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Method>
+    <Field classname="org.bloggers4labour.jmx.Stats" name="m_LastUpdateTime" signature="Ljava/util/Date;" isStatic="true">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Field>
+    <SourceLine classname="org.bloggers4labour.jmx.Stats" start="320" end="320" startBytecode="2" endBytecode="2" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+  </BugInstance>
+  <BugInstance type="IS2_INCONSISTENT_SYNC" priority="3" abbrev="IS" category="MT_CORRECTNESS">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.jmx.Stats">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.jmx.Stats" name="m_RSSFeed_Completed" signature="Ljava/util/Date;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Field>
+    <Int value="50" role="INT_SYNC_PERCENT"/>
+    <SourceLine classname="org.bloggers4labour.jmx.Stats" start="343" end="343" startBytecode="1" endBytecode="1" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java" role="SOURCE_LINE_UNSYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.jmx.Stats" start="329" end="329" startBytecode="20" endBytecode="20" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+  </BugInstance>
+  <BugInstance type="IS2_INCONSISTENT_SYNC" priority="3" abbrev="IS" category="MT_CORRECTNESS">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.jmx.Stats">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.jmx.Stats" name="m_RSSFeed_Count" signature="I" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Field>
+    <Int value="50" role="INT_SYNC_PERCENT"/>
+    <SourceLine classname="org.bloggers4labour.jmx.Stats" start="336" end="336" startBytecode="1" endBytecode="1" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java" role="SOURCE_LINE_UNSYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.jmx.Stats" start="327" end="327" startBytecode="2" endBytecode="2" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+  </BugInstance>
+  <BugInstance type="IS2_INCONSISTENT_SYNC" priority="3" abbrev="IS" category="MT_CORRECTNESS">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.jmx.Stats">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.jmx.Stats" name="m_RSSFeed_Duration" signature="Ljava/lang/StringBuffer;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Field>
+    <Int value="50" role="INT_SYNC_PERCENT"/>
+    <SourceLine classname="org.bloggers4labour.jmx.Stats" start="350" end="350" startBytecode="1" endBytecode="1" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java" role="SOURCE_LINE_UNSYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.jmx.Stats" start="328" end="328" startBytecode="8" endBytecode="8" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+  </BugInstance>
+  <BugInstance type="IS2_INCONSISTENT_SYNC" priority="3" abbrev="IS" category="MT_CORRECTNESS">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.jmx.Stats">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.jmx.Stats" name="m_SuccessfulCommentFeedCount" signature="I" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Field>
+    <Int value="50" role="INT_SYNC_PERCENT"/>
+    <SourceLine classname="org.bloggers4labour.jmx.Stats" start="228" end="228" startBytecode="1" endBytecode="1" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java" role="SOURCE_LINE_UNSYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.jmx.Stats" start="236" end="236" startBytecode="2" endBytecode="2" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+  </BugInstance>
+  <BugInstance type="IS2_INCONSISTENT_SYNC" priority="3" abbrev="IS" category="MT_CORRECTNESS">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.jmx.Stats">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.jmx.Stats" name="m_SuccessfulFeedCount" signature="I" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Field>
+    <Int value="50" role="INT_SYNC_PERCENT"/>
+    <SourceLine classname="org.bloggers4labour.jmx.Stats" start="155" end="155" startBytecode="1" endBytecode="1" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java" role="SOURCE_LINE_UNSYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.jmx.Stats" start="305" end="305" startBytecode="2" endBytecode="2" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+  </BugInstance>
+  <BugInstance type="ITA_INEFFICIENT_TO_ARRAY" priority="3" abbrev="ITA" category="PERFORMANCE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.jmx.Stats">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.jmx.Stats" name="getCurrentSiteNames" signature="()[Ljava/lang/String;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" start="380" end="397" startBytecode="0" endBytecode="96" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.jmx.Stats" start="384" end="384" startBytecode="20" endBytecode="20" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.jmx.Stats">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.jmx.Stats" name="&lt;init&gt;" signature="(Lorg/bloggers4labour/Installation;)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" start="59" end="105" startBytecode="0" endBytecode="169" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.jmx.Stats" start="93" end="93" startBytecode="129" endBytecode="129" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+  </BugInstance>
+  <BugInstance type="UG_SYNC_SET_UNSYNC_GET" priority="2" abbrev="UG" category="MT_CORRECTNESS">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.jmx.Stats">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.jmx.Stats" name="getSuccessfulCommentFeedCount" signature="()I" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" start="228" end="228" startBytecode="0" endBytecode="4" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Method>
+    <Method classname="org.bloggers4labour.jmx.Stats" name="setSuccessfulCommentFeedCount" signature="(I)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" start="236" end="237" startBytecode="0" endBytecode="5" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Method>
+  </BugInstance>
+  <BugInstance type="UG_SYNC_SET_UNSYNC_GET" priority="2" abbrev="UG" category="MT_CORRECTNESS">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.jmx.Stats">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.jmx.Stats" name="getSuccessfulFeedCount" signature="()I" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" start="155" end="155" startBytecode="0" endBytecode="4" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Method>
+    <Method classname="org.bloggers4labour.jmx.Stats" name="setSuccessfulFeedCount" signature="(I)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.jmx.Stats" start="305" end="307" startBytecode="0" endBytecode="16" sourcefile="Stats.java" sourcepath="org/bloggers4labour/jmx/Stats.java"/>
+    </Method>
+  </BugInstance>
+  <BugInstance type="SE_NO_SERIALVERSIONID" priority="3" abbrev="SnVI" category="BAD_PRACTICE">
+    <Class classname="org.bloggers4labour.links.HostNameComparator">
+      <SourceLine classname="org.bloggers4labour.links.HostNameComparator" sourcefile="HostNameComparator.java" sourcepath="org/bloggers4labour/links/HostNameComparator.java"/>
+    </Class>
+  </BugInstance>
+  <BugInstance type="SE_NO_SERIALVERSIONID" priority="3" abbrev="SnVI" category="BAD_PRACTICE">
+    <Class classname="org.bloggers4labour.links.StoreHostNameComparator">
+      <SourceLine classname="org.bloggers4labour.links.StoreHostNameComparator" sourcefile="StoreHostNameComparator.java" sourcepath="org/bloggers4labour/links/StoreHostNameComparator.java"/>
+    </Class>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.mail.DigestSender$CheckerTask">
+      <SourceLine classname="org.bloggers4labour.mail.DigestSender$CheckerTask" sourcefile="DigestSender.java" sourcepath="org/bloggers4labour/mail/DigestSender.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.mail.DigestSender$CheckerTask" name="run" signature="()V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.mail.DigestSender$CheckerTask" start="524" end="569" startBytecode="0" endBytecode="151" sourcefile="DigestSender.java" sourcepath="org/bloggers4labour/mail/DigestSender.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.mail.DigestSender$CheckerTask" start="557" end="557" startBytecode="109" endBytecode="109" sourcefile="DigestSender.java" sourcepath="org/bloggers4labour/mail/DigestSender.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="3" abbrev="SQL" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.mail.DigestSender$CheckerTask">
+      <SourceLine classname="org.bloggers4labour.mail.DigestSender$CheckerTask" sourcefile="DigestSender.java" sourcepath="org/bloggers4labour/mail/DigestSender.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.mail.DigestSender$CheckerTask" name="_handleStatement" signature="(Ljava/sql/Statement;)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.mail.DigestSender$CheckerTask" start="322" end="518" startBytecode="0" endBytecode="348" sourcefile="DigestSender.java" sourcepath="org/bloggers4labour/mail/DigestSender.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.mail.DigestSender$CheckerTask" start="350" end="350" startBytecode="92" endBytecode="92" sourcefile="DigestSender.java" sourcepath="org/bloggers4labour/mail/DigestSender.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.mail.DigestSender$MailTester">
+      <SourceLine classname="org.bloggers4labour.mail.DigestSender$MailTester" sourcefile="DigestSender.java" sourcepath="org/bloggers4labour/mail/DigestSender.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.mail.DigestSender$MailTester" name="runIt" signature="(Lorg/bloggers4labour/mail/MessageBuilder;)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.mail.DigestSender$MailTester" start="198" end="243" startBytecode="0" endBytecode="153" sourcefile="DigestSender.java" sourcepath="org/bloggers4labour/mail/DigestSender.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.mail.DigestSender$MailTester" start="231" end="231" startBytecode="111" endBytecode="111" sourcefile="DigestSender.java" sourcepath="org/bloggers4labour/mail/DigestSender.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="3" abbrev="SQL" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.mail.EventsSection">
+      <SourceLine classname="org.bloggers4labour.mail.EventsSection" sourcefile="EventsSection.java" sourcepath="org/bloggers4labour/mail/EventsSection.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.mail.EventsSection" name="&lt;init&gt;" signature="(Lorg/bloggers4labour/InstallationIF;Ljava/text/DateFormat;Ljava/sql/Statement;)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.mail.EventsSection" start="41" end="122" startBytecode="0" endBytecode="239" sourcefile="EventsSection.java" sourcepath="org/bloggers4labour/mail/EventsSection.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.mail.EventsSection" start="43" end="43" startBytecode="12" endBytecode="12" sourcefile="EventsSection.java" sourcepath="org/bloggers4labour/mail/EventsSection.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.mapping.URLToName">
+      <SourceLine classname="org.bloggers4labour.mapping.URLToName" sourcefile="URLToName.java" sourcepath="org/bloggers4labour/mapping/URLToName.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.mapping.URLToName" name="&lt;init&gt;" signature="()V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.mapping.URLToName" start="49" end="80" startBytecode="0" endBytecode="159" sourcefile="URLToName.java" sourcepath="org/bloggers4labour/mapping/URLToName.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.mapping.URLToName" start="74" end="74" startBytecode="147" endBytecode="147" sourcefile="URLToName.java" sourcepath="org/bloggers4labour/mapping/URLToName.java"/>
+  </BugInstance>
+  <BugInstance type="SE_NO_SERIALVERSIONID" priority="3" abbrev="SnVI" category="BAD_PRACTICE">
+    <Class classname="org.bloggers4labour.mapping.URLToName$HostComparator">
+      <SourceLine classname="org.bloggers4labour.mapping.URLToName$HostComparator" sourcefile="URLToName.java" sourcepath="org/bloggers4labour/mapping/URLToName.java"/>
+    </Class>
+  </BugInstance>
+  <BugInstance type="IS2_INCONSISTENT_SYNC" priority="3" abbrev="IS" category="MT_CORRECTNESS">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.opml.OPMLGenerator">
+      <SourceLine classname="org.bloggers4labour.opml.OPMLGenerator" sourcefile="OPMLGenerator.java" sourcepath="org/bloggers4labour/opml/OPMLGenerator.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.opml.OPMLGenerator" name="m_Document" signature="Lorg/w3c/dom/Document;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.opml.OPMLGenerator" sourcefile="OPMLGenerator.java" sourcepath="org/bloggers4labour/opml/OPMLGenerator.java"/>
+    </Field>
+    <Int value="92" role="INT_SYNC_PERCENT"/>
+    <SourceLine classname="org.bloggers4labour.opml.OPMLGenerator" start="164" end="164" startBytecode="1" endBytecode="1" sourcefile="OPMLGenerator.java" sourcepath="org/bloggers4labour/opml/OPMLGenerator.java" role="SOURCE_LINE_UNSYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.opml.OPMLGenerator" start="173" end="173" startBytecode="1" endBytecode="1" sourcefile="OPMLGenerator.java" sourcepath="org/bloggers4labour/opml/OPMLGenerator.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.opml.OPMLGenerator" start="190" end="190" startBytecode="49" endBytecode="49" sourcefile="OPMLGenerator.java" sourcepath="org/bloggers4labour/opml/OPMLGenerator.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.opml.OPMLGenerator" start="211" end="211" startBytecode="22" endBytecode="22" sourcefile="OPMLGenerator.java" sourcepath="org/bloggers4labour/opml/OPMLGenerator.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.opml.OPMLGenerator" start="86" end="86" startBytecode="20" endBytecode="20" sourcefile="OPMLGenerator.java" sourcepath="org/bloggers4labour/opml/OPMLGenerator.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.opml.OPMLGenerator" start="87" end="87" startBytecode="24" endBytecode="24" sourcefile="OPMLGenerator.java" sourcepath="org/bloggers4labour/opml/OPMLGenerator.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.opml.OPMLGenerator" start="92" end="92" startBytecode="34" endBytecode="34" sourcefile="OPMLGenerator.java" sourcepath="org/bloggers4labour/opml/OPMLGenerator.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.opml.OPMLGenerator" start="95" end="95" startBytecode="62" endBytecode="62" sourcefile="OPMLGenerator.java" sourcepath="org/bloggers4labour/opml/OPMLGenerator.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.opml.OPMLGenerator" start="96" end="96" startBytecode="80" endBytecode="80" sourcefile="OPMLGenerator.java" sourcepath="org/bloggers4labour/opml/OPMLGenerator.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.opml.OPMLGenerator" start="98" end="98" startBytecode="98" endBytecode="98" sourcefile="OPMLGenerator.java" sourcepath="org/bloggers4labour/opml/OPMLGenerator.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.opml.OPMLGenerator" start="102" end="102" startBytecode="141" endBytecode="141" sourcefile="OPMLGenerator.java" sourcepath="org/bloggers4labour/opml/OPMLGenerator.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.opml.OPMLGenerator" start="132" end="132" startBytecode="236" endBytecode="236" sourcefile="OPMLGenerator.java" sourcepath="org/bloggers4labour/opml/OPMLGenerator.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.opml.OPMLGenerator" start="155" end="155" startBytecode="424" endBytecode="424" sourcefile="OPMLGenerator.java" sourcepath="org/bloggers4labour/opml/OPMLGenerator.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+  </BugInstance>
+  <BugInstance type="URF_UNREAD_FIELD" priority="3" abbrev="UrF" category="PERFORMANCE">
+    <Class classname="org.bloggers4labour.opml.OPMLGenerator">
+      <SourceLine classname="org.bloggers4labour.opml.OPMLGenerator" sourcefile="OPMLGenerator.java" sourcepath="org/bloggers4labour/opml/OPMLGenerator.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.opml.OPMLGenerator" name="s_TempSiteArray" signature="[Lorg/bloggers4labour/Site;" isStatic="true">
+      <SourceLine classname="org.bloggers4labour.opml.OPMLGenerator" sourcefile="OPMLGenerator.java" sourcepath="org/bloggers4labour/opml/OPMLGenerator.java"/>
+    </Field>
+    <SourceLine classname="org.bloggers4labour.opml.OPMLGenerator" start="49" end="49" startBytecode="4" endBytecode="4" sourcefile="OPMLGenerator.java" sourcepath="org/bloggers4labour/opml/OPMLGenerator.java"/>
+  </BugInstance>
+  <BugInstance type="SE_NO_SERIALVERSIONID" priority="3" abbrev="SnVI" category="BAD_PRACTICE">
+    <Class classname="org.bloggers4labour.opml.OPMLGenerator$SiteComparator">
+      <SourceLine classname="org.bloggers4labour.opml.OPMLGenerator$SiteComparator" sourcefile="OPMLGenerator.java" sourcepath="org/bloggers4labour/opml/OPMLGenerator.java"/>
+    </Class>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="2" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.options.AbstractTaskOptionsBeanBeanInfo">
+      <SourceLine classname="org.bloggers4labour.options.AbstractTaskOptionsBeanBeanInfo" sourcefile="AbstractTaskOptionsBeanBeanInfo.java" sourcepath="org/bloggers4labour/options/AbstractTaskOptionsBeanBeanInfo.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.options.AbstractTaskOptionsBeanBeanInfo" name="getMdescriptor" signature="()[Ljava/beans/MethodDescriptor;" isStatic="true">
+      <SourceLine classname="org.bloggers4labour.options.AbstractTaskOptionsBeanBeanInfo" start="71" end="83" startBytecode="0" endBytecode="76" sourcefile="AbstractTaskOptionsBeanBeanInfo.java" sourcepath="org/bloggers4labour/options/AbstractTaskOptionsBeanBeanInfo.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.options.AbstractTaskOptionsBeanBeanInfo" start="79" end="79" startBytecode="74" endBytecode="74" sourcefile="AbstractTaskOptionsBeanBeanInfo.java" sourcepath="org/bloggers4labour/options/AbstractTaskOptionsBeanBeanInfo.java"/>
+  </BugInstance>
+  <BugInstance type="DMI_BLOCKING_METHODS_ON_URL" priority="1" abbrev="Dm" category="PERFORMANCE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.polling.MyObserver">
+      <SourceLine classname="org.bloggers4labour.polling.MyObserver" sourcefile="MyObserver.java" sourcepath="org/bloggers4labour/polling/MyObserver.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.polling.MyObserver" name="itemFound" signature="(Lde/nava/informa/core/ItemIF;Lde/nava/informa/core/ChannelIF;)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.polling.MyObserver" start="85" end="231" startBytecode="0" endBytecode="472" sourcefile="MyObserver.java" sourcepath="org/bloggers4labour/polling/MyObserver.java"/>
+    </Method>
+    <Method classname="java.net.URL" name="equals" signature="(Ljava/lang/Object;)Z" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.net.URL" start="836" end="840" startBytecode="0" endBytecode="59" sourcefile="URL.java" sourcepath="java/net/URL.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.polling.MyObserver" start="105" end="105" startBytecode="92" endBytecode="92" sourcefile="MyObserver.java" sourcepath="org/bloggers4labour/polling/MyObserver.java"/>
+  </BugInstance>
+  <BugInstance type="UCF_USELESS_CONTROL_FLOW" priority="3" abbrev="UCF" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.polling.MyObserver">
+      <SourceLine classname="org.bloggers4labour.polling.MyObserver" sourcefile="MyObserver.java" sourcepath="org/bloggers4labour/polling/MyObserver.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.polling.MyObserver" name="itemFound" signature="(Lde/nava/informa/core/ItemIF;Lde/nava/informa/core/ChannelIF;)V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.polling.MyObserver" start="85" end="231" startBytecode="0" endBytecode="472" sourcefile="MyObserver.java" sourcepath="org/bloggers4labour/polling/MyObserver.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.polling.MyObserver" start="226" end="226" startBytecode="466" endBytecode="466" sourcefile="MyObserver.java" sourcepath="org/bloggers4labour/polling/MyObserver.java"/>
+  </BugInstance>
+  <BugInstance type="UWF_NULL_FIELD" priority="3" abbrev="UwF" category="CORRECTNESS">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.polling.Poller">
+      <SourceLine classname="org.bloggers4labour.polling.Poller" sourcefile="Poller.java" sourcepath="org/bloggers4labour/polling/Poller.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.polling.Poller" name="m_Observer" signature="Lde/nava/informa/utils/poller/PollerObserverIF;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.polling.Poller" sourcefile="Poller.java" sourcepath="org/bloggers4labour/polling/Poller.java"/>
+    </Field>
+    <SourceLine classname="org.bloggers4labour.polling.Poller" start="62" end="62" startBytecode="1" endBytecode="1" sourcefile="Poller.java" sourcepath="org/bloggers4labour/polling/Poller.java"/>
+  </BugInstance>
+  <BugInstance type="IS2_INCONSISTENT_SYNC" priority="2" abbrev="IS" category="MT_CORRECTNESS">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.polling.StandardPoller">
+      <SourceLine classname="org.bloggers4labour.polling.StandardPoller" sourcefile="StandardPoller.java" sourcepath="org/bloggers4labour/polling/StandardPoller.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.polling.StandardPoller" name="m_Installation" signature="Lorg/bloggers4labour/Installation;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.polling.StandardPoller" sourcefile="StandardPoller.java" sourcepath="org/bloggers4labour/polling/StandardPoller.java"/>
+    </Field>
+    <Int value="50" role="INT_SYNC_PERCENT"/>
+    <SourceLine classname="org.bloggers4labour.polling.StandardPoller" start="51" end="51" startBytecode="2" endBytecode="2" sourcefile="StandardPoller.java" sourcepath="org/bloggers4labour/polling/StandardPoller.java" role="SOURCE_LINE_UNSYNC_ACCESS"/>
+    <SourceLine classname="org.bloggers4labour.polling.StandardPoller" start="67" end="67" startBytecode="13" endBytecode="13" sourcefile="StandardPoller.java" sourcepath="org/bloggers4labour/polling/StandardPoller.java" role="SOURCE_LINE_SYNC_ACCESS"/>
+  </BugInstance>
+  <BugInstance type="UUF_UNUSED_FIELD" priority="2" abbrev="UuF" category="PERFORMANCE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.polling.StandardPoller">
+      <SourceLine classname="org.bloggers4labour.polling.StandardPoller" sourcefile="StandardPoller.java" sourcepath="org/bloggers4labour/polling/StandardPoller.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.polling.StandardPoller" name="s_TempVal" signature="J" isStatic="true">
+      <SourceLine classname="org.bloggers4labour.polling.StandardPoller" sourcefile="StandardPoller.java" sourcepath="org/bloggers4labour/polling/StandardPoller.java"/>
+    </Field>
+  </BugInstance>
+  <BugInstance type="DM_CONVERT_CASE" priority="3" abbrev="Dm" category="I18N">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.recommend.RecommendationHandler">
+      <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.recommend.RecommendationHandler" name="_handleRequest" signature="(Ljava/sql/Statement;Ljava/lang/String;Ljava/lang/String;J)Lorg/bloggers4labour/recommend/RecommendationResult;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" start="96" end="214" startBytecode="0" endBytecode="520" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" start="104" end="104" startBytecode="25" endBytecode="25" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+  </BugInstance>
+  <BugInstance type="DM_CONVERT_CASE" priority="3" abbrev="Dm" category="I18N">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.recommend.RecommendationHandler">
+      <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.recommend.RecommendationHandler" name="getSiteRecnoForURL" signature="(Ljava/sql/Statement;Ljava/lang/String;)J" isStatic="true">
+      <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" start="221" end="322" startBytecode="0" endBytecode="356" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" start="229" end="229" startBytecode="10" endBytecode="10" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="2" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.recommend.RecommendationHandler">
+      <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.recommend.RecommendationHandler" name="getSiteRecnoForURL" signature="(Ljava/sql/Statement;Ljava/lang/String;)J" isStatic="true">
+      <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" start="221" end="322" startBytecode="0" endBytecode="356" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" start="313" end="313" startBytecode="338" endBytecode="338" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="2" abbrev="SQL" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.recommend.RecommendationHandler">
+      <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.recommend.RecommendationHandler" name="_handleRequest" signature="(Ljava/sql/Statement;Ljava/lang/String;Ljava/lang/String;J)Lorg/bloggers4labour/recommend/RecommendationResult;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" start="96" end="214" startBytecode="0" endBytecode="210" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" start="105" end="105" startBytecode="71" endBytecode="71" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="2" abbrev="SQL" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.recommend.RecommendationHandler">
+      <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.recommend.RecommendationHandler" name="_handleRequest" signature="(Ljava/sql/Statement;Ljava/lang/String;Ljava/lang/String;J)Lorg/bloggers4labour/recommend/RecommendationResult;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" start="96" end="214" startBytecode="0" endBytecode="210" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" start="111" end="111" startBytecode="109" endBytecode="109" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="2" abbrev="SQL" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.recommend.RecommendationHandler">
+      <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.recommend.RecommendationHandler" name="_handleRequest" signature="(Ljava/sql/Statement;Ljava/lang/String;Ljava/lang/String;J)Lorg/bloggers4labour/recommend/RecommendationResult;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" start="96" end="214" startBytecode="0" endBytecode="210" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" start="123" end="123" startBytecode="175" endBytecode="175" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="2" abbrev="SQL" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.recommend.RecommendationHandler">
+      <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.recommend.RecommendationHandler" name="_handleRequest" signature="(Ljava/sql/Statement;Ljava/lang/String;Ljava/lang/String;J)Lorg/bloggers4labour/recommend/RecommendationResult;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" start="96" end="214" startBytecode="0" endBytecode="210" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" start="159" end="159" startBytecode="336" endBytecode="336" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="2" abbrev="SQL" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.recommend.RecommendationHandler">
+      <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.recommend.RecommendationHandler" name="_handleRequest" signature="(Ljava/sql/Statement;Ljava/lang/String;Ljava/lang/String;J)Lorg/bloggers4labour/recommend/RecommendationResult;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" start="96" end="214" startBytecode="0" endBytecode="210" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" start="205" end="205" startBytecode="487" endBytecode="487" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="2" abbrev="SQL" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.recommend.RecommendationHandler">
+      <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.recommend.RecommendationHandler" name="getSiteRecnoForURL" signature="(Ljava/sql/Statement;Ljava/lang/String;)J" isStatic="true">
+      <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" start="221" end="322" startBytecode="0" endBytecode="163" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.recommend.RecommendationHandler" start="294" end="294" startBytecode="291" endBytecode="291" sourcefile="RecommendationHandler.java" sourcepath="org/bloggers4labour/recommend/RecommendationHandler.java"/>
+  </BugInstance>
+  <BugInstance type="DLS_DEAD_LOCAL_STORE" priority="3" abbrev="DLS" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.recommend.Test">
+      <SourceLine classname="org.bloggers4labour.recommend.Test" sourcefile="Test.java" sourcepath="org/bloggers4labour/recommend/Test.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.recommend.Test" name="&lt;init&gt;" signature="()V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.recommend.Test" start="31" end="106" startBytecode="0" endBytecode="168" sourcefile="Test.java" sourcepath="org/bloggers4labour/recommend/Test.java"/>
+    </Method>
+    <LocalVariable name="currTimeMSecs" register="3" pc="10" role="LOCAL_VARIABLE_NAMED"/>
+    <SourceLine classname="org.bloggers4labour.recommend.Test" start="34" end="34" startBytecode="9" endBytecode="9" sourcefile="Test.java" sourcepath="org/bloggers4labour/recommend/Test.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.recommend.Test">
+      <SourceLine classname="org.bloggers4labour.recommend.Test" sourcefile="Test.java" sourcepath="org/bloggers4labour/recommend/Test.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.recommend.Test" name="&lt;init&gt;" signature="()V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.recommend.Test" start="31" end="106" startBytecode="0" endBytecode="359" sourcefile="Test.java" sourcepath="org/bloggers4labour/recommend/Test.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.recommend.Test" start="78" end="78" startBytecode="262" endBytecode="262" sourcefile="Test.java" sourcepath="org/bloggers4labour/recommend/Test.java"/>
+    <SourceLine classname="org.bloggers4labour.recommend.Test" start="92" end="92" startBytecode="317" endBytecode="317" sourcefile="Test.java" sourcepath="org/bloggers4labour/recommend/Test.java"/>
+  </BugInstance>
+  <BugInstance type="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD" priority="2" abbrev="ST" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.sql.DataSourceConnTag">
+      <SourceLine classname="org.bloggers4labour.sql.DataSourceConnTag" sourcefile="DataSourceConnTag.java" sourcepath="org/bloggers4labour/sql/DataSourceConnTag.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.sql.DataSourceConnTag" name="&lt;init&gt;" signature="()V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.sql.DataSourceConnTag" start="41" end="45" startBytecode="0" endBytecode="14" sourcefile="DataSourceConnTag.java" sourcepath="org/bloggers4labour/sql/DataSourceConnTag.java"/>
+    </Method>
+    <Field classname="org.bloggers4labour.sql.DataSourceConnTag" name="s_Logger" signature="Lorg/apache/log4j/Logger;" isStatic="true">
+      <SourceLine classname="org.bloggers4labour.sql.DataSourceConnTag" sourcefile="DataSourceConnTag.java" sourcepath="org/bloggers4labour/sql/DataSourceConnTag.java"/>
+    </Field>
+    <SourceLine classname="org.bloggers4labour.sql.DataSourceConnTag" start="43" end="43" startBytecode="11" endBytecode="11" sourcefile="DataSourceConnTag.java" sourcepath="org/bloggers4labour/sql/DataSourceConnTag.java"/>
+  </BugInstance>
+  <BugInstance type="UUF_UNUSED_FIELD" priority="2" abbrev="UuF" category="PERFORMANCE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.sql.DataSourceConnTag">
+      <SourceLine classname="org.bloggers4labour.sql.DataSourceConnTag" sourcefile="DataSourceConnTag.java" sourcepath="org/bloggers4labour/sql/DataSourceConnTag.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.sql.DataSourceConnTag" name="m_Logger" signature="Lorg/apache/log4j/Logger;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.sql.DataSourceConnTag" sourcefile="DataSourceConnTag.java" sourcepath="org/bloggers4labour/sql/DataSourceConnTag.java"/>
+    </Field>
+  </BugInstance>
+  <BugInstance type="NM_METHOD_NAMING_CONVENTION" priority="2" abbrev="Nm" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.sql.DataSourceConnection">
+      <SourceLine classname="org.bloggers4labour.sql.DataSourceConnection" sourcefile="DataSourceConnection.java" sourcepath="org/bloggers4labour/sql/DataSourceConnection.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.sql.DataSourceConnection" name="CloseDown" signature="()Z" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.sql.DataSourceConnection" start="179" end="203" startBytecode="0" endBytecode="59" sourcefile="DataSourceConnection.java" sourcepath="org/bloggers4labour/sql/DataSourceConnection.java"/>
+    </Method>
+  </BugInstance>
+  <BugInstance type="NM_METHOD_NAMING_CONVENTION" priority="2" abbrev="Nm" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.sql.DataSourceConnection">
+      <SourceLine classname="org.bloggers4labour.sql.DataSourceConnection" sourcefile="DataSourceConnection.java" sourcepath="org/bloggers4labour/sql/DataSourceConnection.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.sql.DataSourceConnection" name="Connect" signature="()Z" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.sql.DataSourceConnection" start="76" end="87" startBytecode="0" endBytecode="50" sourcefile="DataSourceConnection.java" sourcepath="org/bloggers4labour/sql/DataSourceConnection.java"/>
+    </Method>
+  </BugInstance>
+  <BugInstance type="NM_METHOD_NAMING_CONVENTION" priority="2" abbrev="Nm" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.sql.DataSourceConnection">
+      <SourceLine classname="org.bloggers4labour.sql.DataSourceConnection" sourcefile="DataSourceConnection.java" sourcepath="org/bloggers4labour/sql/DataSourceConnection.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.sql.DataSourceConnection" name="GetIdentity" signature="()J" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.sql.DataSourceConnection" start="94" end="113" startBytecode="0" endBytecode="63" sourcefile="DataSourceConnection.java" sourcepath="org/bloggers4labour/sql/DataSourceConnection.java"/>
+    </Method>
+  </BugInstance>
+  <BugInstance type="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR" priority="3" abbrev="UwF" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.sql.DataSourceConnection">
+      <SourceLine classname="org.bloggers4labour.sql.DataSourceConnection" sourcefile="DataSourceConnection.java" sourcepath="org/bloggers4labour/sql/DataSourceConnection.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.sql.DataSourceConnection" name="m_DbConnection" signature="Ljava/sql/Connection;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.sql.DataSourceConnection" sourcefile="DataSourceConnection.java" sourcepath="org/bloggers4labour/sql/DataSourceConnection.java"/>
+    </Field>
+  </BugInstance>
+  <BugInstance type="URF_UNREAD_FIELD" priority="3" abbrev="UrF" category="PERFORMANCE">
+    <Class classname="org.bloggers4labour.test.First">
+      <SourceLine classname="org.bloggers4labour.test.First" sourcefile="First.java" sourcepath="org/bloggers4labour/test/First.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.test.First" name="s_FL" signature="Lorg/bloggers4labour/feed/FeedList;" isStatic="true">
+      <SourceLine classname="org.bloggers4labour.test.First" sourcefile="First.java" sourcepath="org/bloggers4labour/test/First.java"/>
+    </Field>
+    <SourceLine classname="org.bloggers4labour.test.First" start="31" end="31" startBytecode="1" endBytecode="1" sourcefile="First.java" sourcepath="org/bloggers4labour/test/First.java"/>
+  </BugInstance>
+  <BugInstance type="URF_UNREAD_FIELD" priority="2" abbrev="UrF" category="PERFORMANCE">
+    <Class classname="org.bloggers4labour.test.First$Runner">
+      <SourceLine classname="org.bloggers4labour.test.First$Runner" sourcefile="First.java" sourcepath="org/bloggers4labour/test/First.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.test.First$Runner" name="m_Channel" signature="Lde/nava/informa/core/ChannelIF;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.test.First$Runner" sourcefile="First.java" sourcepath="org/bloggers4labour/test/First.java"/>
+    </Field>
+    <SourceLine classname="org.bloggers4labour.test.First$Runner" start="83" end="83" startBytecode="34" endBytecode="34" sourcefile="First.java" sourcepath="org/bloggers4labour/test/First.java"/>
+  </BugInstance>
+  <BugInstance type="DLS_DEAD_LOCAL_STORE" priority="3" abbrev="DLS" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.test.HTMLParserTest">
+      <SourceLine classname="org.bloggers4labour.test.HTMLParserTest" sourcefile="HTMLParserTest.java" sourcepath="org/bloggers4labour/test/HTMLParserTest.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.test.HTMLParserTest" name="runICBMTest" signature="()V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.test.HTMLParserTest" start="177" end="255" startBytecode="0" endBytecode="146" sourcefile="HTMLParserTest.java" sourcepath="org/bloggers4labour/test/HTMLParserTest.java"/>
+    </Method>
+    <LocalVariable name="currTimeMSecs" register="5" pc="19" role="LOCAL_VARIABLE_NAMED"/>
+    <SourceLine classname="org.bloggers4labour.test.HTMLParserTest" start="182" end="182" startBytecode="17" endBytecode="17" sourcefile="HTMLParserTest.java" sourcepath="org/bloggers4labour/test/HTMLParserTest.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" abbrev="REC" category="STYLE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.test.HTMLParserTest">
+      <SourceLine classname="org.bloggers4labour.test.HTMLParserTest" sourcefile="HTMLParserTest.java" sourcepath="org/bloggers4labour/test/HTMLParserTest.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.test.HTMLParserTest" name="runICBMTest" signature="()V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.test.HTMLParserTest" start="177" end="255" startBytecode="0" endBytecode="324" sourcefile="HTMLParserTest.java" sourcepath="org/bloggers4labour/test/HTMLParserTest.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.test.HTMLParserTest" start="225" end="225" startBytecode="231" endBytecode="231" sourcefile="HTMLParserTest.java" sourcepath="org/bloggers4labour/test/HTMLParserTest.java"/>
+    <SourceLine classname="org.bloggers4labour.test.HTMLParserTest" start="241" end="241" startBytecode="287" endBytecode="287" sourcefile="HTMLParserTest.java" sourcepath="org/bloggers4labour/test/HTMLParserTest.java"/>
+  </BugInstance>
+  <BugInstance type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" priority="3" abbrev="SQL" category="BAD_PRACTICE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.test.HTMLParserTest">
+      <SourceLine classname="org.bloggers4labour.test.HTMLParserTest" sourcefile="HTMLParserTest.java" sourcepath="org/bloggers4labour/test/HTMLParserTest.java"/>
+    </Class>
+    <Method classname="org.bloggers4labour.test.HTMLParserTest" name="runICBMTest" signature="()V" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.test.HTMLParserTest" start="177" end="255" startBytecode="0" endBytecode="146" sourcefile="HTMLParserTest.java" sourcepath="org/bloggers4labour/test/HTMLParserTest.java"/>
+    </Method>
+    <SourceLine classname="org.bloggers4labour.test.HTMLParserTest" start="201" end="201" startBytecode="69" endBytecode="69" sourcefile="HTMLParserTest.java" sourcepath="org/bloggers4labour/test/HTMLParserTest.java"/>
+  </BugInstance>
+  <BugInstance type="URF_UNREAD_FIELD" priority="2" abbrev="UrF" category="PERFORMANCE">
+    <UserAnnotation/>
+    <Class classname="org.bloggers4labour.test.HTMLParserTest$Entry">
+      <SourceLine classname="org.bloggers4labour.test.HTMLParserTest$Entry" sourcefile="HTMLParserTest.java" sourcepath="org/bloggers4labour/test/HTMLParserTest.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.test.HTMLParserTest$Entry" name="m_CommFeedURL" signature="Ljava/lang/String;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.test.HTMLParserTest$Entry" sourcefile="HTMLParserTest.java" sourcepath="org/bloggers4labour/test/HTMLParserTest.java"/>
+    </Field>
+    <SourceLine classname="org.bloggers4labour.test.HTMLParserTest$Entry" start="301" end="301" startBytecode="22" endBytecode="22" sourcefile="HTMLParserTest.java" sourcepath="org/bloggers4labour/test/HTMLParserTest.java"/>
+  </BugInstance>
+  <BugInstance type="URF_UNREAD_FIELD" priority="2" abbrev="UrF" category="PERFORMANCE">
+    <Class classname="org.bloggers4labour.test.StatsTest">
+      <SourceLine classname="org.bloggers4labour.test.StatsTest" sourcefile="StatsTest.java" sourcepath="org/bloggers4labour/test/StatsTest.java"/>
+    </Class>
+    <Field classname="org.bloggers4labour.test.StatsTest" name="thePageLocale" signature="Ljava/util/Locale;" isStatic="false">
+      <SourceLine classname="org.bloggers4labour.test.StatsTest" sourcefile="StatsTest.java" sourcepath="org/bloggers4labour/test/StatsTest.java"/>
+    </Field>
+    <SourceLine classname="org.bloggers4labour.test.StatsTest" start="23" end="23" startBytecode="8" endBytecode="8" sourcefile="StatsTest.java" sourcepath="org/bloggers4labour/test/StatsTest.java"/>
+  </BugInstance>
+  <Errors></Errors>
+  <FindBugsSummary timestamp="Wed, 21 Feb 2007 13:56:42 +0000" total_classes="0" total_bugs="0" total_size="0" num_packages="0" cpu_seconds="0.19" clock_seconds="1.05" peak_mbytes="261.90" gc_seconds="0.00"></FindBugsSummary>
+  <ClassFeatures></ClassFeatures>
+  <History></History>
+</BugCollection>
