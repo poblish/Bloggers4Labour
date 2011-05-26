@@ -5,7 +5,6 @@
 	<artifactId>B4L-core</artifactId>
 	<packaging>jar</packaging>
 	<version>1.0-SNAPSHOT</version>
-	<name>B4L II</name>
 	<url>http://maven.apache.org</url>
 
 	<dependencies>
@@ -41,7 +40,7 @@
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
 			<version>5.1.14</version>
-			<scope>provided</scope>
+			<scope>compile</scope>
 		</dependency>
 
 		<dependency>
@@ -93,19 +92,19 @@
 			<groupId>com.hiatus</groupId>
 			<artifactId>environment</artifactId>
 			<version>1.0-SNAPSHOT</version>
-			<scope>provided</scope>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.hiatus</groupId>
 			<artifactId>utils</artifactId>
 			<version>1.0-SNAPSHOT</version>
-			<scope>provided</scope>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.hiatus</groupId>
 			<artifactId>HTL</artifactId>
 			<version>1.0-SNAPSHOT</version>
-			<scope>provided</scope>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.jdom</groupId>
@@ -138,4 +137,5 @@
 	<properties>
 		<!-- <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding> -->
 	</properties>
+	<name>Bloggers4Labour 2011</name>
 </project>
