@@ -1,0 +1,10 @@
+
+=======================================================================
+
+Upcoming events for the next five days, from our Events page:
+
+
+{$events_body}Submit your own events here: <http://www.bloggers4labour.org/events.jsp>
+
+=======================================================================
+

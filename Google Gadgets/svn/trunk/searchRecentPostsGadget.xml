@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Module>
+<ModulePrefs title="B4L Search Recent Posts"
+	     description="Links to the most recently recommended posts at Bloggers4Labour"
+	     title_url="http://www.bloggers4labour.org/"
+	     screenshot="http://www.bloggers4labour.org/gadgets/recommendations/screenshot.png"
+	     thumbnail="http://www.bloggers4labour.org/gadgets/recommendations/thumbnail.png"
+	     author="Andrew Regan"
+	     author_email="aregan+coolgadget@gmail.com"
+	     height="175">
+    <Require feature="analytics"/>
+    <Require feature="dynamic-height"/>
+    <Require feature="minimessage"/>
+</ModulePrefs>
+<Content type="html">
+<![CDATA[
+<script>
+_IG_Analytics("UA-159388-1", "/widget_searchRecentPostsAtB4L");
+</script>
+<script type="text/javascript" src="http://www.bloggers4labour.org/js/main.js"></script>
+
+<style type="text/css">
+@import url("http://b4l-gadgets.googlecode.com/svn/trunk/css/feeds.css");
+@import url("http://b4l-gadgets.googlecode.com/svn/trunk/css/gadgets.css");
+</style>
+
+<div id="b4l-searchRecentPosts08">
+<p class="searchRecentPosts08-head"><span class="searchRecentPosts08-head">Search Recent Posts...&nbsp;</span></p>
+
+<script type="text/javascript"> 
+function populateList()
+{ 
+/*	var msg = new _IG_MiniMessage(__MODULE_ID__);
+	var theLoadingMsg = msg.createStaticMessage("Loading B4L Gadget...");
+
+	// ...
+
+	msg.dismissMessage(theLoadingMsg);
+	document.getElementById("b4l-searchRecentPosts08").style.display = 'block'; */
+
+	_IG_AdjustIFrameHeight();
+}
+
+function handleSearch()
+{ 
+	var whereVal = document.forms["search_posts"].elements["where"].value;
+	var qVal = document.forms["search_posts"].elements["search_query"].value;
+
+	if ( qVal == '') {
+		return;
+	}
+
+	var url = "http://www.bloggers4labour.org/servlet/b4l_main?search=true&disp=xml&q=" + qVal + "&where=" + whereVal;
+
+	_IG_FetchXmlContent( url, function (response) {
+		if ( response == null || typeof(response) != "object" || response.firstChild == null) {
+			return;
+		}
+
+		displaySearchResultsDOM(response);
+
+		_IG_AdjustIFrameHeight();
+	} );
+}
+
+
+_IG_RegisterOnloadHandler(populateList);
+</script>
+
+    <div class="feeds-box">
+	<div id="search_posts_section"><form id="search_posts">
+		<input id="search_query" name="search_query" style="width: 100px" value="Labour" />
+		<select id="where" class="WCHhider">
+			<option value="both">Everywhere</option>
+			<option value="titles">Titles only</option>
+			<option value="text">Text only</option>
+		</select>
+		<input type="button" id="search_do" onclick="javascript:handleSearch(); return false;" name="search_do" value="Search" /> <input type="button" disabled="disabled" id="search_remove_matches" onclick="javascript:removeMatches(); _IG_AdjustIFrameHeight(); return false;" name="search_do" value="Reset" />
+	</form>
+	<div id="search_posts_posts" class="search_posts_off"></div>
+	</div>
+    </div>
+</div>
+
+]]>
+</Content>
+</Module>

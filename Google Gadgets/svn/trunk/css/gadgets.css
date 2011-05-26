@@ -1,0 +1,203 @@
+div#b4l-recommendations
+{
+	border: 1px solid rgb(164,83,96);
+	background-color: #FFF;
+	text-align: left;
+	font-size: 12px;
+}
+
+p.recommend-head
+{
+	padding: 6px 4px 8px 6px;
+	margin: 0;
+	color: white;
+	background-color: rgb(164,83,96);
+}
+
+span.recommend-head
+{
+	font-weight: bold;
+	font-size: 110%;
+}
+
+p.recommend-link
+{
+	padding: 0;
+	margin: 7px 4px 6px 6px;
+}
+
+/* ================================================== */
+
+p.recommend-entries
+{
+	font-weight: normal;
+	padding: 4px 4px 4px 6px;
+	margin: 0;
+	color: black;
+	line-height: 1.3em;
+	background-color: #FFF;
+}
+
+p.recommend-entries .level1 {
+	font-size: 117%;
+}
+
+p.recommend-entries .level2 {
+	font-size: 108%;
+}
+
+p.recommend-entries .level3 {
+	font-size: 100%;
+}
+
+p.recommend-entries .level4 {
+	font-size: 95%;
+}
+
+p.recommend-entries .level5 {
+	font-size: 85%;
+}
+
+p.recommend-entries a:hover,
+	p.recommend-link a:hover
+{
+	color: #FF0000;
+	background-color: rgb(100%,100%,70%);
+	text-decoration: none;
+}
+
+/* ================================================== */
+
+div#b4l-recentPosts08
+{
+	border: 1px solid rgb(164,64,111);
+	background-color: #FFF;
+	text-align: left;
+}
+
+p.recentPosts08-head
+{
+	padding: 6px 4px 8px 6px;
+	margin: 0;
+	color: white;
+	background-color: rgb(164,64,111);
+	font-size: 12px;
+}
+
+span.recentPosts08-head
+{
+	font-weight: bold;
+	font-size: 110%;
+}
+
+/* ================================================== */
+
+div#b4l-searchRecentPosts08
+{
+	border: 1px solid rgb(164,64,111);
+	background-color: #FFF;
+	text-align: left;
+}
+
+p.searchRecentPosts08-head
+{
+	padding: 6px 4px 8px 6px;
+	margin: 0;
+	color: white;
+	background-color: rgb(164,64,111);
+	font-size: 12px;
+}
+
+span.searchRecentPosts08-head
+{
+	font-weight: bold;
+	font-size: 110%;
+}
+
+/* ================================================== */
+
+div#b4l-B4LPosts08
+{
+	border: 1px solid rgb(147,115,166);
+	background-color: #FFF;
+	text-align: left;
+}
+
+p.B4LPosts08-head
+{
+	padding: 6px 4px 8px 6px;
+	margin: 0;
+	color: white;
+	background-color: rgb(147,115,166);
+	font-size: 12px;
+}
+
+span.B4LPosts08-head
+{
+	font-weight: bold;
+	font-size: 110%;
+}
+
+/* ================================================== */
+
+.post-title {
+  margin:0;
+  font-size:135%;
+  line-height:1.5em;
+/*
+  background:url("http://www.blogblog.com/rounders2/icon_arrow.gif") no-repeat 10px .5em;
+  border:1px dotted #bbb;
+  border-width:0 1px 1px;
+  padding:2px 14px 2px 29px;
+*/
+  border-bottom: 1px dotted #999;
+  padding: 2px 2px 3px 5px;
+  display: block;
+  color: #810;
+}
+.post-body {
+  font-family: "Trebuchet MS",Verdana,Arial,Sans-serif;
+  font-size: 80%;
+}
+a:hover {
+  color: #FF0000;
+  }
+
+.post-body a:hover, a.col:hover
+{
+	color: #FF0000;
+	background-color: rgb(100%,100%,70%);
+	text-decoration: none;
+}
+
+span.header-no-comm
+{
+	font-weight: normal;
+	color: #999;
+	font-size: 75%;
+}
+
+span.header-some-comm
+{
+	font-weight: bold;
+	color: rgb(164,83,96);
+	font-size: 75%;
+}
+
+p.post-footer {
+	background:#eee;
+	margin:0;
+	padding:2px 14px 2px 29px;
+	border:1px dotted #bbb;
+	border-width:1px;
+	border-bottom:1px solid #eee;
+	font-size: 80%;
+	line-height:1.3em;
+	color:#666;
+	text-align:right;
+}
+
+span#recent_posts_date
+{
+	color: rgb(255,236,0);
+}

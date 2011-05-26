@@ -1,0 +1,9 @@
+<table class="poll" width="600" border="0" summary="{st:Blog posting activity}">
+<tr>
+	<th class="nice-blue" colspan="3">{st:Blog posting activity}</th>
+</tr>
+{$activity_stats_buf}
+<tr>
+	<td class="poll-title" colspan="3">{st:Total Votes}: {$total_blogs}</td>
+</tr>
+</table>

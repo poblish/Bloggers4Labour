@@ -1,0 +1,7 @@
+[{$event_index}/{$event_count}] "{$event_name}" starts {$event_start_date}
+
+  Description:  {$event_desc}
+  Location:     {$event_location_str}
+  More details: {$event_URL}
+
+

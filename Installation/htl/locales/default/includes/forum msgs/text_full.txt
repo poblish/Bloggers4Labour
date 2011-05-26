@@ -1,0 +1,17 @@
+Hello,
+
+ANNOUNCEMENT: If you're a Labour blogger and/or party supporter, please consider registering
+at the Blogger4Labour message board <http://www.bloggers4labour.org/forum/index.php>
+You can keep up with news, get involved in exciting new developments, and help organise Labour's
+presence in the blogosphere. N.B. For your security and ours, all registrants will need to be
+approved by Andrew @ B4L before they can post or read articles. To speed up the process, please
+provide as much information as you can when you register. It won't be used elsewhere, but will
+help us verify you're not an enemy spy!
+
+
+Here's your digest of articles featured by Bloggers4Labour during the past 24 hours.
+
+{$msgs}
+=======================================================================
+
+Visit <http://www.bloggers4labour.org/login.jsp> to change your email preferences.

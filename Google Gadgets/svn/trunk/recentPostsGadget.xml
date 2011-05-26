@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Module>
+<ModulePrefs title="B4L Recent Posts"
+	     description="Links to the most recently recommended posts at Bloggers4Labour"
+	     title_url="http://www.bloggers4labour.org/"
+	     screenshot="http://www.bloggers4labour.org/gadgets/recommendations/screenshot.png"
+	     thumbnail="http://www.bloggers4labour.org/gadgets/recommendations/thumbnail.png"
+	     author="Andrew Regan"
+	     author_email="aregan+coolgadget@gmail.com"
+	     height="175">
+    <Require feature="analytics"/>
+    <Require feature="dynamic-height"/>
+    <Require feature="minimessage"/>
+</ModulePrefs>
+<Content type="html">
+<![CDATA[
+<script>
+_IG_Analytics("UA-159388-1", "/widget_recentPostsAtB4L");
+</script>
+<script type="text/javascript" src="http://www.bloggers4labour.org/js/main.js"></script>
+
+<style type="text/css">
+@import url("http://b4l-gadgets.googlecode.com/svn/trunk/css/feeds.css");
+@import url("http://b4l-gadgets.googlecode.com/svn/trunk/css/gadgets.css");
+</style>
+
+<div id="b4l-recentPosts08" style="display: none">
+<p class="recentPosts08-head"><span class="recentPosts08-head">Last <span id="recent_posts_count_08"></span> Posts @ <span id="recent_posts_date">current time</span>...&nbsp;</span></p>
+
+<script type="text/javascript"> 
+function populateList()
+{ 
+	var msg = new _IG_MiniMessage(__MODULE_ID__);
+	var theLoadingMsg = msg.createStaticMessage("Loading B4L Gadget...");
+  
+  	var url = "http://www.bloggers4labour.org/servlet/b4l_main?headlines=true&yuk=" + Math.random() + "&posts=3";
+
+	_IG_FetchXmlContent( url, function (response) {
+		if ( response == null || typeof(response) != "object" || response.firstChild == null) {
+			_gel("b4l-recommendations-content").innerHTML = "<i>Invalid data.</i>";
+			return;
+		}
+
+		handleNewRecentPostsDOM(response);
+
+		msg.dismissMessage(theLoadingMsg);
+		document.getElementById("b4l-recentPosts08").style.display = 'block';
+
+		_IG_AdjustIFrameHeight();
+	} );
+}
+_IG_RegisterOnloadHandler(populateList);
+</script>
+
+  <!-- <div style="line-height: 1.3em"> -->
+    <div class="feeds-box" style="border:0">
+	<div id="search_posts_section">
+	<div id="search_posts_posts"></div>
+	</div>
+    </div>
+  <!-- </div> -->
+</div>
+
+]]>
+</Content>
+</Module>

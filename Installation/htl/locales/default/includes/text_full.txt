@@ -1,0 +1,10 @@
+Hello,
+
+Welcome to the daily Bloggers4Labour newsletter.
+{$events_section}
+Here's your digest of articles featured by Bloggers4Labour during the past 24 hours.
+
+{$msgs}
+=======================================================================
+
+Visit <http://www.bloggers4labour.org/login.jsp> to change your email preferences.

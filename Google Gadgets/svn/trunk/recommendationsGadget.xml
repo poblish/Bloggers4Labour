@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Module>
+<ModulePrefs title="B4L Recommendations"
+	     description="Links to the most recently recommended posts at Bloggers4Labour"
+	     title_url="http://www.bloggers4labour.org/"
+	     screenshot="http://www.bloggers4labour.org/gadgets/recommendations/screenshot.png"
+	     thumbnail="http://www.bloggers4labour.org/gadgets/recommendations/thumbnail.png"
+	     author="Andrew Regan"
+	     author_email="aregan+coolgadget@gmail.com"
+	     height="175">
+    <Require feature="analytics"/>
+    <Require feature="dynamic-height"/>
+    <Require feature="minimessage"/>
+</ModulePrefs>
+<Content type="html">
+<![CDATA[
+<script>
+_IG_Analytics("UA-159388-1", "/widget_recommendations");
+</script>
+
+<style type="text/css">
+@import url("http://b4l-gadgets.googlecode.com/svn/trunk/css/gadgets.css");
+</style>
+
+<div id="b4l-recommendations" style="display: none">
+<p class="recommend-head"><span class="recommend-head">Recently Recommended...&nbsp;</span></p>
+<p id="b4l-recommendations-content" class="recommend-entries"><i>Loading...</i></p>
+<hr />
+<p class="recommend-link"><a class="recommend" href="http://www.bloggers4labour.org/recommended.jsp" target="recommendedWind">More Recommendations</a></p>
+</div>
+
+<script type="text/javascript"> 
+function populateList()
+{ 
+	var msg = new _IG_MiniMessage(__MODULE_ID__);
+	var theLoadingMsg = msg.createStaticMessage("Loading B4L Gadget...");
+  
+	var url = "http://www.bloggers4labour.org/servlet/b4l_main?recommendations=google&yuk=" + Math.random();
+
+	_IG_FetchXmlContent( url, function (response) {
+		if ( response == null || typeof(response) != "object" || response.firstChild == null) {
+			_gel("b4l-recommendations-content").innerHTML = "<i>Invalid data.</i>";
+			return;
+		}
+
+		var rootNodeList = response.getElementsByTagName('entries');
+		if ( rootNodeList != null && rootNodeList.item(0) != null) {
+			var entryElems = rootNodeList.item(0).getElementsByTagName('entry');
+			if ( entryElems != null && entryElems.length > 0) {
+				var theHTML = "";
+
+				for ( var i = 0; i < entryElems.length; i++) {
+					if ( i > 0) {
+						theHTML += ", ";
+					}
+
+					var urlStr = entryElems[i].getElementsByTagName('url')[0].firstChild.data;
+					var siteNameStr = entryElems[i].getElementsByTagName('site')[0].firstChild.data;
+					var levelObj = entryElems[i].getElementsByTagName('level');
+
+					theHTML += "<a href=\"" + urlStr + "\" target=\"recommendedWind\">";
+
+					if ( levelObj != null) {
+						theHTML += "<span class=\"level" + levelObj[0].firstChild.data + "\">";
+					}
+
+					theHTML += siteNameStr;
+
+					if ( levelObj != null) {
+						theHTML += "</span>";
+					}
+
+					theHTML += "</a>";
+				}
+
+				_gel('b4l-recommendations-content').innerHTML = theHTML;
+			} else {
+				_gel('b4l-recommendations-content').innerHTML = "<span style=\"color:#666\">Sorry, no recommendations found</span>";
+			}
+		} else {
+			_gel('b4l-recommendations-content').innerHTML = "<b>Error:</b> Could not find recommendations";
+		}
+
+		msg.dismissMessage(theLoadingMsg);
+		document.getElementById("b4l-recommendations").style.display = 'block';
+
+		_IG_AdjustIFrameHeight();
+	} );
+}
+_IG_RegisterOnloadHandler(populateList);
+</script>
+
+]]>
+</Content>
+</Module>

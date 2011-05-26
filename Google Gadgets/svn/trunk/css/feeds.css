@@ -1,0 +1,234 @@
+/***************************  Feed stuff  *******************************/
+
+div.feeds-box, div.box07
+{
+	font-size: 11px;
+	padding: 5px 5px 0 5px;
+	/* border-bottom: 1px dotted rgb(187,187,187);
+	margin: 5px; */
+}
+
+div.feeds-box
+{
+	max-width: 465px;
+
+	/* For IE <= 6 ...
+
+	width:expression( document.body.clientWidth > 800? "465px": "300px" ); */
+}
+
+p.newB4LLastHeader
+{
+	margin-top: 0;
+	font-size: 120%;
+	color: gray;
+	margin-bottom: 4px;
+	padding: 0;
+}
+
+div.feeds-box p.header, div.box07 p.header, p.newB4LLastHeader
+{
+	margin-top: 0;
+}
+
+div.feeds-box p.header2, div.box07 p.header2
+{
+	margin-top: 12px;
+}
+
+div.feeds-box p.header, div.feeds-box p.header2,
+	div.box07 p.header, div.box07 p.header2
+{
+	font-size: 140%;
+	color: gray;
+	margin-bottom: 9px;
+	padding: 0;
+}
+
+div.feeds-box p.header span.link, div.feeds-box p.header2 span.link,
+	div.box07 p.header span.link, div.box07 p.header2 span.link
+{
+	font-size: 11px;
+}
+
+div.feed-item-box, div.search-item-box
+{
+	padding: 2px;
+	margin: 2px 2px 4px 2px;
+	border: 2px groove rgb(232,207,204);
+	text-align: left;
+}
+
+div.feed-item-box	{ background: rgb(232,207,204); }
+div.search-item-box	{ background: rgb(225,200,234); }
+
+* html .feed-item-box
+{
+	width:expression(document.body.clientWidth > 900 ? "475px": "95%" );
+}
+
+* html .search-item-box
+{
+	width:expression(document.body.clientWidth > 900 ? "475px": "95%" );
+}
+
+div.feed-item-box p.item-info, div.search-item-box p.item-info
+{
+	margin: 2px;
+}
+
+span.item-title
+{
+}
+
+span.item-age
+{
+	color: #666;
+}
+
+p.item-description, p.item-description-news,
+	p.item-description-1votes, p.item-description-2votes,
+	p.item-description-3votes, p.item-description-4votes,
+	p.item-description-5votes, p.item-description-morevotes
+{
+	margin: 0px;
+	padding: 2px 2px 2px 5px;
+	line-height: 16px;
+	overflow-x: hidden;
+	max-width: 449px;
+}
+
+p.item-description		{ background: rgb(226,245,178); }
+p.item-description-news		{ background: rgb(212,221,232); }
+p.item-description-1votes	{ background: rgb(253,242,177); }	/* H:49deg, S:30%, B:100% */
+p.item-description-2votes	{ background: rgb(253,237,151); }	/* H:49deg, S:40%, B:100% */
+p.item-description-3votes	{ background: rgb(252,233,125); }	/* H:49deg, S:50%, B:100% */
+p.item-description-4votes	{ background: rgb(252,228,98); }	/* H:49deg, S:60%, B:100% */
+p.item-description-5votes	{ background: rgb(252,223,71); }	/* H:49deg, S:70%, B:100% */
+p.item-description-morevotes	{ background: rgb(251,218,42); }	/* H:49deg, S:80%, B:100% */
+
+table.item-details
+{
+	margin: 1px 0 1px 0;
+	padding: 0 5px 0 5px;
+}
+
+table.item-details img
+{
+	vertical-align: middle;
+}
+
+table.item-details td.cats
+{
+	padding-left: 5px;
+	font-size: 11px;
+}
+
+table.item-details td.people
+{
+	width: 18px;
+	text-align: left;
+}
+
+table.item-details td.creator
+{
+	width: 20px;
+	padding: 0 3px 0 5px;
+	text-align: left;
+}
+
+table.item-details td.image
+{
+	width: 20px;
+	text-align: right;
+}
+
+table.item-details td.image2
+{
+	width: 20px;
+	text-align: left;
+}
+
+td.item-xml
+{
+	width: 45px;
+	padding: 0 3px 0 5px;
+	text-align: right;
+	vertical-align: top;
+}
+
+td.item-links
+{
+	width: 50px;
+	padding: 0 3px 0 5px;
+	text-align: right;
+	vertical-align: top;
+}
+
+table.item-holder
+{
+	font-size: 11px;
+	margin:0;
+	/* padding:0; */
+	padding: 0 5px 0 3px;
+}
+
+table.item-holder, table.item-details
+{
+	/* width:450px; */
+	width: 100%;
+}
+
+div#referrers hr
+{
+	display: none;
+}
+
+
+/* --------------------------------------------------------- */
+/* --------------------------------------------------------- */
+
+table.item-details td.recommend-no-votes,
+	table.item-details td.recommend-voted,
+	table.item-details td.recommend-error
+{
+	padding-right: 0;
+	font-size: 11px;
+	text-align: center;
+	width: 85px;
+	border: 1px solid rgb(177,97,90);
+}
+
+table.item-details td.recommend-no-votes
+{
+	background-color: #FFD;
+}
+
+table.item-details td.recommend-voted
+{
+	font-weight: bold;
+	background-color: white;
+}
+
+table.item-details td.recommend-error
+{
+	font-weight: bold;
+	background-color: rgb(253,220,220);
+}
+
+/* --------------------------------------------------------- */
+
+table.item-details td.recommend-no-votes a
+{
+	text-decoration: underline;
+}
+
+table.item-details td.recommend-voted a
+{
+	text-decoration: underline;
+}
+
+table.item-details td.recommend-error a
+{
+	text-decoration: none;
+}

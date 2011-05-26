@@ -1,0 +1,8 @@
+<script type="text/javascript">
+setTimeout("requestScoreUpdate();",30000);
+</script>
+
+<div id="b4l-cricket">
+	<div id="b4l-cricket-info">{$info}</div>
+	<div id="b4l-cricket-score">{$team1_buf} vs. {$team2_buf}</div>
+</div>

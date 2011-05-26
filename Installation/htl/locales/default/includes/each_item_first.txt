@@ -1,0 +1,8 @@
+
+[{$item_index}/{$item_count}]  {$title_buf}
+
+{$desc_buf}
+From: {$from}
+Read more at: {$link_url}
+Posted at: {$post_date}
+{$cats_buf}

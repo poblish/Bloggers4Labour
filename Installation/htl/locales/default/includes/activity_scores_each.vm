@@ -1,0 +1,15 @@
+<tr>
+	<td class="poll-option" rowspan="2" width="35%">
+		{$opt_name}
+	</td>
+	<td class="poll-option" rowspan="2" width="28%">
+		{$opt_votes} ({$opt_perc})
+	</td>
+	<td class="poll-option" style="line-height: 14px; padding-top: 4px" width="37%">
+		<img src="http://www.bloggers4labour.org/images/chart/vote_on.gif" height="8" width="{$opt_width_1}" border="0" /><img src="http://www.bloggers4labour.org/images/chart/vote_off.gif" height="8" width="{$opt_width_0}" border="0" />
+	</td>
+</tr><tr>
+	<td class="poll-option" style="line-height: 14px; padding-bottom: 4px" width="37%">
+		<img src="http://www.bloggers4labour.org/images/chart/vote_on_2.gif" height="8" width="{$opt_cum_width_1}" border="0" /><img src="http://www.bloggers4labour.org/images/chart/vote_off_2.gif" height="8" width="{$opt_cum_width_0}" border="0" />
+	</td>
+</tr>

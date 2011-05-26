@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Module>
+<ModulePrefs title="B4L Posts"
+	     description="Links to the most recently recommended posts at Bloggers4Labour"
+	     title_url="http://www.bloggers4labour.org/"
+	     screenshot="http://www.bloggers4labour.org/gadgets/recommendations/screenshot.png"
+	     thumbnail="http://www.bloggers4labour.org/gadgets/recommendations/thumbnail.png"
+	     author="Andrew Regan"
+	     author_email="aregan+coolgadget@gmail.com"
+	     height="175">
+    <!-- <Require feature="opensocial-0.5" /> -->
+    <Require feature="analytics"/>
+    <Require feature="dynamic-height"/>
+    <Require feature="minimessage"/>
+</ModulePrefs>
+<Content type="html">
+<![CDATA[
+
+<style type="text/css">
+@import url("http://b4l-gadgets.googlecode.com/svn/trunk/css/gadgets.css");
+</style>
+
+<script>
+_IG_Analytics("UA-159388-1", "/widget_B4LBlogPosts");
+</script>
+
+<script type="text/javascript"> 
+function populateList()
+{ 
+	var msg = new _IG_MiniMessage(__MODULE_ID__);
+	var theLoadingMsg = msg.createStaticMessage("Loading B4L Gadget...");
+  
+	var url = "http://www.blogger.com/feeds/10883926/posts/default?max-results=3";	// 15";
+
+	_IG_FetchXmlContent( url, function (response) {
+		if ( response == null || typeof(response) != "object" || response.firstChild == null) {
+			_gel("b4l-recommendations-content").innerHTML = "<i>Invalid data.</i>";
+			return;
+		}
+
+		var rootNodeList = response.getElementsByTagName('feed');
+		if ( rootNodeList != null && rootNodeList.item(0) != null) {
+			var entryElems = rootNodeList.item(0).getElementsByTagName('entry');
+			if ( entryElems != null && entryElems.length > 0) {
+				var theHTML = "";
+
+				for ( var thePostIndex = 0; thePostIndex < entryElems.length; thePostIndex++) {
+
+					var theLinkElems = entryElems[thePostIndex].getElementsByTagName('link');
+					var theBloggerCommentsURL = '';
+					var theBlogsOwnURL = '';
+					var theNumComments = 0;
+
+					for ( var theLinkIndex = 0; theLinkIndex < theLinkElems.length; theLinkIndex++) {
+						var theLinkRel = theLinkElems.item(theLinkIndex).getAttribute("rel");
+						var theLinkType = theLinkElems.item(theLinkIndex).getAttribute("type");
+
+						if ( theLinkRel == "replies" && theLinkType == "text/html")
+						{
+							theBloggerCommentsURL = theLinkElems.item(theLinkIndex).getAttribute("href");
+
+							var theBloggerCommentsStr = theLinkElems.item(theLinkIndex).getAttribute("title");
+
+							theNumComments = theBloggerCommentsStr.substring( 0, theBloggerCommentsStr.indexOf(' '));
+						}
+						else if ( theLinkRel == "alternate" && theLinkType == "text/html")
+						{
+							theBlogsOwnURL = theLinkElems.item(theLinkIndex).getAttribute("href");
+						}
+					}
+
+					var postTitleStr = entryElems[thePostIndex].getElementsByTagName('title')[0].firstChild.data;
+					var postContentElem = entryElems[thePostIndex].getElementsByTagName('content')[0];
+					var postContentStr = '';
+
+					for ( var j = 0; j < postContentElem.childNodes.length; j++) {
+						postContentStr += postContentElem.childNodes[j].nodeValue;
+					}
+
+					///////////////////////////////////////////////////////////////////  Author stuff
+
+					var theAuthorElem = entryElems[thePostIndex].getElementsByTagName('author')[0];
+					var theAuthorNameColl = theAuthorElem.getElementsByTagName('name');
+					var theAuthorName = '';
+
+					if ( theAuthorNameColl != null && theAuthorNameColl.length > 0) {
+						theAuthorName = theAuthorNameColl[0].firstChild.data;
+					}
+
+					///////////////////////////////////////////////////////////////////  Author stuff
+
+					var thePubTimeStr = entryElems[thePostIndex].getElementsByTagName('published')[0].firstChild.data;
+					var theUglyPublishedTimeStr = '';
+					var thePTLoc1 = thePubTimeStr.indexOf('T');
+
+					if ( thePTLoc1 > 0)
+					{
+						var thePTLoc2 = thePubTimeStr.indexOf( '+', thePTLoc1 + 1);
+						if ( thePTLoc2 >= 0)
+						{
+							// "21:07:00" in the timezone specified in Blogger Settings
+
+							theUglyPublishedTimeStr = thePubTimeStr.substring( thePTLoc1 + 1, thePTLoc2 - 7);	// Remove secs and mssecs
+						}
+					}
+
+					///////////////////////////////////////////////////////////////////  Title and comments display
+
+					theHTML += "<h3 class=\"post-title\">" + postTitleStr;
+
+					if ( theNumComments == 1) {
+						theHTML += "<span class=\"header-some-comm\"> - 1 comment</span></h3>";
+					}
+					else if ( theNumComments > 0) {
+						theHTML += "<span class=\"header-some-comm\"> - " + theNumComments + " comments</span></h3>";
+					}
+					else {
+						theHTML += "<span class=\"header-no-comm\"> - no comments</span></h3>";
+					}
+
+					///////////////////////////////////////////////////////////////////
+
+					theHTML += "<p class=\"post-body\">" + postContentStr + "</p>";
+
+					/* theHTML += "<a href=\"" + theBlogsOwnURL + "\">";
+
+					theHTML += siteNameStr;
+
+					theHTML += "</a>"; */
+
+					///////////////////////////////////////////////////////////////////
+
+					theHTML += "<p class=\"post-footer\">";
+					theHTML += "<em>posted by " + theAuthorName + " @ <a href=\"xxx\" title=\"permanent link\">" + theUglyPublishedTimeStr + "</a></em>";
+					theHTML += "<div class=\"numBlogComments\"><a class=\"comment-link\" href=\"url\">commentsStr</a></div>";
+					theHTML += "</p>";
+				}
+
+				_gel('content_div').innerHTML = theHTML;
+			} else {
+				_gel('content_div').innerHTML = "<span style=\"color:#666\">Sorry, no recommendations found</span>";
+			}
+		} else {
+			_gel('content_div').innerHTML = "<b>Error:</b> Could not find recommendations";
+		}
+
+		msg.dismissMessage(theLoadingMsg);
+		document.getElementById("b4l-B4LPosts08").style.display = 'block';
+
+		_IG_AdjustIFrameHeight();
+	} );
+}
+_IG_RegisterOnloadHandler(populateList);
+</script>
+
+<div id="b4l-B4LPosts08" style="display: none">
+<p class="B4LPosts08-head"><span class="B4LPosts08-head">B4L Editorials...&nbsp;</span></p>
+  <div id="content_div"></div>
+</div>
+
+]]>
+</Content>
+</Module>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<installations>
+	<fileLocators>
+		<fileLocator rootDirectoryPath="htl/" 
+			     directoryPrefix="locales/" 
+			     defaultDirectoryName="default" 
+			     id="myLocalMachine" />
+	</fileLocators>
+
+	<HTL fileLocator="myLocalMachine" />
+
+	<pollers>
+		<poller id="standard">
+			<class>org.bloggers4labour.polling.StandardPoller</class>
+			<frequency_ms>300000</frequency_ms>
+		</poller>
+		<poller id="cricket">
+			<class>org.bloggers4labour.cricket.ScoresPoller</class>
+			<frequency_ms>30000</frequency_ms>
+		</poller>
+	</pollers>
+
+	<install name="b4l" mbean_name="b4lStats" poller="standard">
+		<jdbc_url><![CDATA[jdbc:mysql://localhost:3306/Bloggers4Labour?user=root&password=Militant&useUnicode=true]]></jdbc_url>
+
+		<headlinesMgr>
+			<rss_feed id="24"/>
+			<email id="48"/>
+			<index id="48"/>
+			<recent id="48"/>
+			<comments id="CommentsHeadz"/>
+
+			<headlines id="24">
+				<name>One day</name>
+				<items>POSTS</items>
+				<minAgeMillis>-86399999</minAgeMillis>
+				<maxAgeMillis>86400000</maxAgeMillis>
+			</headlines>
+
+			<headlines id="48">
+				<name>Two days</name>
+				<items>POSTS</items>
+				<minAgeMillis>-86399999</minAgeMillis>
+				<maxAgeMillis>172800000</maxAgeMillis>
+				<handlers>
+					<class>org.bloggers4labour.headlines.LogNewItemsHandler</class>
+				</handlers>
+			</headlines>
+
+			<headlines id="CommentsHeadz">
+				<name>Comments</name>
+				<items>COMMENTS</items>
+				<minAgeMillis>-86399999</minAgeMillis>
+				<maxAgeMillis>172800000</maxAgeMillis>
+			</headlines>
+
+			<headlines id="Cllrs">
+				<name>Bloggers4Labour: Councillors</name>
+				<description>Bloggers4Labour: posts from Labour Councillors</description>
+				<items>POSTS</items>
+				<minAgeMillis>-86399999</minAgeMillis>
+				<maxAgeMillis>432000000</maxAgeMillis>
+				<filter>
+					<creatorStatus>6</creatorStatus>
+					<creatorStatus>7</creatorStatus>
+					<creatorStatus>8</creatorStatus>
+				</filter>
+			</headlines>
+		</headlinesMgr>
+
+		<facebook>
+			<group_id>2228600509</group_id>
+		</facebook>
+	</install>
+</installations>
