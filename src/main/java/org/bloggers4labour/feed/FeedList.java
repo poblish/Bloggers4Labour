@@ -553,7 +553,8 @@ public class FeedList implements MutableFeedListIF
 
 			synchronized (m_Task._m_LastRecnoLocker)
 			{
-				if (m_Task.m_SiteRecnosUsed.contains(theSiteRecno))
+				if ( theSiteRecno == null ||	// (AGR) Found NPE on 23 May 2011
+				     m_Task.m_SiteRecnosUsed.contains(theSiteRecno))
 				{
 					return true;
 				}
