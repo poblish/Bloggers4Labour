@@ -6,6 +6,7 @@
 package org.bloggers4labour.headlines;
 
 import java.util.Collection;
+import java.util.Collections;
 import org.bloggers4labour.AddResult;
 import org.bloggers4labour.InstallationIF;
 import org.bloggers4labour.ItemContext;
@@ -25,12 +26,17 @@ public class DummyHeadlinesImpl implements HeadlinesIF
 	*******************************************************************************/
 	public DummyHeadlinesImpl( final InstallationIF inInstall, String inName, String inDescr, long inMinAgeMsecs, long inMaxAgeMsecs)
 	{
-		;
+	}
+
+	/*******************************************************************************
+	*******************************************************************************/
+	public DummyHeadlinesImpl()
+	{
 	}
 
 	public String getName()
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		return null;
 	}
 
 	public String getHeadlinesXMLString()
@@ -45,7 +51,7 @@ public class DummyHeadlinesImpl implements HeadlinesIF
 
 	public Collection<String> getBlogs()
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		return Collections.emptyList();
 	}
 
 	public int getBlogsCount()
