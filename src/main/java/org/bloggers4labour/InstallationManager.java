@@ -63,7 +63,7 @@ import static org.bloggers4labour.Constants.*;
  *
  * @author andrewre
  */
-public class InstallationManager implements InstallationManagerIF
+public final class InstallationManager implements InstallationManagerIF
 {
 	private Map<String,InstallationIF>	m_Map = new LinkedHashMap<String,InstallationIF>();
 	private Collection<IncludeFileLocator>	m_FileLocators = new HashSet<IncludeFileLocator>();
@@ -177,7 +177,7 @@ public class InstallationManager implements InstallationManagerIF
 
 				PollerFeedApproverIF	theApprover = new AllFeedsApprover();
 
-				if ( theApproverImplClassStr != null)
+				if (UText.isValidString(theApproverImplClassStr))
 				{
 					try
 					{

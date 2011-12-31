@@ -10,8 +10,6 @@
 
 package org.bloggers4labour;
 
-import com.hiatus.text.UText;
-import com.sun.org.apache.xpath.internal.XPathAPI;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -19,13 +17,16 @@ import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.concurrent.CopyOnWriteArrayList;
+
 import javax.xml.transform.TransformerException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+
 import org.apache.log4j.Logger;
+import static org.bloggers4labour.Constants.*;
 import org.bloggers4labour.bridge.channel.ChannelIF;
 import org.bloggers4labour.headlines.Handler;
 import org.bloggers4labour.headlines.HeadlinesIF;
@@ -34,8 +35,8 @@ import org.bloggers4labour.xml.XMLUtils;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.traversal.NodeIterator;
-import static org.bloggers4labour.Constants.*;
+
+import com.hiatus.text.UText;
 
 /**
  *
@@ -92,10 +93,10 @@ public class HeadlinesMgr
 
 				for ( int i = 0; i < headsNodes.getLength(); i++)
 				{
-					Element		e = (Element) headsNodes.item(i);
-					String		ourIDStr = XMLUtils.getNodeIDValue(e);
-					String		theImplClassName = XMLUtils.getNodeAttrValue( e, "impl");	// (AGR) 20 Oct 2009
-					NodeList	nl = e.getChildNodes();
+					Element		theElem = (Element) headsNodes.item(i);
+					String		ourIDStr = XMLUtils.getNodeIDValue(theElem);
+					String		theImplClassName = XMLUtils.getNodeAttrValue( theElem, "impl");	// (AGR) 20 Oct 2009
+					NodeList	nl = theElem.getChildNodes();
 					String		theName = null;
 					String		theDescription = null;
 					String		theAllowedItems;
@@ -228,7 +229,7 @@ public class HeadlinesMgr
 
 					////////////////////////////////////////////////////////////////  (AGR) 24 March 2006
 
-					NodeList	tempNodeList = (NodeList) theCatFiltersExpr.evaluate( e, XPathConstants.NODESET);
+					NodeList	tempNodeList = (NodeList) theCatFiltersExpr.evaluate( theElem, XPathConstants.NODESET);
 
 					if ( tempNodeList != null && tempNodeList.getLength() >= 1)
 					{
@@ -244,16 +245,14 @@ public class HeadlinesMgr
 
 					////////////////////////////////////////////////////////////////
 
-					NodeIterator	ni = XPathAPI.selectNodeIterator( e, "handlers/class");
-					Node		handlerNode;
-					String		theClassName;
+					NodeList	ni = (NodeList) theXPathObj.evaluate( "handlers/class", theElem, XPathConstants.NODESET);
 
-					while (( handlerNode = ni.nextNode()) != null)
+					for ( int idx = 0; idx < ni.getLength(); idx++)
 					{
+						String	theClassName = ni.item(idx).getTextContent();
+
 						try
 						{
-							theClassName = handlerNode.getFirstChild().getNodeValue();
-
 							Class	clazz = Class.forName(theClassName);
 
 							theHeads.addHandler((Handler) clazz.newInstance());
@@ -267,6 +266,10 @@ public class HeadlinesMgr
 							s_HeadlinesMgr_Logger.error( "handlers...", e2);
 						}
 						catch (IllegalAccessException e2)
+						{
+							s_HeadlinesMgr_Logger.error( "handlers...", e2);
+						}
+						catch (RuntimeException e2)
 						{
 							s_HeadlinesMgr_Logger.error( "handlers...", e2);
 						}

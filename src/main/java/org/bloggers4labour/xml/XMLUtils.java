@@ -10,9 +10,13 @@
 
 package org.bloggers4labour.xml;
 
-import com.sun.org.apache.xpath.internal.XPathAPI;
 import javax.xml.transform.TransformerException;
-import org.w3c.dom.*;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 
 /**
  *
@@ -30,12 +34,17 @@ public class XMLUtils
 	*******************************************************************************/
 	public static String getIDValue( Node inParent, String inNodeName) throws TransformerException
 	{
-		Node	matchedNode = XPathAPI.selectSingleNode( inParent, inNodeName);
-
-		if ( matchedNode != null)
+		try
 		{
-			return getNodeIDValue(matchedNode);
+			final XPath	theXPathObj = XPathFactory.newInstance().newXPath();
+			Node		matchedNode = (Node) theXPathObj.evaluate( inNodeName, inParent, XPathConstants.NODE);
+
+			if ( matchedNode != null)
+			{
+				return getNodeIDValue(matchedNode);
+			}
 		}
+		catch (XPathExpressionException ex) {}
 
 		return null;
 	}
