@@ -11,7 +11,7 @@
  * ====================================================================
  * Copyright (c) 1995-1999 Purple Technology, Inc. All rights
  * reserved.
- * 
+ *
  * PLAIN LANGUAGE LICENSE: Do whatever you like with this code, free
  * of charge, just give credit where credit is due. If you improve it,
  * please send your improvements to server@purpletech.com. Check
@@ -34,7 +34,7 @@
  * promote products derived from this software without prior written
  * permission. For written permission, please contact
  * server@purpletech.com.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHORS AND PURPLE TECHNOLOGY ``AS
  * IS'' AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -76,7 +76,7 @@ public class Encoding	// Formerly com.purpletech.util.Purple_Utils
 				"arse<a href=\"http://www.tribute.r8.org\" /> <b> Woot</b>!!</a>!!",
 				"<P><!--StartFragment -->Sophia over at&nbsp;<A href=\"http://www.demosgreenhouse.co.uk/archives/000970.html\">Demos</A> has been reflecting on whether there might be lessons to be learned from some bits of the private sector, in particular <A href=\"http://www.pret.com/\">Pret-a-Manger</A>.&nbsp; Im intrigued by some of the ideas (without being clear whether theyre practical in a local government setting), for example:</P>",
 				"Chuckie Kennedy party of <strike>not very</strike> prestigious jobs",
-				"<P class=MsoNormal style=\"MARGIN: 0cm 0cm 0pt\"><TT><SPAN style=\"FONT-SIZE: 10pt; FONT-FAMILY: 'Lucida Sans Typewriter'\"><FONT face=\"Arial, Helvetica, sans-serif\">A&nbsp;really interesting email from a member of the Hastings Creative and Media Community&nbsp;came to my attention today, about what is claimed to be Ôthe 1<SUP>st</SUP> genuinely independent public access web tv station in HasingsÕ.<?xml:namespace prefix = o ns = \"urn:schemas-microsoft-com:office:office\" /><o:p></o:p></FONT></SPAN></TT></P>\n<P class=MsoNormal style=\"MARGIN: 0cm 0cm 0pt\"><TT><SPAN style=\"FONT-SIZE: 10pt; FONT-FAMILY: 'Lucida Sans Typewriter'\"><FONT face=\"Arial, Helvetica, sans-serif\">&nbsp;<o:p></o:p></FONT></SPAN></TT></P>\n<P class=MsoNormal style=\"MARGIN: 0cm 0cm 0pt\"><TT><SPAN style=\"FONT-SIZE: 10pt; FONT-FAMILY: 'Lucida Sans Typewriter'\"><FONT face=\"Arial, Helvetica, sans-serif\">Its presently posted </FONT><A href=\"http://www.angusg.f2s.com/\"><FONT face=\"Arial, Helvetica, sans-serif\">here</FONT></A><FONT face=\"Arial, Helvetica, sans-serif\"> but from tomorrow will be running from:</FONT></SPAN></TT></P>\n<P class=MsoNormal style=\"MARGIN: 0cm 0cm 0pt\"><TT><SPAN style=\"FONT-SIZE: 10pt; FONT-FAMILY: 'Lucida Sans Typewriter'\"><FONT face=\"Arial, Helvetica, sans-serif\">&nbsp;<o:p></o:p></FONT></SPAN></TT></P>\n<P class=MsoNormal style=\"MARGIN: 0cm 0cm 0pt\"><TT><SPAN style=\"FONT-SIZE: 10pt; FONT-FAMILY: 'Lucida Sans Typewriter'\"><A href=\"http://www.tvhastings.org/\"><FONT face=\"Arial, Helvetica, sans-serif\">www.tvhastings.org</FONT></A><o:p></o:p></SPAN></TT></P>\n<P class=MsoNormal style=\"MARGIN: 0cm 0cm 0pt\"><TT><SPAN style=\"FONT-SIZE: 10pt; FONT-FAMILY: 'Lucida Sans Typewriter'\"><FONT face=\"Arial, Helvetica, sans-serif\">&nbsp;<o:p></o:p></FONT></SPAN></TT></P><TT><SPAN style=\"FONT-SIZE: 10pt; FONT-FAMILY: 'Lucida Sans Typewriter'; mso-ansi-language: EN-GB; mso-fareast-language: EN-US; mso-bidi-language: AR-SA\"><FONT face=\"Arial, Helvetica, sans-serif\">Its early days but all credit to the creators - IÕm sure it canÕt fail to be better than the standard of the local dead tree press.</FONT></SPAN></TT>",
+				"<P class=MsoNormal style=\"MARGIN: 0cm 0cm 0pt\"><TT><SPAN style=\"FONT-SIZE: 10pt; FONT-FAMILY: 'Lucida Sans Typewriter'\"><FONT face=\"Arial, Helvetica, sans-serif\">A&nbsp;really interesting email from a member of the Hastings Creative and Media Community&nbsp;came to my attention today, about what is claimed to be ï¿½ï¿½ï¿½the 1<SUP>st</SUP> genuinely independent public access web tv station in Hasingsï¿½ï¿½ï¿½.<?xml:namespace prefix = o ns = \"urn:schemas-microsoft-com:office:office\" /><o:p></o:p></FONT></SPAN></TT></P>\n<P class=MsoNormal style=\"MARGIN: 0cm 0cm 0pt\"><TT><SPAN style=\"FONT-SIZE: 10pt; FONT-FAMILY: 'Lucida Sans Typewriter'\"><FONT face=\"Arial, Helvetica, sans-serif\">&nbsp;<o:p></o:p></FONT></SPAN></TT></P>\n<P class=MsoNormal style=\"MARGIN: 0cm 0cm 0pt\"><TT><SPAN style=\"FONT-SIZE: 10pt; FONT-FAMILY: 'Lucida Sans Typewriter'\"><FONT face=\"Arial, Helvetica, sans-serif\">Its presently posted </FONT><A href=\"http://www.angusg.f2s.com/\"><FONT face=\"Arial, Helvetica, sans-serif\">here</FONT></A><FONT face=\"Arial, Helvetica, sans-serif\"> but from tomorrow will be running from:</FONT></SPAN></TT></P>\n<P class=MsoNormal style=\"MARGIN: 0cm 0cm 0pt\"><TT><SPAN style=\"FONT-SIZE: 10pt; FONT-FAMILY: 'Lucida Sans Typewriter'\"><FONT face=\"Arial, Helvetica, sans-serif\">&nbsp;<o:p></o:p></FONT></SPAN></TT></P>\n<P class=MsoNormal style=\"MARGIN: 0cm 0cm 0pt\"><TT><SPAN style=\"FONT-SIZE: 10pt; FONT-FAMILY: 'Lucida Sans Typewriter'\"><A href=\"http://www.tvhastings.org/\"><FONT face=\"Arial, Helvetica, sans-serif\">www.tvhastings.org</FONT></A><o:p></o:p></SPAN></TT></P>\n<P class=MsoNormal style=\"MARGIN: 0cm 0cm 0pt\"><TT><SPAN style=\"FONT-SIZE: 10pt; FONT-FAMILY: 'Lucida Sans Typewriter'\"><FONT face=\"Arial, Helvetica, sans-serif\">&nbsp;<o:p></o:p></FONT></SPAN></TT></P><TT><SPAN style=\"FONT-SIZE: 10pt; FONT-FAMILY: 'Lucida Sans Typewriter'; mso-ansi-language: EN-GB; mso-fareast-language: EN-US; mso-bidi-language: AR-SA\"><FONT face=\"Arial, Helvetica, sans-serif\">Its early days but all credit to the creators - Iï¿½ï¿½ï¿½m sure it canï¿½ï¿½ï¿½t fail to be better than the standard of the local dead tree press.</FONT></SPAN></TT>",
 				"spotted at<a href=\"http://foo.com\"> normblog</a>.",
 				"spotted at <a href=\"http://foo.com\">normblog </a>Hullo",
 				"<p>This site lists Blogs in the UK. Woo.<BR><br  /><a href=\"http://www.britblog.com\"  target=\'_blank\'><p style=\"text-align:center;\"><img src=\"http://www.westminstervillage.co.uk/images/icon_britblog_80x15.gif\" border=\"0\" title=\"\" alt=\"\" class=\"pivot-image\" /></p></a></p>",
@@ -151,7 +151,7 @@ public class Encoding	// Formerly com.purpletech.util.Purple_Utils
 	out.print(indent(indent));
     }
 
-    public static String indent(int indent) {	
+    public static String indent(int indent) {
 	switch (indent) {
 	case 8:
 	    return("        ");
@@ -170,7 +170,7 @@ public class Encoding	// Formerly com.purpletech.util.Purple_Utils
 	case 1:
 	    return(" ");
 	default:
-	    StringBuffer buf = new StringBuffer();	    
+	    StringBuffer buf = new StringBuffer();
 	    for (int i=0; i<indent; ++i) { buf.append(" "); }
 	    return buf.toString();
 	}
@@ -196,7 +196,7 @@ public class Encoding	// Formerly com.purpletech.util.Purple_Utils
      * @param sleep msec to wait before terminating process
      **
     public static ExecInfo exec(String command, String input, long sleep)  throws IOException {
-	Process process = null;		    
+	Process process = null;
 	ExecInfo info = new ExecInfo();
 	try {
 	    Alarm a = null;
@@ -204,7 +204,7 @@ public class Encoding	// Formerly com.purpletech.util.Purple_Utils
 		a = new Alarm(Thread.currentThread(), sleep);
 		a.start();
 	    }
-			
+
 	    process = Runtime.getRuntime().exec(command);
 
 	    if (input != null) {
@@ -212,11 +212,11 @@ public class Encoding	// Formerly com.purpletech.util.Purple_Utils
 		pw.print(input);
 		pw.close();
 	    }
-	    
+
 	    info.stdout = IOUtils.readStream(process.getInputStream());
-			
+
 	    info.stderr = IOUtils.readStream(process.getErrorStream());
-			
+
 	    process.waitFor();
 	    if (a!=null)    a.stop = true;
 	}
@@ -297,7 +297,7 @@ public class Encoding	// Formerly com.purpletech.util.Purple_Utils
 	StringBuffer result = new StringBuffer(source.length());
 	int i = 0, j = 0;
 	int len = source.length();
-	while (i < len) {	    
+	while (i < len) {
 	    j = source.indexOf(target, i);
 	    if (j == -1) {
 		result.append( source.substring(i,len) );
@@ -316,74 +316,74 @@ public class Encoding	// Formerly com.purpletech.util.Purple_Utils
     static Object[][] entities = {
 		{"#39", Integer.valueOf(39)},		// ' - apostrophe
 		{"quot", Integer.valueOf(34)},		// " - double-quote
-		{"amp", Integer.valueOf(38)},		// & - ampersand 
+		{"amp", Integer.valueOf(38)},		// & - ampersand
 		{"lt", Integer.valueOf(60)},		// < - less-than
 		{"gt", Integer.valueOf(62)},		// > - greater-than
 		{"nbsp", Integer.valueOf(160)},		// non-breaking space
-		{"copy", Integer.valueOf(169)},		// © - copyright
-		{"reg", Integer.valueOf(174)},		// ® - registered trademark
-		{"Agrave", Integer.valueOf(192)},	// À - uppercase A, grave accent
-		{"Aacute", Integer.valueOf(193)},	// Á - uppercase A, acute accent
-		{"Acirc", Integer.valueOf(194)},	// Â - uppercase A, circumflex accent
-		{"Atilde", Integer.valueOf(195)},	// Ã - uppercase A, tilde
-		{"Auml", Integer.valueOf(196)},		// Ä - uppercase A, umlaut
-		{"Aring", Integer.valueOf(197)},	// Å - uppercase A, ring
-		{"AElig", Integer.valueOf(198)},	// Æ - uppercase AE
-		{"Ccedil", Integer.valueOf(199)},	// Ç - uppercase C, cedilla
-		{"Egrave", Integer.valueOf(200)},	// È - uppercase E, grave accent
-		{"Eacute", Integer.valueOf(201)},	// É - uppercase E, acute accent
-		{"Ecirc", Integer.valueOf(202)},	// Ê - uppercase E, circumflex accent
-		{"Euml", Integer.valueOf(203)},		// Ë - uppercase E, umlaut
-		{"Igrave", Integer.valueOf(204)},	// Ì - uppercase I, grave accent
-		{"Iacute", Integer.valueOf(205)},	// Í - uppercase I, acute accent
-		{"Icirc", Integer.valueOf(206)},	// Î - uppercase I, circumflex accent
-		{"Iuml", Integer.valueOf(207)},		// Ï - uppercase I, umlaut
-		{"ETH", Integer.valueOf(208)},		// Ð - uppercase Eth, Icelandic
-		{"Ntilde", Integer.valueOf(209)},	// Ñ - uppercase N, tilde
-		{"Ograve", Integer.valueOf(210)},	// Ò - uppercase O, grave accent
-		{"Oacute", Integer.valueOf(211)},	// Ó - uppercase O, acute accent
-		{"Ocirc", Integer.valueOf(212)},	// Ô - uppercase O, circumflex accent
-		{"Otilde", Integer.valueOf(213)},	// Õ - uppercase O, tilde
-		{"Ouml", Integer.valueOf(214)},		// Ö - uppercase O, umlaut
-		{"Oslash", Integer.valueOf(216)},	// Ø - uppercase O, slash
-		{"Ugrave", Integer.valueOf(217)},	// Ù - uppercase U, grave accent
-		{"Uacute", Integer.valueOf(218)},	// Ú - uppercase U, acute accent
-		{"Ucirc", Integer.valueOf(219)},	// Û - uppercase U, circumflex accent
-		{"Uuml", Integer.valueOf(220)},		// Ü - uppercase U, umlaut
-		{"Yacute", Integer.valueOf(221)},	// Ý - uppercase Y, acute accent
-		{"THORN", Integer.valueOf(222)},	// Þ - uppercase THORN, Icelandic
-		{"szlig", Integer.valueOf(223)},	// ß - lowercase sharps, German
-		{"agrave", Integer.valueOf(224)},	// à - lowercase a, grave accent
-		{"aacute", Integer.valueOf(225)},	// á - lowercase a, acute accent
-		{"acirc", Integer.valueOf(226)},	// â - lowercase a, circumflex accent
-		{"atilde", Integer.valueOf(227)},	// ã - lowercase a, tilde
-		{"auml", Integer.valueOf(228)},		// ä - lowercase a, umlaut
-		{"aring", Integer.valueOf(229)},	// å - lowercase a, ring
-		{"aelig", Integer.valueOf(230)},	// æ - lowercase ae
-		{"ccedil", Integer.valueOf(231)},	// ç - lowercase c, cedilla
-		{"egrave", Integer.valueOf(232)},	// è - lowercase e, grave accent
-		{"eacute", Integer.valueOf(233)},	// é - lowercase e, acute accent
-		{"ecirc", Integer.valueOf(234)},	// ê - lowercase e, circumflex accent
-		{"euml", Integer.valueOf(235)},		// ë - lowercase e, umlaut
-		{"igrave", Integer.valueOf(236)},	// ì - lowercase i, grave accent
-		{"iacute", Integer.valueOf(237)},	// í - lowercase i, acute accent
-		{"icirc", Integer.valueOf(238)},	// î - lowercase i, circumflex accent
-		{"iuml", Integer.valueOf(239)},		// ï - lowercase i, umlaut
-		{"eth", Integer.valueOf(240)},		// ð - lowercase eth, Icelandic
-		{"ntilde", Integer.valueOf(241)},	// ñ - lowercase n, tilde
-		{"ograve", Integer.valueOf(242)},	// ò - lowercase o, grave accent
-		{"oacute", Integer.valueOf(243)},	// ó - lowercase o, acute accent
-		{"ocirc", Integer.valueOf(244)},	// ô - lowercase o, circumflex accent
-		{"otilde", Integer.valueOf(245)},	// õ - lowercase o, tilde
-		{"ouml", Integer.valueOf(246)},		// ö - lowercase o, umlaut
-		{"oslash", Integer.valueOf(248)},	// ø - lowercase o, slash
-		{"ugrave", Integer.valueOf(249)},	// ù - lowercase u, grave accent
-		{"uacute", Integer.valueOf(250)},	// ú - lowercase u, acute accent
-		{"ucirc", Integer.valueOf(251)},	// û - lowercase u, circumflex accent
-		{"uuml", Integer.valueOf(252)},		// ü - lowercase u, umlaut
-		{"yacute", Integer.valueOf(253)},	// ý - lowercase y, acute accent
-		{"thorn", Integer.valueOf(254)},	// þ - lowercase thorn, Icelandic
-		{"yuml", Integer.valueOf(255)},		// ÿ - lowercase y, umlaut
+		{"copy", Integer.valueOf(169)},		// copyright
+		{"reg", Integer.valueOf(174)},		// registered trademark
+		{"Agrave", Integer.valueOf(192)},	// uppercase A, grave accent
+		{"Aacute", Integer.valueOf(193)},	// uppercase A, acute accent
+		{"Acirc", Integer.valueOf(194)},	// uppercase A, circumflex accent
+		{"Atilde", Integer.valueOf(195)},	// uppercase A, tilde
+		{"Auml", Integer.valueOf(196)},		// uppercase A, umlaut
+		{"Aring", Integer.valueOf(197)},	// uppercase A, ring
+		{"AElig", Integer.valueOf(198)},	// uppercase AE
+		{"Ccedil", Integer.valueOf(199)},	// uppercase C, cedilla
+		{"Egrave", Integer.valueOf(200)},	// uppercase E, grave accent
+		{"Eacute", Integer.valueOf(201)},	// uppercase E, acute accent
+		{"Ecirc", Integer.valueOf(202)},	// uppercase E, circumflex accent
+		{"Euml", Integer.valueOf(203)},		// uppercase E, umlaut
+		{"Igrave", Integer.valueOf(204)},	// uppercase I, grave accent
+		{"Iacute", Integer.valueOf(205)},	// uppercase I, acute accent
+		{"Icirc", Integer.valueOf(206)},	// uppercase I, circumflex accent
+		{"Iuml", Integer.valueOf(207)},		// uppercase I, umlaut
+		{"ETH", Integer.valueOf(208)},		// uppercase Eth, Icelandic
+		{"Ntilde", Integer.valueOf(209)},	// uppercase N, tilde
+		{"Ograve", Integer.valueOf(210)},	// uppercase O, grave accent
+		{"Oacute", Integer.valueOf(211)},	// uppercase O, acute accent
+		{"Ocirc", Integer.valueOf(212)},	// uppercase O, circumflex accent
+		{"Otilde", Integer.valueOf(213)},	// uppercase O, tilde
+		{"Ouml", Integer.valueOf(214)},		// uppercase O, umlaut
+		{"Oslash", Integer.valueOf(216)},	// uppercase O, slash
+		{"Ugrave", Integer.valueOf(217)},	// uppercase U, grave accent
+		{"Uacute", Integer.valueOf(218)},	// uppercase U, acute accent
+		{"Ucirc", Integer.valueOf(219)},	// uppercase U, circumflex accent
+		{"Uuml", Integer.valueOf(220)},		// uppercase U, umlaut
+		{"Yacute", Integer.valueOf(221)},	// uppercase Y, acute accent
+		{"THORN", Integer.valueOf(222)},	// uppercase THORN, Icelandic
+		{"szlig", Integer.valueOf(223)},	// lowercase sharps, German
+		{"agrave", Integer.valueOf(224)},	// lowercase a, grave accent
+		{"aacute", Integer.valueOf(225)},	// lowercase a, acute accent
+		{"acirc", Integer.valueOf(226)},	// lowercase a, circumflex accent
+		{"atilde", Integer.valueOf(227)},	// lowercase a, tilde
+		{"auml", Integer.valueOf(228)},		// lowercase a, umlaut
+		{"aring", Integer.valueOf(229)},	// lowercase a, ring
+		{"aelig", Integer.valueOf(230)},	// lowercase ae
+		{"ccedil", Integer.valueOf(231)},	// lowercase c, cedilla
+		{"egrave", Integer.valueOf(232)},	// lowercase e, grave accent
+		{"eacute", Integer.valueOf(233)},	// lowercase e, acute accent
+		{"ecirc", Integer.valueOf(234)},	// lowercase e, circumflex accent
+		{"euml", Integer.valueOf(235)},		// lowercase e, umlaut
+		{"igrave", Integer.valueOf(236)},	// lowercase i, grave accent
+		{"iacute", Integer.valueOf(237)},	// lowercase i, acute accent
+		{"icirc", Integer.valueOf(238)},	// lowercase i, circumflex accent
+		{"iuml", Integer.valueOf(239)},		// lowercase i, umlaut
+		{"eth", Integer.valueOf(240)},		// lowercase eth, Icelandic
+		{"ntilde", Integer.valueOf(241)},	// lowercase n, tilde
+		{"ograve", Integer.valueOf(242)},	// lowercase o, grave accent
+		{"oacute", Integer.valueOf(243)},	// lowercase o, acute accent
+		{"ocirc", Integer.valueOf(244)},	// lowercase o, circumflex accent
+		{"otilde", Integer.valueOf(245)},	// lowercase o, tilde
+		{"ouml", Integer.valueOf(246)},		// lowercase o, umlaut
+		{"oslash", Integer.valueOf(248)},	// lowercase o, slash
+		{"ugrave", Integer.valueOf(249)},	// lowercase u, grave accent
+		{"uacute", Integer.valueOf(250)},	// lowercase u, acute accent
+		{"ucirc", Integer.valueOf(251)},	// lowercase u, circumflex accent
+		{"uuml", Integer.valueOf(252)},		// lowercase u, umlaut
+		{"yacute", Integer.valueOf(253)},	// lowercase y, acute accent
+		{"thorn", Integer.valueOf(254)},	// lowercase thorn, Icelandic
+		{"yuml", Integer.valueOf(255)},		// lowercase y, umlaut
 		{"euro", Integer.valueOf(8364)},	// Euro symbol
 
 		// 25 July 2002 ...
@@ -395,14 +395,14 @@ public class Encoding	// Formerly com.purpletech.util.Purple_Utils
 		{"raquo", Integer.valueOf(187)},	// right angle quote
 		{"iquest", Integer.valueOf(191)},	// inverted question mark
     };
- 
+
     final static Object2IntMap<String> e2i = new Object2IntOpenHashMap<String>();
     final static Int2ObjectMap<String> i2e = new Int2ObjectOpenHashMap<String>();
 
     static {
 	for (int i=0; i<entities.length; ++i) {
 	    e2i.put( (String) entities[i][0], (Integer) entities[i][1]);
-	    i2e.put( (Integer) entities[i][1], (String) entities[i][0]);	    
+	    i2e.put( (Integer) entities[i][1], (String) entities[i][0]);
 	}
     }
 
@@ -473,7 +473,7 @@ public class Encoding	// Formerly com.purpletech.util.Purple_Utils
 			}
 			else
 			{
-				String entity = (String)i2e.get( Integer.valueOf((int)ch) );	    
+				String entity = (String)i2e.get( Integer.valueOf((int)ch) );
 				if ( entity == null)
 				{
 					if (((int)ch) > 128)
@@ -633,7 +633,7 @@ public class Encoding	// Formerly com.purpletech.util.Purple_Utils
 	    {
 		ch = (char) 39; // single quote
 	    }
-	    sb.append(ch);	
+	    sb.append(ch);
 	}
 	return sb.toString();
     }
@@ -688,7 +688,7 @@ public class Encoding	// Formerly com.purpletech.util.Purple_Utils
 	//System.err.println(s + " -> " + buf.toString());
 	return buf.toString();
     }
-    
+
     public static String getStackTrace(Throwable t) {
 	StringWriter s = new StringWriter();
 	PrintWriter p = new PrintWriter(s);
@@ -700,7 +700,7 @@ public class Encoding	// Formerly com.purpletech.util.Purple_Utils
     public static void sleep(long msec) {
 	try {
 	    Thread.sleep(msec);
-	}		
-	catch (InterruptedException ie) {}	
-    }	
+	}
+	catch (InterruptedException ie) {}
+    }
 }
