@@ -12,7 +12,6 @@
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<version>1.2.16</version>
-			<scope>compile</scope>
 		</dependency>
 
 		<dependency>
@@ -40,7 +39,6 @@
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
 			<version>5.1.18</version>
-			<scope>compile</scope>
 		</dependency>
 
 		<dependency>
@@ -98,31 +96,37 @@
 			<groupId>com.hiatus</groupId>
 			<artifactId>environment</artifactId>
 			<version>1.0-SNAPSHOT</version>
-			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.hiatus</groupId>
 			<artifactId>utils</artifactId>
 			<version>1.0-SNAPSHOT</version>
-			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.hiatus</groupId>
 			<artifactId>HTL</artifactId>
 			<version>1.0-SNAPSHOT</version>
-			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.jdom</groupId>
 			<artifactId>jdom</artifactId>
-			<version>1.1.1</version>
+			<version>1.1.2</version>
 			<scope>provided</scope>
+			<exclusions>
+                                <exclusion>
+                                  <groupId>maven-plugins</groupId>
+                                  <artifactId>maven-cobertura-plugin</artifactId>
+                                </exclusion>
+                                <exclusion>
+                                  <groupId>maven-plugins</groupId>
+                                  <artifactId>maven-findbugs-plugin</artifactId>
+                                </exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>de.nava.informa</groupId>
 			<artifactId>informa</artifactId>
 			<version>0.6.5</version>
-			<scope>compile</scope>
 		</dependency>
 	</dependencies>
 
@@ -150,7 +154,6 @@
 		</plugins>
 	</build>
 	<properties>
-		<!-- <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding> -->
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	<name>Bloggers4Labour 2011</name>
