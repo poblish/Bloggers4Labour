@@ -9,9 +9,9 @@
 
 package org.bloggers4labour;
 
+import com.hiatus.htl.IncludeFileLocator;
 import org.bloggers4labour.polling.impl.AllFeedsApprover;
 import org.bloggers4labour.polling.api.PollerFeedApproverIF;
-import com.hiatus.envt.IncludeFileLocator;
 import com.hiatus.envt.impl.DefaultFileLocator;
 import com.hiatus.htl.HTL;
 import com.hiatus.text.UText;

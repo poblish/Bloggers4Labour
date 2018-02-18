@@ -5,7 +5,7 @@
 
 package org.bloggers4labour;
 
-import com.hiatus.envt.IncludeFileLocator;
+import com.hiatus.htl.IncludeFileLocator;
 import java.util.Set;
 import javax.naming.NamingException;
 import javax.sql.DataSource;

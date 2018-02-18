@@ -230,7 +230,7 @@ public class MaintenanceForm extends javax.swing.JFrame
                 getContentPane().add(m_CommandsPane, gridBagConstraints);
 
                 m_ExecuteButton.setActionCommand("executeButton");
-                m_ExecuteButton.setLabel("Run Command");
+                m_ExecuteButton.setText("Run Command");
                 m_ExecuteButton.addActionListener(new java.awt.event.ActionListener()
                 {
                         public void actionPerformed(java.awt.event.ActionEvent evt)
