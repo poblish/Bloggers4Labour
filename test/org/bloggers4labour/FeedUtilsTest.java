@@ -25,12 +25,4 @@ public class FeedUtilsTest
         // TODO add your test code below by replacing the default call to fail.
        //  fail("The test case is empty.");
     }
-
-	@Test public void getItemDate()
-    {
-        System.out.println("testGetItemDate");
-        
-        // TODO add your test code below by replacing the default call to fail.
-        // fail("The test case is empty.");
-    }
 }

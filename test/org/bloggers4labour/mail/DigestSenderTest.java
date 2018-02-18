@@ -50,7 +50,8 @@ public class DigestSenderTest extends AbstractB4LTest
 
 	/*******************************************************************************
 	*******************************************************************************/
-	@Test public void sendEmail() throws InterruptedException
+	// @Test  <== Not a proper test
+	public void sendEmail() throws InterruptedException
 	{
 		synchronized (m_Lock)
 		{

@@ -21,6 +21,7 @@ import org.htmlparser.filters.*;
 import org.htmlparser.tags.LinkTag;
 import org.htmlparser.util.NodeList;
 import org.htmlparser.util.ParserException;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.bloggers4labour.Constants.*;
 
@@ -28,11 +29,12 @@ import static org.bloggers4labour.Constants.*;
  *
  * @author andrewregan
  */
+@Ignore
 public class TotalPoliticsScreenScrapeTest
 {
 	/*******************************************************************************
 	*******************************************************************************/
-//	@Test
+	@Test
 	public void testLabourBlogScrape()
 	{
 		testPoliticalPartyScrape( 2, false);
@@ -40,7 +42,7 @@ public class TotalPoliticsScreenScrapeTest
 
 	/*******************************************************************************
 	*******************************************************************************/
-//	@Test
+	@Test
 	public void testToryBlogScrape()
 	{
 		testPoliticalPartyScrape( 1, false);
@@ -56,7 +58,7 @@ public class TotalPoliticsScreenScrapeTest
 
 	/*******************************************************************************
 	*******************************************************************************/
-//	@Test
+	@Test
 	public void testNorthernIrishBlogScrape()
 	{
 		testBlogCountryOfOriginScrape( 4, false);
