@@ -6,7 +6,15 @@ This is the source code for the feed aggregator that powered the Bloggers4Labour
 
 _We had some good times..._
 
-----
+## Building
+
+   > mvn
+
+## Running
+
+Don't expect this to run anywhere. It probably can be made to with tweaks to the config, but it's not really worth trying now. It's purely of historical interest.
+
+## Notes
 
 Code quality-wise, it's not great - or at least it doesn't look great with 10+ years hindsight. But it worked pretty well for a side-project with just one developer, running on a single dedicated server with 1 GB of RAM. At least there wasn't anything obviously better (technically) at the time.
 
