@@ -1,6 +1,6 @@
 # Bloggers4Labour
 
-This is the source code for the feed aggregator that powered the Bloggers4Labour web site from 2005-2008 (ish)
+This is the source code for the feed aggregator that powered the Bloggers4Labour web site from 2005-2010 (ish)
 
 [Google will tell you more](https://www.google.co.uk/search?q=bloggers4labour&oq=bloggers4labour)
 
